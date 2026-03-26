@@ -141,3 +141,46 @@ When completely finished, run:
 ```bash
 openclaw system event --text "Done: DesignShip MVP built and deployed to Vercel. GitHub OAuth + PR timeline + stakeholder toggle + weekly summary — all working." --mode now
 ```
+
+---
+
+## Low-Friction + Genuine Usefulness Additions (priority)
+
+These are NOT nice-to-haves — they're what separates a tool people actually use from one they try once:
+
+### 1. Zero-setup after login
+- Immediately show populated timeline — no repo picker, no config
+- Auto-detect all repos the user has merged PRs to in last 30 days
+- Smart default: last 7 days, most active repo first
+
+### 2. Pre-computed summary
+- Don't make the user press "Generate" — compute the weekly summary the moment data loads
+- Show it ready in the panel, copy button always visible
+- Pressing the button just refreshes/regenerates it
+
+### 3. PR grouping by theme
+- Group PRs visually: ✨ Shipped / 🐛 Fixed / 🧹 Cleaned Up (based on conventional commit prefixes)
+- Makes the timeline readable at a glance, not a flat list
+
+### 4. 3 tone modes (not just 2)
+- **Builder**: technical — PR title, branch, commit count
+- **Stakeholder**: plain English — "Improved checkout flow speed"  
+- **Achievement**: metric/impact framed — "Delivered X feature, resolving Y user pain point" (for job apps, performance reviews)
+- Toggle between all 3 in the UI
+
+### 5. Shareable summary permalink
+- Each weekly summary gets a `/week/YYYY-MM-DD` route
+- No login required to view (read-only public link)
+- "Share" button that copies the URL
+
+### 6. Time range picker
+- 7 days / 14 days / 30 days toggle in the header
+- Instantly re-filters the timeline
+
+### Order of importance for MVP:
+1. Zero-setup + auto-populate ← critical
+2. Pre-computed summary ← critical  
+3. 3 tone modes ← high
+4. Time range picker ← high
+5. PR grouping ← medium
+6. Shareable permalink ← can be post-MVP if tight on time
