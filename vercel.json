@@ -1,62 +1,9 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/test/ping",
-      "dest": "/api/test/ping.js"
-    },
-    {
-      "src": "/api/auth/login",
-      "dest": "/api/auth/login.js"
-    },
-    {
-      "src": "/api/auth/callback",
-      "dest": "/api/auth/callback.js"
-    },
-    {
-      "src": "/api/auth/logout",
-      "dest": "/api/auth/logout.js"
-    },
-    {
-      "src": "/api/auth/figma-login",
-      "dest": "/api/auth/figma-login.js"
-    },
-    {
-      "src": "/api/auth/figma-callback",
-      "dest": "/api/auth/figma-callback.js"
-    },
-    {
-      "src": "/api/github/prs",
-      "dest": "/api/github/prs.js"
-    },
-    {
-      "src": "/api/github/user",
-      "dest": "/api/github/user.js"
-    },
-    {
-      "src": "/api/github/summary",
-      "dest": "/api/github/summary.js"
-    },
-    {
-      "src": "/api/sync",
-      "dest": "/api/sync.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
