@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { getGitHubToken } from '../_lib/token.js'
+import { getGitHubToken } from '../_lib/token'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const token = getGitHubToken(req)

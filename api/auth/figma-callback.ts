@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { getGitHubToken } from '../_lib/token.js'
+import { getGitHubToken } from '../_lib/token'
 
 function parseCookies(cookieHeader: string): Record<string, string> {
   const cookies: Record<string, string> = {}
