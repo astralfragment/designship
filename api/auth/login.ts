@@ -12,7 +12,7 @@ export default function handler(_req: VercelRequest, res: VercelResponse) {
     const redirectUri = appUrl.trim() + '/api/auth/callback'
     const scope = 'read:user repo'
     const params = new URLSearchParams({
-      client_id: clientId,
+      client_id: clientId.trim(),
       redirect_uri: redirectUri,
       scope: scope,
     })
