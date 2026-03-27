@@ -6,7 +6,7 @@ export default function handler(_req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: 'GITHUB_CLIENT_ID not configured' })
   }
 
-  const redirectUri = `${process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : 'http://localhost:3000'}/api/auth/callback`
+  const redirectUri = `${process.env.VITE_APP_URL || 'http://localhost:3000'}/api/auth/callback`
   const scope = 'read:user repo'
 
   const url = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}`

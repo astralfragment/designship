@@ -46,11 +46,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const encryptedToken = encrypt(tokenData.access_token, sessionSecret)
-    const baseUrl = process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : 'http://localhost:3000'
+    const baseUrl = process.env.VITE_APP_URL || 'http://localhost:3000'
 
     res.setHeader('Set-Cookie', [
-      `gh_token=${encryptedToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800${process.env.VERCEL_URL ? '; Secure' : ''}`,
-      `gh_logged_in=1; Path=/; SameSite=Lax; Max-Age=604800${process.env.VERCEL_URL ? '; Secure' : ''}`,
+      `gh_token=${encryptedToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800; Secure`,
+      `gh_logged_in=1; Path=/; SameSite=Lax; Max-Age=604800; Secure`,
     ])
 
     res.redirect(302, `${baseUrl}/dashboard`)
