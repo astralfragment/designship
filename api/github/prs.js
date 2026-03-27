@@ -73,3 +73,5 @@ async function handler(req, res) {
         res.status(500).json({ error: 'Failed to fetch PRs' });
     }
 }
+
+if (typeof exports.default !== 'undefined') { module.exports = exports.default; }

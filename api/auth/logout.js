@@ -9,3 +9,5 @@ function handler(_req, res) {
     ]);
     res.redirect(302, baseUrl);
 }
+
+if (typeof exports.default !== 'undefined') { module.exports = exports.default; }

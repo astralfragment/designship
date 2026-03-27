@@ -196,3 +196,5 @@ async function handler(req, res) {
         res.status(500).json({ error: 'Sync failed' });
     }
 }
+
+if (typeof exports.default !== 'undefined') { module.exports = exports.default; }

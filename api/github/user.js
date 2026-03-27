@@ -29,3 +29,5 @@ async function handler(req, res) {
         res.status(500).json({ error: 'Failed to fetch user' });
     }
 }
+
+if (typeof exports.default !== 'undefined') { module.exports = exports.default; }

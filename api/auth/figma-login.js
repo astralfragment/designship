@@ -19,3 +19,5 @@ function handler(req, res) {
     const url = `https://www.figma.com/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=file_read&state=${state}&response_type=code`;
     res.redirect(302, url);
 }
+
+if (typeof exports.default !== 'undefined') { module.exports = exports.default; }

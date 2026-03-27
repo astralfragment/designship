@@ -11,3 +11,5 @@ async function handler(req, res) {
     // The current implementation generates summaries client-side deterministically
     res.json({ message: 'Summary generation is handled client-side' });
 }
+
+if (typeof exports.default !== 'undefined') { module.exports = exports.default; }

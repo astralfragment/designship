@@ -111,3 +111,5 @@ async function handler(req, res) {
         res.status(500).json({ error: 'Failed to exchange code for Figma token' });
     }
 }
+
+if (typeof exports.default !== 'undefined') { module.exports = exports.default; }

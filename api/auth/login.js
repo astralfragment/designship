@@ -11,3 +11,5 @@ function handler(_req, res) {
     const url = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}`;
     res.redirect(302, url);
 }
+
+if (typeof exports.default !== 'undefined') { module.exports = exports.default; }

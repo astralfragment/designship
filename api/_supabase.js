@@ -13,3 +13,5 @@ function getSupabase() {
     }
     return _client;
 }
+
+if (typeof exports.default !== 'undefined') { module.exports = exports.default; }

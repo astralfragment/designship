@@ -41,3 +41,5 @@ function getGitHubToken(req) {
         return null;
     }
 }
+
+if (typeof exports.default !== 'undefined') { module.exports = exports.default; }
