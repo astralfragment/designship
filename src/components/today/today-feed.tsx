@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { GitPullRequest, Figma, Sparkles } from 'lucide-react'
+import { GitPullRequest, PenTool, Sparkles } from 'lucide-react'
 
 interface WorkItem {
   id: string
@@ -122,7 +122,7 @@ export function TodayFeed() {
                 {item.type === 'pr' ? (
                   <GitPullRequest className="w-4 h-4 text-primary" />
                 ) : (
-                  <Figma className="w-4 h-4 text-primary" />
+                  <PenTool className="w-4 h-4 text-primary" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
