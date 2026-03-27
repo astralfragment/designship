@@ -9,8 +9,8 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "outDir": "api",
-    "rootDir": "api"
+    "rootDir": "api-src"
   },
-  "include": ["api/**/*.ts"],
+  "include": ["api-src/**/*.ts"],
   "exclude": ["node_modules"]
 }
