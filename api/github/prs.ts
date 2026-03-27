@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { getGitHubToken } from '../_lib/token'
+import { getGitHubToken } from '../_lib/token.js'
 
 interface GitHubPR {
   id: number

@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { getGitHubToken } from './_lib/token'
-import { getSupabase } from './_supabase'
+import { getGitHubToken } from './_lib/token.js'
+import { getSupabase } from './_supabase.js'
 
 interface GitHubPRData {
   id: number
