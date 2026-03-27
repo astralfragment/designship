@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useRouterState } from '@tanstack/react-router'
 import {
   Sidebar,
   SidebarContent,
@@ -19,10 +19,11 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import { fetchUser, getLogoutUrl } from '@/lib/github'
-import { Ship, LayoutDashboard, LogOut } from 'lucide-react'
+import { Ship, LayoutDashboard, CalendarDays, LogOut } from 'lucide-react'
 
 export function DashboardLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
   const { data: user } = useQuery({
     queryKey: ['user'],
     queryFn: fetchUser,
@@ -53,11 +54,21 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       onClick={() => navigate({ to: '/dashboard' })}
-                      isActive
+                      isActive={pathname.startsWith('/dashboard')}
                       className="gap-2"
                     >
                       <LayoutDashboard className="w-4 h-4" />
                       Dashboard
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      onClick={() => navigate({ to: '/today' })}
+                      isActive={pathname.startsWith('/today')}
+                      className="gap-2"
+                    >
+                      <CalendarDays className="w-4 h-4" />
+                      Today
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>

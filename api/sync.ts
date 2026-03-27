@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { getGitHubToken } from './_lib/token'
-import { supabase } from './_supabase'
+import { getSupabase } from './_supabase'
 
 interface GitHubPRData {
   id: number
@@ -52,7 +52,7 @@ async function syncGitHubPRs(ghToken: string, userId: string) {
       })
       const pr: GitHubPRData = await prRes.json()
 
-      await supabase.from('github_prs').upsert(
+      await getSupabase().from('github_prs').upsert(
         {
           user_id: userId,
           pr_number: pr.number,
@@ -162,7 +162,7 @@ async function syncFigmaFrames(figmaToken: string, userId: string) {
 
       // Upsert frames
       for (const frame of frames) {
-        await supabase.from('figma_frames').upsert(
+        await getSupabase().from('figma_frames').upsert(
           {
             user_id: userId,
             file_key: file.key,
@@ -199,7 +199,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const ghUser = await ghUserRes.json()
 
     // Upsert user record
-    const { data: userData } = await supabase
+    const { data: userData } = await getSupabase()
       .from('users')
       .upsert(
         {
