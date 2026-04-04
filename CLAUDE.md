@@ -4,7 +4,7 @@
 
 **DesignShip** — Zero-input communication layer that sits on top of existing dev tools (GitHub, Figma, Jira, Slack/Teams). Watches activity and auto-generates standups, release notes, stakeholder updates, and visual changelogs.
 
-- **Stack:** TanStack Start (client-side focused) + Tailwind CSS + shadcn/ui + shadcn studio pro + Supabase (Postgres + Auth + Realtime) + Claude API + Vercel
+- **Stack:** TanStack Start (client-side focused) + Tailwind CSS v4 + shadcn/ui + shadcn studio pro + Supabase (Postgres + Auth + Realtime) + Claude API + Vercel
 - **Project dir:** `C:\Users\char\Desktop\designship`
 - **Deployment:** Vercel
 
@@ -34,26 +34,49 @@ designship/
 │   ├── config                 ← ralphex settings
 │   └── progress/              ← task completion tracking
 ├── docs/plans/                ← ralphex plan files
-├── .env                       ← shadcn studio license (gitignored)
+├── .env                       ← env vars (gitignored)
+├── .env.example               ← env var template
 ├── components.json            ← shadcn/ui + studio config
 ├── package.json
 ├── tsconfig.json
-├── tailwind.config.ts
-├── app.config.ts              ← TanStack Start config
+├── vercel.json                ← Vercel deployment config
+├── app.config.ts              ← TanStack Start + Tailwind v4 config
 ├── app/
 │   ├── routes/                ← TanStack file-based routes
-│   ├── components/            ← shared components
-│   ├── lib/                   ← utilities, API clients
-│   └── styles/                ← global CSS
+│   │   ├── __root.tsx         ← Root layout (AuthProvider, ThemeProvider, QueryClient)
+│   │   ├── login.tsx          ← GitHub OAuth login
+│   │   ├── auth/callback.tsx  ← Supabase auth callback
+│   │   ├── auth/figma-callback.tsx ← Figma OAuth callback
+│   │   ├── _authenticated.tsx ← Auth guard layout
+│   │   └── _authenticated/    ← Protected pages
+│   │       ├── index.tsx      ← Main timeline (/)
+│   │       ├── summaries.tsx  ← Summary history (/summaries)
+│   │       └── settings.tsx   ← Connected accounts (/settings)
+│   └── components/            ← shared components
+│       ├── app-shell.tsx      ← Navigation shell
+│       ├── timeline/          ← Timeline components
+│       ├── toast.tsx           ← Toast notification system
+│       ├── error-boundary.tsx  ← Error boundary
+│       ├── weekly-summary-dialog.tsx
+│       ├── view-toggle.tsx
+│       └── repo-selector.tsx
 ├── src/
 │   ├── components/
 │   │   └── ui/                ← shadcn/ui components
 │   ├── lib/
 │   │   ├── supabase.ts        ← Supabase client
+│   │   ├── auth.tsx           ← Auth context/provider
 │   │   ├── github.ts          ← GitHub API client
 │   │   ├── figma.ts           ← Figma API client
-│   │   └── ai.ts              ← Claude API integration
-│   └── hooks/                 ← custom React hooks
+│   │   ├── ai.ts              ← Claude API integration
+│   │   ├── summaries.ts       ← Summary persistence (Supabase)
+│   │   ├── format-summary.ts  ← Text/Markdown export formatters
+│   │   └── utils.ts           ← cn() helper
+│   ├── hooks/                 ← custom React hooks
+│   └── styles/
+│       └── globals.css        ← Global CSS + Tailwind v4 config
+├── supabase/
+│   └── migrations/            ← Database migrations
 └── public/                    ← static assets
 ```
 
@@ -92,8 +115,8 @@ shadcn commands:
 
 License credentials in `.env` (gitignored):
 ```
-EMAIL=designer@aie.ac
-LICENSE_KEY=BB2FB7B1-8AFB-4A59-BD02-6C86AFF12B9C
+EMAIL=your-email@example.com
+LICENSE_KEY=your-license-key
 ```
 
 ## Tech Stack Details
@@ -102,7 +125,7 @@ LICENSE_KEY=BB2FB7B1-8AFB-4A59-BD02-6C86AFF12B9C
 |-------|-----------|---------|
 | Framework | TanStack Start | Client-side focused React framework |
 | Routing | TanStack Router | File-based routing with type safety |
-| Styling | Tailwind CSS | Utility-first CSS |
+| Styling | Tailwind CSS v4 | Utility-first CSS (CSS-native config via @tailwindcss/vite) |
 | Components | shadcn/ui + Studio Pro | Premium component library |
 | Database | Supabase | Postgres + Auth + Realtime |
 | AI | Claude API | Summarisation, technical → plain English |

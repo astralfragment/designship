@@ -196,16 +196,18 @@ function EntryMetaBadges({ event }: { event: TimelineEvent }) {
         <Badge variant="outline" className="gap-1 text-[10px]">
           {meta.branch}
         </Badge>
-        {meta.reviewCount > 0 && (
+        {meta.reviewCount != null && meta.reviewCount > 0 && (
           <Badge variant="outline" className="gap-1 text-[10px]">
             <MessageSquareIcon className="size-2.5" />
             {meta.reviewCount}
           </Badge>
         )}
-        <Badge variant="outline" className="gap-1 text-[10px]">
-          <FilesIcon className="size-2.5" />
-          {meta.filesChanged} files
-        </Badge>
+        {meta.filesChanged != null && (
+          <Badge variant="outline" className="gap-1 text-[10px]">
+            <FilesIcon className="size-2.5" />
+            {meta.filesChanged} files
+          </Badge>
+        )}
         {meta.labels.map((label) => (
           <Badge
             key={label.name}
@@ -287,16 +289,21 @@ function EntryDetail({
       )}
 
       {/* Technical stats — only in Builder view */}
-      {!isStakeholder && event.metadata.type === 'pr_merged' && (
+      {!isStakeholder && event.metadata.type === 'pr_merged' &&
+        (event.metadata.additions != null || event.metadata.deletions != null) && (
         <div className="flex items-center gap-4 text-xs text-ds-text-tertiary">
-          <span className="flex items-center gap-1">
-            <PlusIcon className="size-3 text-ds-success" />
-            {event.metadata.additions} additions
-          </span>
-          <span className="flex items-center gap-1">
-            <MinusIcon className="size-3 text-destructive" />
-            {event.metadata.deletions} deletions
-          </span>
+          {event.metadata.additions != null && (
+            <span className="flex items-center gap-1">
+              <PlusIcon className="size-3 text-ds-success" />
+              {event.metadata.additions} additions
+            </span>
+          )}
+          {event.metadata.deletions != null && (
+            <span className="flex items-center gap-1">
+              <MinusIcon className="size-3 text-destructive" />
+              {event.metadata.deletions} deletions
+            </span>
+          )}
         </div>
       )}
 

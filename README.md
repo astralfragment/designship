@@ -57,33 +57,20 @@ cp .env.example .env
 | `VITE_SUPABASE_URL` | Yes | Your Supabase project URL |
 | `VITE_SUPABASE_ANON_KEY` | Yes | Your Supabase anonymous/public key |
 | `ANTHROPIC_API_KEY` | Yes | Claude API key for AI summaries and rewrites |
-| `VITE_FIGMA_CLIENT_ID` | No | Figma OAuth app client ID |
+| `VITE_FIGMA_CLIENT_ID` | No | Figma OAuth app client ID (shown in browser) |
+| `FIGMA_CLIENT_ID` | No | Figma OAuth app client ID (server-only, for token exchange) |
 | `FIGMA_CLIENT_SECRET` | No | Figma OAuth app client secret (server-only) |
 
-4. Set up Supabase Auth with GitHub as an OAuth provider, and add your app's callback URL (`http://localhost:3000/auth/callback`) to the allowed redirect URLs.
+4. Set up Supabase Auth with GitHub as an OAuth provider, and add your app's callback URL (`http://localhost:3000/auth/callback`) to the allowed redirect URLs. If using the Figma integration, also register `http://localhost:3000/auth/figma-callback` as the callback URL in your Figma Developer App settings.
 
-5. Create the `summaries` table in your Supabase database:
+5. Create the `summaries` table in your Supabase database by running the migration file:
 
-```sql
-create table summaries (
-  id uuid default gen_random_uuid() primary key,
-  user_id uuid references auth.users(id) on delete cascade not null,
-  date_from text not null,
-  date_to text not null,
-  shipped text[] default '{}',
-  in_progress text[] default '{}',
-  key_decisions text[] default '{}',
-  repo_name text,
-  generated_at timestamptz not null,
-  created_at timestamptz default now()
-);
-
-alter table summaries enable row level security;
-
-create policy "Users can manage their own summaries"
-  on summaries for all
-  using (auth.uid() = user_id);
+```bash
+# Copy the contents of supabase/migrations/20260404_create_summaries.sql
+# into the Supabase SQL Editor and execute it
 ```
+
+The migration creates the table with JSONB columns, RLS policies (SELECT, INSERT, DELETE), and an index on `user_id`.
 
 6. Start the dev server:
 

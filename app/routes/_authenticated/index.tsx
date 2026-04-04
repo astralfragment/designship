@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { Timeline } from '../../components/timeline'
@@ -110,12 +110,14 @@ function HomePage() {
   const saveSummaryMutation = useSaveSummary()
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [summarySaved, setSummarySaved] = useState(false)
+  const saveInitiated = useRef(false)
 
   // Auto-save summary to Supabase when generated
   const saveMutate = saveSummaryMutation.mutate
   const isSaving = saveSummaryMutation.isPending
   useEffect(() => {
-    if (summary && !summaryGenerating && !summarySaved && !isSaving) {
+    if (summary && !summaryGenerating && !summarySaved && !isSaving && !saveInitiated.current) {
+      saveInitiated.current = true
       const repoName = activeRepo?.full_name
       saveMutate(
         { summary, repoName },
@@ -133,7 +135,10 @@ function HomePage() {
   const handleSummaryOpenChange = useCallback(
     (open: boolean) => {
       setSummaryOpen(open)
-      if (!open) resetSummary()
+      if (!open) {
+        resetSummary()
+        saveInitiated.current = false
+      }
     },
     [resetSummary],
   )

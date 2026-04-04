@@ -19,10 +19,10 @@ export interface PRMetadata {
   number: number
   branch: string
   baseBranch: string
-  reviewCount: number
-  filesChanged: number
-  additions: number
-  deletions: number
+  reviewCount?: number
+  filesChanged?: number
+  additions?: number
+  deletions?: number
   labels: Array<{ name: string; color: string }>
 }
 

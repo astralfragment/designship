@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -203,6 +204,9 @@ function FigmaPreviewDialog({
               </Badge>
             )}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Figma design screenshot preview
+          </DialogDescription>
         </DialogHeader>
 
         {hasMultiple && !compareMode && (

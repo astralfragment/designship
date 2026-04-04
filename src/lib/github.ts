@@ -161,7 +161,7 @@ export async function fetchMergedPRsPage(
   )
 
   const merged = batch.filter((pr) => pr.merged_at !== null)
-  const hasMore = batch.length === PR_PAGE_SIZE && merged.length > 0
+  const hasMore = batch.length === PR_PAGE_SIZE
 
   return {
     prs: merged,

@@ -234,8 +234,8 @@ export const exchangeFigmaCode = createServerFn({ method: 'POST' })
 
 // --- Figma link parsing ---
 
-const FIGMA_URL_REGEX =
-  /https:\/\/(?:www\.)?figma\.com\/(?:design|file)\/([a-zA-Z0-9]+)(?:\/[^?]*)?(?:\?.*node-id=([^&]+))?/g
+const FIGMA_URL_PATTERN =
+  'https:\\/\\/(?:www\\.)?figma\\.com\\/(?:design|file)\\/([a-zA-Z0-9]+)(?:\\/[^?]*)?(?:\\?.*node-id=([^&]+))?'
 
 export interface FigmaLink {
   fileKey: string
@@ -247,7 +247,7 @@ export function extractFigmaLinks(text: string): FigmaLink[] {
   const links: FigmaLink[] = []
   let match: RegExpExecArray | null
 
-  const regex = new RegExp(FIGMA_URL_REGEX)
+  const regex = new RegExp(FIGMA_URL_PATTERN, 'g')
   while ((match = regex.exec(text)) !== null) {
     const nodeId = match[2] ? decodeURIComponent(match[2]).replace(/-/g, ':') : null
     links.push({
