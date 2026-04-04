@@ -112,15 +112,17 @@ function HomePage() {
   const [summarySaved, setSummarySaved] = useState(false)
 
   // Auto-save summary to Supabase when generated
+  const saveMutate = saveSummaryMutation.mutate
+  const isSaving = saveSummaryMutation.isPending
   useEffect(() => {
-    if (summary && !summaryGenerating && !summarySaved) {
+    if (summary && !summaryGenerating && !summarySaved && !isSaving) {
       const repoName = activeRepo?.full_name
-      saveSummaryMutation.mutate(
+      saveMutate(
         { summary, repoName },
         { onSuccess: () => setSummarySaved(true) },
       )
     }
-  }, [summary, summaryGenerating, summarySaved, activeRepo?.full_name, saveSummaryMutation])
+  }, [summary, summaryGenerating, summarySaved, isSaving, activeRepo?.full_name, saveMutate])
 
   const handleGenerateSummary = useCallback(() => {
     setSummaryOpen(true)

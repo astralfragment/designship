@@ -4,6 +4,7 @@ import { useSummaries, useDeleteSummary } from '@/hooks/use-summaries'
 import { storedToWeeklySummary } from '@/lib/summaries'
 import type { StoredSummary } from '@/lib/summaries'
 import type { WeeklySummary } from '@/lib/ai'
+import { formatSummaryAsText, formatSummaryAsMarkdown } from '@/lib/format-summary'
 import { useToast } from '../../components/toast'
 import { ErrorBoundary } from '../../components/error-boundary'
 import { Button } from '@/components/ui/button'
@@ -42,72 +43,6 @@ import { cn } from '@/lib/utils'
 export const Route = createFileRoute('/_authenticated/summaries')({
   component: SummariesPage,
 })
-
-function formatSummaryAsText(summary: WeeklySummary): string {
-  const lines: string[] = []
-  lines.push(
-    `Weekly Summary (${summary.dateRange.from} - ${summary.dateRange.to})`,
-  )
-  lines.push('')
-
-  if (summary.shipped.length > 0) {
-    lines.push('What shipped:')
-    for (const item of summary.shipped) {
-      lines.push(`  - ${item}`)
-    }
-    lines.push('')
-  }
-
-  if (summary.inProgress.length > 0) {
-    lines.push("What's in progress:")
-    for (const item of summary.inProgress) {
-      lines.push(`  - ${item}`)
-    }
-    lines.push('')
-  }
-
-  if (summary.keyDecisions.length > 0) {
-    lines.push('Key decisions:')
-    for (const item of summary.keyDecisions) {
-      lines.push(`  - ${item}`)
-    }
-  }
-
-  return lines.join('\n')
-}
-
-function formatSummaryAsMarkdown(summary: WeeklySummary): string {
-  const lines: string[] = []
-  lines.push(
-    `## Weekly Summary (${summary.dateRange.from} \u2014 ${summary.dateRange.to})`,
-  )
-  lines.push('')
-
-  if (summary.shipped.length > 0) {
-    lines.push('### What shipped')
-    for (const item of summary.shipped) {
-      lines.push(`- ${item}`)
-    }
-    lines.push('')
-  }
-
-  if (summary.inProgress.length > 0) {
-    lines.push("### What's in progress")
-    for (const item of summary.inProgress) {
-      lines.push(`- ${item}`)
-    }
-    lines.push('')
-  }
-
-  if (summary.keyDecisions.length > 0) {
-    lines.push('### Key decisions')
-    for (const item of summary.keyDecisions) {
-      lines.push(`- ${item}`)
-    }
-  }
-
-  return lines.join('\n')
-}
 
 function formatRelativeDate(dateStr: string): string {
   const date = new Date(dateStr)
@@ -268,10 +203,14 @@ function SummaryDetailDialog({
       format === 'markdown'
         ? formatSummaryAsMarkdown(summary)
         : formatSummaryAsText(summary)
-    await navigator.clipboard.writeText(content)
-    setCopied(format)
-    toast(format === 'markdown' ? 'Copied as Markdown' : 'Copied for Slack', 'success')
-    setTimeout(() => setCopied(null), 2000)
+    try {
+      await navigator.clipboard.writeText(content)
+      setCopied(format)
+      toast(format === 'markdown' ? 'Copied as Markdown' : 'Copied for Slack', 'success')
+      setTimeout(() => setCopied(null), 2000)
+    } catch {
+      toast('Failed to copy to clipboard', 'error')
+    }
   }
 
   return (

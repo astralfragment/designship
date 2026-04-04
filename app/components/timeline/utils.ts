@@ -8,6 +8,7 @@ const WEEK = 604_800_000
 export function relativeTime(dateString: string): string {
   const diff = Date.now() - new Date(dateString).getTime()
 
+  if (diff < 0) return 'just now'
   if (diff < MINUTE) return 'just now'
   if (diff < HOUR) {
     const m = Math.floor(diff / MINUTE)

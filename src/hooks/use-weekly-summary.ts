@@ -21,16 +21,28 @@ export function useWeeklySummary(events: TimelineEvent[]) {
         (e) => new Date(e.timestamp) >= weekAgo,
       )
 
-      const entries = (recentEvents.length > 0 ? recentEvents : events).map(
-        (e) => ({
-          title: e.title,
-          description: e.description,
-          date: new Date(e.timestamp).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-          }),
+      if (recentEvents.length === 0) {
+        setSummary({
+          shipped: ['No activity in the past 7 days'],
+          inProgress: [],
+          keyDecisions: [],
+          dateRange: {
+            from: weekAgo.toISOString().split('T')[0]!,
+            to: new Date().toISOString().split('T')[0]!,
+          },
+          generatedAt: new Date().toISOString(),
+        })
+        return
+      }
+
+      const entries = recentEvents.map((e) => ({
+        title: e.title,
+        description: e.description,
+        date: new Date(e.timestamp).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
         }),
-      )
+      }))
 
       const result = await generateWeeklySummary(entries)
       setSummary(result)

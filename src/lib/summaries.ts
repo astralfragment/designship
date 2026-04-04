@@ -41,9 +41,13 @@ export async function saveSummary(
 }
 
 export async function fetchSummaries(): Promise<StoredSummary[]> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
   const { data, error } = await supabase
     .from('summaries')
     .select('*')
+    .eq('user_id', user.id)
     .order('generated_at', { ascending: false })
 
   if (error) throw error
@@ -51,7 +55,10 @@ export async function fetchSummaries(): Promise<StoredSummary[]> {
 }
 
 export async function deleteSummary(id: string): Promise<void> {
-  const { error } = await supabase.from('summaries').delete().eq('id', id)
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { error } = await supabase.from('summaries').delete().eq('id', id).eq('user_id', user.id)
   if (error) throw error
 }
 

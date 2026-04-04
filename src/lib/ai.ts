@@ -26,12 +26,16 @@ export interface WeeklySummary {
 
 const CACHE_PREFIX = 'ds-ai-cache:'
 
-function cacheKey(text: string): string {
-  let hash = 0
-  for (let i = 0; i < text.length; i++) {
-    hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0
+function simpleHash(str: string): string {
+  let hash = 5381
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash + str.charCodeAt(i)) | 0
   }
-  return `${CACHE_PREFIX}${hash}`
+  return (hash >>> 0).toString(36)
+}
+
+function cacheKey(text: string): string {
+  return `${CACHE_PREFIX}${simpleHash(text.trim())}`
 }
 
 function getCached(text: string): string | null {
@@ -316,10 +320,15 @@ ${formatted}`,
       return { shipped: ['Weekly summary generated but could not be parsed'], inProgress: [], keyDecisions: [] }
     }
 
-    const parsed = JSON.parse(jsonMatch[0]) as {
+    let parsed: {
       shipped?: string[]
       inProgress?: string[]
       keyDecisions?: string[]
+    }
+    try {
+      parsed = JSON.parse(jsonMatch[0])
+    } catch {
+      return { shipped: ['Weekly summary generated but could not be parsed'], inProgress: [], keyDecisions: [] }
     }
 
     return {
@@ -342,18 +351,6 @@ export async function classifyByFeature(
     map[r.id] = r.category
   }
   return map
-}
-
-export async function rewriteForHumans(text: string): Promise<string> {
-  if (!text || text.trim().length === 0) return 'Minor update'
-
-  const cached = getCached(text)
-  if (cached) return cached
-
-  const results = await rewriteOnServer({ data: { texts: [text] } })
-  const rewritten = results[0] ?? 'Minor update'
-  setCache(text, rewritten)
-  return rewritten
 }
 
 export async function batchRewriteForHumans(

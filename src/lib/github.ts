@@ -103,17 +103,6 @@ export interface GitHubPR {
   labels: Array<{ name: string; color: string }>
 }
 
-export interface GitHubCommit {
-  sha: string
-  html_url: string
-  commit: {
-    message: string
-    author: { name: string; date: string }
-  }
-  author: { login: string; avatar_url: string } | null
-  stats?: { additions: number; deletions: number; total: number }
-}
-
 // --- API Functions ---
 
 export async function fetchUserRepos(
@@ -149,48 +138,6 @@ export interface PRPage {
   nextPage: number | null
 }
 
-export async function fetchMergedPRs(
-  owner: string,
-  repo: string,
-  since?: string,
-  token?: string | null,
-): Promise<GitHubPR[]> {
-  const prs: GitHubPR[] = []
-  let page = 1
-  const perPage = 30
-
-  while (true) {
-    const batch = await githubFetch<GitHubPR[]>(
-      `/repos/${owner}/${repo}/pulls`,
-      {
-        token,
-        params: {
-          state: 'closed',
-          sort: 'updated',
-          direction: 'desc',
-          per_page: perPage,
-          page,
-        },
-      },
-    )
-
-    for (const pr of batch) {
-      if (!pr.merged_at) continue
-      if (since && pr.merged_at < since) {
-        return prs
-      }
-      prs.push(pr)
-    }
-
-    if (batch.length < perPage) break
-    page++
-    // Safety cap: don't paginate forever
-    if (page > 10) break
-  }
-
-  return prs
-}
-
 const PR_PAGE_SIZE = 15
 
 export async function fetchMergedPRsPage(
@@ -214,43 +161,12 @@ export async function fetchMergedPRsPage(
   )
 
   const merged = batch.filter((pr) => pr.merged_at !== null)
-  const hasMore = batch.length === PR_PAGE_SIZE
+  const hasMore = batch.length === PR_PAGE_SIZE && merged.length > 0
 
   return {
     prs: merged,
     nextPage: hasMore ? page + 1 : null,
   }
-}
-
-export async function fetchCommits(
-  owner: string,
-  repo: string,
-  since?: string,
-  token?: string | null,
-): Promise<GitHubCommit[]> {
-  const commits: GitHubCommit[] = []
-  let page = 1
-  const perPage = 30
-
-  const params: Record<string, string | number> = {
-    per_page: perPage,
-    page,
-  }
-  if (since) params['since'] = since
-
-  while (true) {
-    params['page'] = page
-    const batch = await githubFetch<GitHubCommit[]>(
-      `/repos/${owner}/${repo}/commits`,
-      { token, params },
-    )
-    commits.push(...batch)
-    if (batch.length < perPage) break
-    page++
-    if (page > 10) break
-  }
-
-  return commits
 }
 
 export { GitHubRateLimitError, GitHubAuthError }

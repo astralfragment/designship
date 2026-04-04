@@ -237,7 +237,6 @@
   --animate-ds-fade-in: ds-fade-in 0.4s ease-out both;
   --animate-ds-slide-up: ds-slide-up 0.4s ease-out both;
   --animate-ds-slide-down: ds-slide-down 0.3s ease-out both;
-  --animate-ds-scale-in: ds-scale-in 0.2s ease-out both;
 }
 
 /* --- Keyframes for timeline animations --- */
@@ -273,17 +272,6 @@
   }
 }
 
-@keyframes ds-scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
 @layer base {
   * {
     @apply border-border;
@@ -295,8 +283,7 @@
     letter-spacing: -0.011em;
   }
   html,
-  body,
-  * {
-    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease;
+  body {
+    transition: background-color 0.2s ease, color 0.15s ease;
   }
 }
