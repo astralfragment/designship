@@ -1,0 +1,27 @@
+# DesignShip — ralphex configuration
+
+# Plans directory
+plans_dir = docs/plans
+
+# Execution limits
+max_iterations = 500
+iteration_delay_ms = 3000
+task_retry_count = 2
+
+# Timeouts
+session_timeout = 300m
+idle_timeout = 20m
+
+# Reviews — enable code review between phases
+codex_enabled = true
+external_review_tool = none
+
+# Finalization — disabled (we handle deploy via Vercel)
+finalize_enabled = false
+
+# Web dashboard
+# serve = true
+# port = 8080
+
+# Worktree — enabled for isolated feature work
+use_worktree = false
