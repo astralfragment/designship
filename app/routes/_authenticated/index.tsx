@@ -10,6 +10,7 @@ import { useRepos, useMergedPRsPaginated } from '@/hooks/use-github'
 import { useAiRewrite } from '@/hooks/use-ai-rewrite'
 import { useAiClassify } from '@/hooks/use-ai-classify'
 import { useWeeklySummary } from '@/hooks/use-weekly-summary'
+import { useSaveSummary } from '@/hooks/use-summaries'
 import { useAuth } from '@/lib/auth'
 import type { ViewMode } from '@/lib/ai'
 import type { GitHubRepo, GitHubPR } from '@/lib/github'
@@ -90,7 +91,7 @@ function HomePage() {
     isFetching: classifyFetching,
   } = useAiClassify(events, isStakeholder)
 
-  // Weekly summary generation
+  // Weekly summary generation + persistence
   const {
     summary,
     isGenerating: summaryGenerating,
@@ -98,10 +99,24 @@ function HomePage() {
     generate: generateSummary,
     reset: resetSummary,
   } = useWeeklySummary(events)
+  const saveSummaryMutation = useSaveSummary()
   const [summaryOpen, setSummaryOpen] = useState(false)
+  const [summarySaved, setSummarySaved] = useState(false)
+
+  // Auto-save summary to Supabase when generated
+  useEffect(() => {
+    if (summary && !summaryGenerating && !summarySaved) {
+      const repoName = activeRepo?.full_name
+      saveSummaryMutation.mutate(
+        { summary, repoName },
+        { onSuccess: () => setSummarySaved(true) },
+      )
+    }
+  }, [summary, summaryGenerating, summarySaved, activeRepo?.full_name, saveSummaryMutation])
 
   const handleGenerateSummary = useCallback(() => {
     setSummaryOpen(true)
+    setSummarySaved(false)
     generateSummary()
   }, [generateSummary])
 

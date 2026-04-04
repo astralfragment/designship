@@ -18,7 +18,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
-import { LogOutIcon, MenuIcon, SettingsIcon } from 'lucide-react'
+import { LogOutIcon, MenuIcon, SettingsIcon, FileTextIcon } from 'lucide-react'
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth()
@@ -54,10 +54,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <nav className="flex flex-col gap-1 px-4">
                 <Link
                   to="/"
-                  className="rounded-md px-3 py-2 text-sm text-ds-text-secondary hover:bg-accent hover:text-accent-foreground"
+                  className="rounded-md px-3 py-2 text-sm text-ds-text-secondary hover:bg-accent hover:text-accent-foreground [&.active]:text-ds-text-primary"
                   onClick={() => setMobileOpen(false)}
                 >
                   Timeline
+                </Link>
+                <Link
+                  to="/summaries"
+                  className="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm text-ds-text-secondary hover:bg-accent hover:text-accent-foreground [&.active]:text-ds-text-primary"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <FileTextIcon className="size-3.5" />
+                  Summaries
                 </Link>
               </nav>
             </SheetContent>
@@ -66,6 +74,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <Link to="/" className="text-base font-semibold tracking-tight text-ds-text-primary">
             DesignShip
           </Link>
+
+          <nav className="ml-6 hidden items-center gap-1 sm:flex">
+            <Link
+              to="/"
+              className="rounded-md px-3 py-1.5 text-sm text-ds-text-secondary transition-colors hover:bg-accent hover:text-accent-foreground [&.active]:text-ds-text-primary"
+            >
+              Timeline
+            </Link>
+            <Link
+              to="/summaries"
+              className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-ds-text-secondary transition-colors hover:bg-accent hover:text-accent-foreground [&.active]:text-ds-text-primary"
+            >
+              <FileTextIcon className="size-3.5" />
+              Summaries
+            </Link>
+          </nav>
         </div>
 
         <div className="flex items-center gap-2">

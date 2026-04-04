@@ -125,13 +125,13 @@
   - [x] Copy to clipboard button (formatted for Slack/Teams paste)
   - [x] Share link generation (optional) — skipped, not MVP-critical
 
-- [ ] **Task 13: Summary history + export**
+- [x] **Task 13: Summary history + export**
   - Skills: `/rui`, `test-driven-development`
-  - Store generated summaries in Supabase
-  - Summary list view accessible from navigation
-  - Each summary: date range, generated date, content preview
-  - Export options: Copy as Markdown, Copy as formatted text
-  - Delete old summaries
+  - [x] Store generated summaries in Supabase
+  - [x] Summary list view accessible from navigation
+  - [x] Each summary: date range, generated date, content preview
+  - [x] Export options: Copy as Markdown, Copy as formatted text
+  - [x] Delete old summaries
 
 ## Phase 5: Figma Integration
 
