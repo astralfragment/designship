@@ -50,13 +50,21 @@ async function githubFetch<T>(
     },
   })
 
-  if (res.status === 401 || res.status === 403) {
+  if (res.status === 401) {
+    throw new GitHubAuthError()
+  }
+
+  if (res.status === 403) {
     const rateLimitRemaining = res.headers.get('x-ratelimit-remaining')
     if (rateLimitRemaining === '0') {
       const resetEpoch = Number(res.headers.get('x-ratelimit-reset')) * 1000
       throw new GitHubRateLimitError(new Date(resetEpoch))
     }
-    throw new GitHubAuthError()
+    const retryAfter = res.headers.get('retry-after')
+    if (retryAfter) {
+      throw new GitHubRateLimitError(new Date(Date.now() + Number(retryAfter) * 1000))
+    }
+    throw new Error(`GitHub API forbidden: ${res.status}`)
   }
 
   if (!res.ok) {

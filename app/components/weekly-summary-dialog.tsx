@@ -104,11 +104,13 @@ export function WeeklySummaryDialog({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Weekly Summary</DialogTitle>
-          {summary && (
-            <DialogDescription>
-              {summary.dateRange.from} &mdash; {summary.dateRange.to}
-            </DialogDescription>
-          )}
+          <DialogDescription>
+            {summary
+              ? <>{summary.dateRange.from} &mdash; {summary.dateRange.to}</>
+              : isGenerating
+              ? 'Generating your weekly summary...'
+              : 'Weekly summary'}
+          </DialogDescription>
         </DialogHeader>
 
         {isGenerating && (

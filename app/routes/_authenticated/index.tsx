@@ -123,7 +123,10 @@ function HomePage() {
       const repoName = activeRepo?.full_name
       saveMutate(
         { summary, repoName },
-        { onSuccess: () => setSummarySaved(true) },
+        {
+          onSuccess: () => setSummarySaved(true),
+          onError: () => { saveInitiated.current = false },
+        },
       )
     }
   }, [summary, summaryGenerating, summarySaved, isSaving, activeRepo?.full_name, saveMutate])
