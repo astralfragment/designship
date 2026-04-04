@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import { useQuery, useQueries } from '@tanstack/react-query'
 import {
-  fetchRecentFiles,
   fetchFileScreenshot,
   hasFigmaToken,
   extractFigmaLinks,
@@ -11,15 +10,6 @@ import {
 interface TimelineEventLike {
   id: string
   description: string | null
-}
-
-export function useFigmaFiles() {
-  return useQuery({
-    queryKey: ['figma', 'files'],
-    queryFn: () => fetchRecentFiles(),
-    enabled: hasFigmaToken(),
-    staleTime: 5 * 60 * 1000,
-  })
 }
 
 export function useFigmaScreenshot(fileKey: string, nodeId: string) {

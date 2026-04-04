@@ -96,41 +96,11 @@ export interface FigmaImage {
   nodeId: string
 }
 
-interface FigmaFilesResponse {
-  files: Array<{
-    key: string
-    name: string
-    thumbnail_url: string
-    last_modified: string
-  }>
-}
-
 interface FigmaImagesResponse {
   images: Record<string, string | null>
 }
 
-interface FigmaFileResponse {
-  name: string
-  lastModified: string
-  thumbnailUrl: string
-  version: string
-}
-
 // --- API Functions ---
-
-export async function fetchRecentFiles(
-  token?: string | null,
-): Promise<FigmaFile[]> {
-  const response = await figmaFetch<FigmaFilesResponse>('/me/files', {
-    token,
-  })
-  return response.files.map((f) => ({
-    key: f.key,
-    name: f.name,
-    thumbnail_url: f.thumbnail_url,
-    last_modified: f.last_modified,
-  }))
-}
 
 export async function fetchFileScreenshot(
   fileKey: string,
@@ -149,16 +119,7 @@ export async function fetchFileInfo(
   fileKey: string,
   token?: string | null,
 ): Promise<FigmaFileDetail> {
-  const response = await figmaFetch<FigmaFileResponse>(
-    `/files/${fileKey}?depth=1`,
-    { token },
-  )
-  return {
-    name: response.name,
-    lastModified: response.lastModified,
-    thumbnailUrl: response.thumbnailUrl,
-    version: response.version,
-  }
+  return figmaFetch<FigmaFileDetail>(`/files/${fileKey}?depth=1`, { token })
 }
 
 // --- OAuth flow ---
@@ -196,7 +157,17 @@ export function validateOAuthState(state: string): boolean {
 
 // Server function for token exchange (client_secret stays server-side)
 export const exchangeFigmaCode = createServerFn({ method: 'POST' })
-  .inputValidator((d: { code: string; redirectUri: string }) => d)
+  .inputValidator((d: unknown) => {
+    if (!d || typeof d !== 'object') throw new Error('Invalid input')
+    const obj = d as Record<string, unknown>
+    if (typeof obj.code !== 'string' || obj.code.length === 0 || obj.code.length > 512) {
+      throw new Error('Invalid authorization code')
+    }
+    if (typeof obj.redirectUri !== 'string' || obj.redirectUri.length === 0) {
+      throw new Error('Invalid redirect URI')
+    }
+    return { code: obj.code, redirectUri: obj.redirectUri }
+  })
   .handler(async ({ data }): Promise<{ access_token: string }> => {
     const clientId = process.env.FIGMA_CLIENT_ID
     const clientSecret = process.env.FIGMA_CLIENT_SECRET
@@ -207,7 +178,7 @@ export const exchangeFigmaCode = createServerFn({ method: 'POST' })
       )
     }
 
-    const { code, redirectUri } = data as { code: string; redirectUri: string }
+    const { code, redirectUri } = data
 
     const res = await fetch('https://api.figma.com/v1/oauth/token', {
       method: 'POST',

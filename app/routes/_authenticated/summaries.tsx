@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useSummaries, useDeleteSummary } from '@/hooks/use-summaries'
 import { storedToWeeklySummary } from '@/lib/summaries'
+import { formatRelativeDate } from '../../components/timeline'
 import type { StoredSummary } from '@/lib/summaries'
 import type { WeeklySummary } from '@/lib/ai'
 import { formatSummaryAsText, formatSummaryAsMarkdown } from '@/lib/format-summary'
@@ -43,26 +44,6 @@ import { cn } from '@/lib/utils'
 export const Route = createFileRoute('/_authenticated/summaries')({
   component: SummariesPage,
 })
-
-function formatRelativeDate(dateStr: string): string {
-  const date = new Date(dateStr)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-
-  if (diffDays === 0) return 'Today'
-  if (diffDays === 1) return 'Yesterday'
-  if (diffDays < 7) return `${diffDays} days ago`
-  if (diffDays < 30) {
-    const weeks = Math.floor(diffDays / 7)
-    return `${weeks} week${weeks > 1 ? 's' : ''} ago`
-  }
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
 
 function SummaryCard({
   stored,
@@ -367,16 +348,28 @@ function SummariesPage() {
   const [viewingSummary, setViewingSummary] = useState<StoredSummary | null>(
     null,
   )
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const handleDelete = useCallback(
     (id: string) => {
-      deleteM.mutate(id, {
-        onSuccess: () => toast('Summary deleted', 'success'),
-        onError: () => toast('Failed to delete summary', 'error'),
-      })
+      setDeletingId(id)
     },
-    [deleteM, toast],
+    [],
   )
+
+  const confirmDelete = useCallback(() => {
+    if (!deletingId) return
+    deleteM.mutate(deletingId, {
+      onSuccess: () => {
+        toast('Summary deleted', 'success')
+        setDeletingId(null)
+      },
+      onError: () => {
+        toast('Failed to delete summary', 'error')
+        setDeletingId(null)
+      },
+    })
+  }, [deletingId, deleteM, toast])
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
@@ -436,6 +429,26 @@ function SummariesPage() {
           if (!open) setViewingSummary(null)
         }}
       />
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={deletingId !== null} onOpenChange={(open) => { if (!open) setDeletingId(null) }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete summary?</DialogTitle>
+            <DialogDescription>
+              This will permanently remove this weekly summary. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setDeletingId(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" size="sm" onClick={confirmDelete} disabled={deleteM.isPending}>
+              {deleteM.isPending ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

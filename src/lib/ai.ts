@@ -73,8 +73,9 @@ function clearOldCache(): void {
 
 const rewriteOnServer = createServerFn({ method: 'POST' })
   .inputValidator((d: unknown) => {
+    if (!d || typeof d !== 'object') throw new Error('Invalid input: expected { texts: string[] }')
     const obj = d as Record<string, unknown>
-    if (!obj || !Array.isArray(obj.texts) || !obj.texts.every((t: unknown) => typeof t === 'string')) {
+    if (!Array.isArray(obj.texts) || !obj.texts.every((t: unknown) => typeof t === 'string')) {
       throw new Error('Invalid input: expected { texts: string[] }')
     }
     return obj as { texts: string[] }
@@ -166,8 +167,9 @@ ${numbered}`,
 
 const classifyOnServer = createServerFn({ method: 'POST' })
   .inputValidator((d: unknown) => {
+    if (!d || typeof d !== 'object') throw new Error('Invalid input: expected { entries: Array<{ id, title, description }> }')
     const obj = d as Record<string, unknown>
-    if (!obj || !Array.isArray(obj.entries)) {
+    if (!Array.isArray(obj.entries)) {
       throw new Error('Invalid input: expected { entries: Array<{ id, title, description }> }')
     }
     return obj as { entries: Array<{ id: string; title: string; description: string | null }> }
@@ -253,8 +255,9 @@ ${numbered}`,
 
 const generateSummaryOnServer = createServerFn({ method: 'POST' })
   .inputValidator((d: unknown) => {
+    if (!d || typeof d !== 'object') throw new Error('Invalid input: expected { entries: Array<{ title, description, date }> }')
     const obj = d as Record<string, unknown>
-    if (!obj || !Array.isArray(obj.entries)) {
+    if (!Array.isArray(obj.entries)) {
       throw new Error('Invalid input: expected { entries: Array<{ title, description, date }> }')
     }
     return obj as { entries: Array<{ title: string; description: string | null; date: string }> }

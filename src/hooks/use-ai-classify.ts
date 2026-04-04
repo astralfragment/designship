@@ -9,7 +9,7 @@ export function useAiClassify(events: TimelineEvent[], enabled: boolean) {
     description: e.description,
   }))
 
-  const eventIds = events.map((e) => e.id).join(',')
+  const eventIds = events.map((e) => e.id)
 
   return useQuery({
     queryKey: ['ai-classify', eventIds],

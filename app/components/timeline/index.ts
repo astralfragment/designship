@@ -11,4 +11,4 @@ export type {
   DeployMetadata,
   DesignMetadata,
 } from './types'
-export { relativeTime, eventTypeConfig } from './utils'
+export { relativeTime, formatRelativeDate, eventTypeConfig } from './utils'

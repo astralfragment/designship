@@ -33,12 +33,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user: null,
     session: null,
     loading: true,
-    githubToken: typeof window !== 'undefined'
-      ? localStorage.getItem(GITHUB_TOKEN_KEY)
-      : null,
-    figmaConnected: typeof window !== 'undefined'
-      ? !!localStorage.getItem(FIGMA_TOKEN_KEY)
-      : false,
+    githubToken: null,
+    figmaConnected: false,
   })
 
   useEffect(() => {

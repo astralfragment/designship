@@ -54,6 +54,9 @@ designship/
 │   │       └── settings.tsx   ← Connected accounts (/settings)
 │   └── components/            ← shared components
 │       ├── app-shell.tsx      ← Navigation shell
+│       ├── icons.tsx           ← Shared icon components
+│       ├── offline-indicator.tsx ← Network status indicator
+│       ├── theme-toggle.tsx    ← Dark/light mode toggle
 │       ├── timeline/          ← Timeline components
 │       ├── toast.tsx           ← Toast notification system
 │       ├── error-boundary.tsx  ← Error boundary
@@ -73,6 +76,14 @@ designship/
 │   │   ├── format-summary.ts  ← Text/Markdown export formatters
 │   │   └── utils.ts           ← cn() helper
 │   ├── hooks/                 ← custom React hooks
+│   │   ├── use-ai-classify.ts ← AI-powered event categorization
+│   │   ├── use-ai-rewrite.ts  ← AI description rewriting (stakeholder view)
+│   │   ├── use-figma.ts       ← Figma screenshot fetching for timeline
+│   │   ├── use-github.ts      ← GitHub repos + paginated merged PRs
+│   │   ├── use-mobile.ts      ← Responsive breakpoint detection
+│   │   ├── use-summaries.ts   ← Summary CRUD operations (Supabase)
+│   │   ├── use-theme.ts       ← Dark/light theme with system detection
+│   │   └── use-weekly-summary.ts ← Weekly summary generation
 │   └── styles/
 │       └── globals.css        ← Global CSS + Tailwind v4 config
 ├── supabase/
@@ -133,6 +144,13 @@ LICENSE_KEY=your-license-key
 | Integrations | Figma REST API | Design screenshots |
 | Deployment | Vercel | Edge deployment |
 | Auth | Supabase Auth | GitHub OAuth (connects repos too) |
+
+## Architectural Patterns
+
+- **TanStack Server Functions:** Server-side logic uses `createServerFn` from `@tanstack/start-client-core`. These run on the server during SSR and as API endpoints on the client. Used for Claude API calls (`src/lib/ai.ts`) and Figma OAuth token exchange (`src/lib/figma.ts`). Server-only secrets (e.g., `ANTHROPIC_API_KEY`, `FIGMA_CLIENT_SECRET`) are accessed via `process.env` inside server function handlers.
+- **Supabase lazy proxy:** The Supabase client (`src/lib/supabase.ts`) is lazily initialized via a JS `Proxy` to avoid accessing `import.meta.env` during server-side module evaluation. Access it as `supabase.auth.getUser()` etc.
+- **localStorage keys:** All use the `ds-` prefix: `ds-github-token` (GitHub OAuth), `ds-figma-token` (Figma OAuth), `ds-theme` (theme preference), `ds-view-mode` (builder/stakeholder), `ds-figma-oauth-state` (sessionStorage, Figma CSRF), `ds-ai-cache:*` (AI rewrite cache).
+- **Claude model:** API calls use `claude-sonnet-4-20250514` hardcoded in `src/lib/ai.ts`. Three server functions: `rewriteOnServer` (batch text rewriting), `classifyOnServer` (feature area classification), `generateSummaryOnServer` (weekly summary).
 
 ## Important Conventions
 

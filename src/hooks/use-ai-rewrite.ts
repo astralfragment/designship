@@ -7,7 +7,7 @@ export function useAiRewrite(events: TimelineEvent[], enabled: boolean) {
     (e) => e.description || e.title,
   )
 
-  const eventIds = events.map((e) => e.id).join(',')
+  const eventIds = events.map((e) => e.id)
 
   return useQuery({
     queryKey: ['ai-rewrite', eventIds],
