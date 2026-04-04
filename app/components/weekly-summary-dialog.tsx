@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import type { WeeklySummary } from '@/lib/ai'
+import { formatSummaryAsText, formatSummaryAsMarkdown } from '@/lib/format-summary'
 import {
   CheckCircle2Icon,
   ClockIcon,
@@ -27,72 +28,6 @@ interface WeeklySummaryDialogProps {
   summary: WeeklySummary | null
   isGenerating: boolean
   error: string | null
-}
-
-function formatSummaryAsText(summary: WeeklySummary): string {
-  const lines: string[] = []
-  lines.push(
-    `Weekly Summary (${summary.dateRange.from} - ${summary.dateRange.to})`,
-  )
-  lines.push('')
-
-  if (summary.shipped.length > 0) {
-    lines.push('What shipped:')
-    for (const item of summary.shipped) {
-      lines.push(`  - ${item}`)
-    }
-    lines.push('')
-  }
-
-  if (summary.inProgress.length > 0) {
-    lines.push("What's in progress:")
-    for (const item of summary.inProgress) {
-      lines.push(`  - ${item}`)
-    }
-    lines.push('')
-  }
-
-  if (summary.keyDecisions.length > 0) {
-    lines.push('Key decisions:')
-    for (const item of summary.keyDecisions) {
-      lines.push(`  - ${item}`)
-    }
-  }
-
-  return lines.join('\n')
-}
-
-function formatSummaryAsMarkdown(summary: WeeklySummary): string {
-  const lines: string[] = []
-  lines.push(
-    `## Weekly Summary (${summary.dateRange.from} \u2014 ${summary.dateRange.to})`,
-  )
-  lines.push('')
-
-  if (summary.shipped.length > 0) {
-    lines.push('### What shipped')
-    for (const item of summary.shipped) {
-      lines.push(`- ${item}`)
-    }
-    lines.push('')
-  }
-
-  if (summary.inProgress.length > 0) {
-    lines.push("### What's in progress")
-    for (const item of summary.inProgress) {
-      lines.push(`- ${item}`)
-    }
-    lines.push('')
-  }
-
-  if (summary.keyDecisions.length > 0) {
-    lines.push('### Key decisions')
-    for (const item of summary.keyDecisions) {
-      lines.push(`- ${item}`)
-    }
-  }
-
-  return lines.join('\n')
 }
 
 function SummarySection({
@@ -153,9 +88,13 @@ export function WeeklySummaryDialog({
         format === 'markdown'
           ? formatSummaryAsMarkdown(summary)
           : formatSummaryAsText(summary)
-      await navigator.clipboard.writeText(content)
-      setCopied(format)
-      setTimeout(() => setCopied(null), 2000)
+      try {
+        await navigator.clipboard.writeText(content)
+        setCopied(format)
+        setTimeout(() => setCopied(null), 2000)
+      } catch {
+        // Clipboard API not available or page unfocused
+      }
     },
     [summary],
   )

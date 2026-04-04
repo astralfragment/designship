@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useAuth } from '@/lib/auth'
 import {
   fetchSummaries,
   saveSummary,
@@ -10,9 +11,12 @@ import type { WeeklySummary } from '@/lib/ai'
 const SUMMARIES_KEY = ['summaries'] as const
 
 export function useSummaries() {
+  const { user } = useAuth()
+
   return useQuery<StoredSummary[]>({
     queryKey: SUMMARIES_KEY,
     queryFn: fetchSummaries,
+    enabled: !!user,
   })
 }
 

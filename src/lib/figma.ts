@@ -198,12 +198,12 @@ export function validateOAuthState(state: string): boolean {
 export const exchangeFigmaCode = createServerFn({ method: 'POST' })
   .inputValidator((d: { code: string; redirectUri: string }) => d)
   .handler(async ({ data }): Promise<{ access_token: string }> => {
-    const clientId = process.env.VITE_FIGMA_CLIENT_ID
+    const clientId = process.env.FIGMA_CLIENT_ID
     const clientSecret = process.env.FIGMA_CLIENT_SECRET
 
     if (!clientId || !clientSecret) {
       throw new Error(
-        'Figma OAuth credentials not configured. Set VITE_FIGMA_CLIENT_ID and FIGMA_CLIENT_SECRET.',
+        'Figma OAuth credentials not configured. Set FIGMA_CLIENT_ID and FIGMA_CLIENT_SECRET.',
       )
     }
 
