@@ -9,6 +9,7 @@ build/
 .output/
 .vinxi/
 .vercel/
+app.config.timestamp_*
 
 # Environment
 .env

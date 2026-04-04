@@ -11,12 +11,12 @@ start)
   echo "  DesignShip — MVP Build"
   echo "  ======================="
   echo "  Plan: docs/plans/designship-mvp.md"
-  echo "  Dashboard: http://localhost:8080"
+  echo "  Dashboard: http://localhost:8181"
   echo ""
   echo "  Ctrl+\\ to pause and steer"
   echo "  Ctrl+C to abort"
   echo ""
-  ralphex --serve --port 8080 --session-timeout 45m --idle-timeout 15m \
+  ralphex --serve --port 8181 --session-timeout 45m --idle-timeout 15m \
     docs/plans/designship-mvp.md
   ;;
 
@@ -44,7 +44,7 @@ status)
 
 dashboard)
   echo "Starting dashboard only..."
-  ralphex --serve --port 8080 --watch "C:\Users\char\Desktop\designship"
+  ralphex --serve --port 8181 --watch "C:\Users\char\Desktop\designship"
   ;;
 
 *)

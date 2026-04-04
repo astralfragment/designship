@@ -1,0 +1,39 @@
+{
+  "name": "designship",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vinxi dev",
+    "build": "vinxi build",
+    "start": "vinxi start",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.96.2",
+    "@tanstack/react-router": "1.120.20",
+    "@tanstack/start": "1.120.20",
+    "clsx": "^2.1.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "tailwind-merge": "^3.5.0",
+    "vinxi": "^0.5.11"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.2.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "tailwindcss": "^4.2.2",
+    "typescript": "^6.0.2",
+    "vite": "^6.4.1"
+  },
+  "overrides": {
+    "@tanstack/router-generator": "1.120.20",
+    "@tanstack/router-plugin": "1.120.20",
+    "@tanstack/react-start-plugin": "1.120.17",
+    "@tanstack/start-plugin-core": "1.120.17",
+    "@tanstack/server-functions-plugin": "1.120.17",
+    "@tanstack/directive-functions-plugin": "1.120.17",
+    "@tanstack/start-config": "1.120.20"
+  }
+}
