@@ -42,8 +42,8 @@ export function FigmaThumbnails({ links }: FigmaThumbnailsProps) {
           <LoaderCircleIcon className="size-3 animate-spin" />
         </div>
         <div className="flex gap-2">
-          <Skeleton className="h-20 w-32 rounded-md" />
-          {hasMultiple && <Skeleton className="h-20 w-32 rounded-md" />}
+          <Skeleton className="h-16 w-24 rounded-md sm:h-20 sm:w-32" />
+          {hasMultiple && <Skeleton className="h-16 w-24 rounded-md sm:h-20 sm:w-32" />}
         </div>
       </div>
     )
@@ -116,7 +116,7 @@ function FigmaThumbnailItem({
   }
 
   if (link.loading) {
-    return <Skeleton className="h-20 w-32 rounded-md" />
+    return <Skeleton className="h-16 w-24 rounded-md sm:h-20 sm:w-32" />
   }
 
   return (
@@ -140,7 +140,7 @@ function FigmaThumbnailItem({
       <img
         src={link.screenshotUrl}
         alt="Figma design preview"
-        className="h-20 w-32 object-cover object-top"
+        className="h-16 w-24 object-cover object-top sm:h-20 sm:w-32"
         onError={() => setImgError(true)}
       />
       <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover/thumb:bg-black/20">
@@ -192,7 +192,7 @@ function FigmaPreviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[calc(100%-2rem)] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <PencilRulerIcon className="size-4" />
@@ -245,7 +245,7 @@ function FigmaPreviewDialog({
 
         {compareMode && screenshotLinks.length >= 2 ? (
           <div className="space-y-2">
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <div className="space-y-1">
                 <span className="text-[10px] font-medium text-ds-text-tertiary uppercase">
                   Before

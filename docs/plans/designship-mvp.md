@@ -155,14 +155,14 @@
 
 ## Phase 6: Polish & Deploy
 
-- [ ] **Task 16: Responsive design + mobile optimization**
+- [x] **Task 16: Responsive design + mobile optimization**
   - Skills: `audit-ui`, `refactoring-ui`
-  - Test all views on mobile viewport (375px)
-  - Timeline entries stack vertically on mobile
-  - Touch-friendly tap targets (min 44px)
-  - Bottom sheet for entry details on mobile
-  - Test on tablet viewport (768px)
-  - Run accessibility audit (WCAG AA compliance)
+  - [x] Test all views on mobile viewport (375px)
+  - [x] Timeline entries stack vertically on mobile
+  - [x] Touch-friendly tap targets (min 44px)
+  - [x] Bottom sheet for entry details on mobile
+  - [x] Test on tablet viewport (768px)
+  - [x] Run accessibility audit (WCAG AA compliance)
 
 - [ ] **Task 17: Loading states + error handling**
   - Skills: `systematic-debugging`, `verification-before-completion`

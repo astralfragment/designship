@@ -35,7 +35,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen flex-col bg-ds-surface-0">
-      <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border/40 bg-ds-surface-0/80 px-4 backdrop-blur-sm sm:px-6">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground focus:shadow-lg"
+      >
+        Skip to content
+      </a>
+      <header role="banner" className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border/40 bg-ds-surface-0/80 px-4 backdrop-blur-sm sm:px-6">
         <div className="flex items-center gap-3">
           {/* Mobile menu */}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -51,17 +57,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <SheetHeader>
                 <SheetTitle>DesignShip</SheetTitle>
               </SheetHeader>
-              <nav className="flex flex-col gap-1 px-4">
+              <nav className="flex flex-col gap-1 px-4" role="navigation" aria-label="Mobile navigation">
                 <Link
                   to="/"
-                  className="rounded-md px-3 py-2 text-sm text-ds-text-secondary hover:bg-accent hover:text-accent-foreground [&.active]:text-ds-text-primary"
+                  className="rounded-md px-3 py-3 text-sm text-ds-text-secondary hover:bg-accent hover:text-accent-foreground [&.active]:text-ds-text-primary"
                   onClick={() => setMobileOpen(false)}
                 >
                   Timeline
                 </Link>
                 <Link
                   to="/summaries"
-                  className="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm text-ds-text-secondary hover:bg-accent hover:text-accent-foreground [&.active]:text-ds-text-primary"
+                  className="inline-flex items-center gap-1.5 rounded-md px-3 py-3 text-sm text-ds-text-secondary hover:bg-accent hover:text-accent-foreground [&.active]:text-ds-text-primary"
                   onClick={() => setMobileOpen(false)}
                 >
                   <FileTextIcon className="size-3.5" />
@@ -75,7 +81,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             DesignShip
           </Link>
 
-          <nav className="ml-6 hidden items-center gap-1 sm:flex">
+          <nav className="ml-6 hidden items-center gap-1 sm:flex" role="navigation" aria-label="Main navigation">
             <Link
               to="/"
               className="rounded-md px-3 py-1.5 text-sm text-ds-text-secondary transition-colors hover:bg-accent hover:text-accent-foreground [&.active]:text-ds-text-primary"
@@ -123,7 +129,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="flex-1">{children}</main>
+      <main id="main-content" className="flex-1">{children}</main>
     </div>
   )
 }

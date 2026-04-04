@@ -3,6 +3,12 @@ import { cn } from '@/lib/utils'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
+import {
   GitMergeIcon,
   GitCommitVerticalIcon,
   RocketIcon,
@@ -17,6 +23,7 @@ import {
 import type { ViewMode } from '@/lib/ai'
 import type { TimelineEvent, TimelineEventType } from './types'
 import type { FigmaLinkWithScreenshot } from '@/hooks/use-figma'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { relativeTime, eventTypeConfig } from './utils'
 import { FigmaThumbnails } from './figma-preview'
 
@@ -41,12 +48,17 @@ export function TimelineEntry({
   figmaLinks?: FigmaLinkWithScreenshot[]
 }) {
   const [expanded, setExpanded] = useState(false)
+  const isMobile = useIsMobile()
   const config = eventTypeConfig[event.type]
   const Icon = eventIcons[event.type]
   const isStakeholder = viewMode === 'stakeholder'
 
+  const handleToggle = () => {
+    setExpanded((v) => !v)
+  }
+
   return (
-    <div className="group relative flex gap-4 animate-ds-slide-up">
+    <div className="group relative flex gap-3 animate-ds-slide-up sm:gap-4">
       {/* Left rail: dot + connector */}
       <div className="flex flex-col items-center">
         <div
@@ -63,20 +75,21 @@ export function TimelineEntry({
       </div>
 
       {/* Content card */}
-      <div className="mb-6 flex-1 pb-2">
+      <div className="mb-6 min-w-0 flex-1 pb-2">
         <button
           type="button"
-          onClick={() => setExpanded((v) => !v)}
+          onClick={handleToggle}
+          aria-expanded={expanded}
           className={cn(
-            'w-full rounded-lg border border-border/40 bg-card p-4 text-left transition-colors',
+            'w-full min-h-[44px] rounded-lg border border-border/40 bg-card p-3 text-left transition-colors sm:p-4',
             'hover:border-border/70 hover:bg-card/80',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
           )}
         >
           {/* Header row */}
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex-1 space-y-1">
-              <div className="flex items-center gap-2">
+          <div className="flex items-start justify-between gap-2 sm:gap-3">
+            <div className="min-w-0 flex-1 space-y-1">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                 {!isStakeholder && (
                   <Badge variant="secondary" className="text-[10px] font-medium uppercase tracking-wider">
                     {config.label}
@@ -123,8 +136,8 @@ export function TimelineEntry({
             <FigmaThumbnails links={figmaLinks} />
           )}
 
-          {/* Expanded detail */}
-          {expanded && (
+          {/* Expanded detail — inline on desktop */}
+          {expanded && !isMobile && (
             <EntryDetail
               event={event}
               rewrittenDescription={rewrittenDescription}
@@ -132,6 +145,43 @@ export function TimelineEntry({
             />
           )}
         </button>
+
+        {/* Bottom sheet detail — mobile only */}
+        {isMobile && (
+          <Sheet open={expanded} onOpenChange={setExpanded}>
+            <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto rounded-t-xl">
+              <SheetHeader>
+                <SheetTitle className="flex items-center gap-2 text-sm">
+                  <div
+                    className={cn(
+                      'flex size-6 items-center justify-center rounded-full',
+                      config.dotClass,
+                    )}
+                  >
+                    <Icon className="size-3 text-white" />
+                  </div>
+                  <span className="truncate">
+                    {isStakeholder && rewrittenDescription
+                      ? rewrittenDescription
+                      : event.title}
+                  </span>
+                </SheetTitle>
+              </SheetHeader>
+              <div className="px-4 pb-6">
+                <EntryDetail
+                  event={event}
+                  rewrittenDescription={rewrittenDescription}
+                  viewMode={viewMode}
+                />
+                {figmaLinks && figmaLinks.length > 0 && (
+                  <div className="mt-4">
+                    <FigmaThumbnails links={figmaLinks} />
+                  </div>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+        )}
       </div>
     </div>
   )

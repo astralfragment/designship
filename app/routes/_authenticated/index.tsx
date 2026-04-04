@@ -221,31 +221,38 @@ function HomePage() {
       </div>
 
       {/* Header */}
-      <div className="mb-8 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-ds-text-primary">
-            Timeline
-          </h1>
-          <p className="mt-1 text-sm text-ds-text-secondary">
-            {isStakeholder
-              ? 'What your team shipped, in plain English.'
-              : 'Your recent development activity at a glance.'}
-          </p>
+      <div className="mb-8 space-y-4">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-ds-text-primary">
+              Timeline
+            </h1>
+            <p className="mt-1 text-sm text-ds-text-secondary">
+              {isStakeholder
+                ? 'What your team shipped, in plain English.'
+                : 'Your recent development activity at a glance.'}
+            </p>
+          </div>
+          <div className="hidden items-center gap-2 sm:flex">
+            {(aiFetching || classifyFetching) && (
+              <LoaderCircleIcon className="size-3.5 animate-spin text-ds-text-tertiary" />
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleGenerateSummary}
+              disabled={loading || events.length === 0 || summaryGenerating}
+              className="gap-1.5 text-xs"
+            >
+              <FileTextIcon className="size-3.5" />
+              Weekly Summary
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {(aiFetching || classifyFetching) && (
-            <LoaderCircleIcon className="size-3.5 animate-spin text-ds-text-tertiary" />
+            <LoaderCircleIcon className="size-3.5 animate-spin text-ds-text-tertiary sm:hidden" />
           )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleGenerateSummary}
-            disabled={loading || events.length === 0 || summaryGenerating}
-            className="gap-1.5 text-xs"
-          >
-            <FileTextIcon className="size-3.5" />
-            Weekly Summary
-          </Button>
           <ViewToggle mode={viewMode} onChange={setViewMode} />
           <RepoSelector
             repos={repos ?? []}
@@ -253,6 +260,16 @@ function HomePage() {
             onSelect={setSelectedRepo}
             loading={reposLoading}
           />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleGenerateSummary}
+            disabled={loading || events.length === 0 || summaryGenerating}
+            className="gap-1.5 text-xs sm:hidden"
+          >
+            <FileTextIcon className="size-3.5" />
+            Summary
+          </Button>
         </div>
       </div>
 

@@ -33,7 +33,7 @@ export function RepoSelector({
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button variant="outline" size="default" className="gap-2 font-normal" />
+          <Button variant="outline" size="default" className="min-h-[44px] gap-2 font-normal sm:min-h-0" aria-label="Select repository" />
         }
       >
         <GitBranchIcon className="size-3.5 text-ds-text-tertiary" />
