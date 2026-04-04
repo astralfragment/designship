@@ -134,6 +134,7 @@ function HomePage() {
   const handleGenerateSummary = useCallback(() => {
     setSummaryOpen(true)
     setSummarySaved(false)
+    saveInitiated.current = false
     generateSummary()
   }, [generateSummary])
 
