@@ -1,14 +1,16 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { Timeline } from '../../components/timeline'
 import type { TimelineEvent } from '../../components/timeline'
 import { RepoSelector } from '../../components/repo-selector'
 import { useRepos, useMergedPRsPaginated } from '@/hooks/use-github'
+import { useAiRewrite } from '@/hooks/use-ai-rewrite'
 import { useAuth } from '@/lib/auth'
 import type { GitHubRepo, GitHubPR } from '@/lib/github'
-import { RefreshCwIcon } from 'lucide-react'
+import { RefreshCwIcon, BookOpenIcon, CodeIcon, LoaderCircleIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
 export const Route = createFileRoute('/_authenticated/')({
   component: HomePage,
@@ -46,6 +48,10 @@ function HomePage() {
   const { data: repos, isLoading: reposLoading } = useRepos()
 
   const [selectedRepo, setSelectedRepo] = useState<GitHubRepo | null>(null)
+  const [showPlainEnglish, setShowPlainEnglish] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem('ds-view-mode') === 'plain'
+  })
 
   // Default to first repo if none selected
   const activeRepo = selectedRepo ?? repos?.[0] ?? null
@@ -62,6 +68,18 @@ function HomePage() {
 
   const events: TimelineEvent[] =
     prPages?.pages.flatMap((page) => page.prs.map(prToTimelineEvent)) ?? []
+
+  // AI rewriting
+  const {
+    data: rewrittenDescriptions,
+    isLoading: aiLoading,
+    isFetching: aiFetching,
+  } = useAiRewrite(events, showPlainEnglish)
+
+  // Persist view mode preference
+  useEffect(() => {
+    localStorage.setItem('ds-view-mode', showPlainEnglish ? 'plain' : 'technical')
+  }, [showPlainEnglish])
 
   const loading = !githubToken || reposLoading || prsLoading
 
@@ -156,12 +174,32 @@ function HomePage() {
             Your recent development activity at a glance.
           </p>
         </div>
-        <RepoSelector
-          repos={repos ?? []}
-          selectedRepo={activeRepo}
-          onSelect={setSelectedRepo}
-          loading={reposLoading}
-        />
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowPlainEnglish((v) => !v)}
+            className={cn(
+              'gap-1.5 text-xs',
+              showPlainEnglish && 'border-primary/50 bg-primary/5 text-primary',
+            )}
+          >
+            {aiFetching ? (
+              <LoaderCircleIcon className="size-3.5 animate-spin" />
+            ) : showPlainEnglish ? (
+              <BookOpenIcon className="size-3.5" />
+            ) : (
+              <CodeIcon className="size-3.5" />
+            )}
+            {showPlainEnglish ? 'Plain English' : 'Technical'}
+          </Button>
+          <RepoSelector
+            repos={repos ?? []}
+            selectedRepo={activeRepo}
+            onSelect={setSelectedRepo}
+            loading={reposLoading}
+          />
+        </div>
       </div>
 
       {/* Timeline */}
@@ -171,6 +209,8 @@ function HomePage() {
         hasMore={!!hasNextPage}
         loadingMore={isFetchingNextPage}
         onLoadMore={() => fetchNextPage()}
+        rewrittenDescriptions={rewrittenDescriptions}
+        showPlainEnglish={showPlainEnglish}
       />
     </div>
   )

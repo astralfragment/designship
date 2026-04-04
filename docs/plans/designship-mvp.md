@@ -95,7 +95,7 @@
   - Infinite scroll or "Load more" for older entries
   - Pull-to-refresh on mobile
 
-- [ ] **Task 10: AI-powered description rewriting**
+- [x] **Task 10: AI-powered description rewriting**
   - Skills: `brainstorming`, `systematic-debugging`
   - Create `src/lib/ai.ts` — Claude API client (via Supabase Edge Function or API route)
   - Implement `rewriteForHumans(technicalText)` — converts commit messages and PR descriptions to plain English

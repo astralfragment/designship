@@ -11,6 +11,8 @@ interface TimelineProps {
   hasMore?: boolean
   loadingMore?: boolean
   onLoadMore?: () => void
+  rewrittenDescriptions?: Record<string, string>
+  showPlainEnglish?: boolean
 }
 
 export function Timeline({
@@ -19,6 +21,8 @@ export function Timeline({
   hasMore,
   loadingMore,
   onLoadMore,
+  rewrittenDescriptions,
+  showPlainEnglish,
 }: TimelineProps) {
   if (loading) {
     return <TimelineSkeleton />
@@ -35,6 +39,8 @@ export function Timeline({
           key={event.id}
           event={event}
           isLast={i === events.length - 1 && !hasMore}
+          rewrittenDescription={rewrittenDescriptions?.[event.id]}
+          showPlainEnglish={showPlainEnglish}
         />
       ))}
 

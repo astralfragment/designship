@@ -27,9 +27,13 @@ const eventIcons: Record<TimelineEventType, React.ElementType> = {
 export function TimelineEntry({
   event,
   isLast,
+  rewrittenDescription,
+  showPlainEnglish,
 }: {
   event: TimelineEvent
   isLast: boolean
+  rewrittenDescription?: string
+  showPlainEnglish?: boolean
 }) {
   const [expanded, setExpanded] = useState(false)
   const config = eventTypeConfig[event.type]
@@ -105,7 +109,13 @@ export function TimelineEntry({
           <EntryMetaBadges event={event} />
 
           {/* Expanded detail */}
-          {expanded && <EntryDetail event={event} />}
+          {expanded && (
+            <EntryDetail
+              event={event}
+              rewrittenDescription={rewrittenDescription}
+              showPlainEnglish={showPlainEnglish}
+            />
+          )}
         </button>
       </div>
     </div>
@@ -187,15 +197,25 @@ function EntryMetaBadges({ event }: { event: TimelineEvent }) {
   return null
 }
 
-function EntryDetail({ event }: { event: TimelineEvent }) {
+function EntryDetail({
+  event,
+  rewrittenDescription,
+  showPlainEnglish,
+}: {
+  event: TimelineEvent
+  rewrittenDescription?: string
+  showPlainEnglish?: boolean
+}) {
   return (
     <div
       className="mt-4 animate-ds-slide-down space-y-3 border-t border-border/40 pt-4"
       onClick={(e) => e.stopPropagation()}
     >
-      {event.description && (
+      {(event.description || rewrittenDescription) && (
         <p className="text-xs leading-relaxed text-ds-text-secondary whitespace-pre-wrap">
-          {event.description}
+          {showPlainEnglish && rewrittenDescription
+            ? rewrittenDescription
+            : event.description}
         </p>
       )}
 

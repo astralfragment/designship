@@ -1,0 +1,201 @@
+import { createServerFn } from '@tanstack/start-client-core'
+
+// --- Types ---
+
+export interface RewriteResult {
+  original: string
+  rewritten: string
+}
+
+// --- Cache ---
+
+const CACHE_PREFIX = 'ds-ai-cache:'
+
+function cacheKey(text: string): string {
+  let hash = 0
+  for (let i = 0; i < text.length; i++) {
+    hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0
+  }
+  return `${CACHE_PREFIX}${hash}`
+}
+
+function getCached(text: string): string | null {
+  if (typeof window === 'undefined') return null
+  return localStorage.getItem(cacheKey(text))
+}
+
+function setCache(text: string, rewritten: string): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(cacheKey(text), rewritten)
+  } catch {
+    clearOldCache()
+    try {
+      localStorage.setItem(cacheKey(text), rewritten)
+    } catch {
+      // still full, skip caching
+    }
+  }
+}
+
+function clearOldCache(): void {
+  const keys: string[] = []
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
+    if (key?.startsWith(CACHE_PREFIX)) keys.push(key)
+  }
+  const toRemove = keys.slice(0, Math.ceil(keys.length / 2))
+  for (const key of toRemove) {
+    localStorage.removeItem(key)
+  }
+}
+
+// --- Server function ---
+
+const rewriteOnServer = createServerFn({ method: 'POST' })
+  .inputValidator((d: { texts: string[] }) => d)
+  .handler(async ({ data }): Promise<string[]> => {
+    const apiKey = process.env.ANTHROPIC_API_KEY
+    if (!apiKey) {
+      throw new Error(
+        'ANTHROPIC_API_KEY is not configured. Set it in your environment variables.',
+      )
+    }
+
+    const { texts } = data as { texts: string[] }
+
+    if (texts.length === 0) return []
+
+    const numbered = texts
+      .map((t: string, i: number) => `[${i + 1}] ${t}`)
+      .join('\n\n')
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2048,
+        messages: [
+          {
+            role: 'user',
+            content: `You are a technical writer for a software team. Rewrite the following technical PR descriptions and commit messages into plain English that a non-technical stakeholder can understand.
+
+Rules:
+- Keep each rewrite concise (1-2 sentences max)
+- Focus on WHAT changed and WHY it matters, not HOW
+- No technical jargon (no "refactor", "endpoint", "API", "merge", "branch", etc.)
+- Use active voice
+- If the original is empty or unclear, write "Minor update"
+- Return ONLY the numbered rewrites in the same [N] format, nothing else
+
+${numbered}`,
+          },
+        ],
+      }),
+    })
+
+    if (!res.ok) {
+      const body = await res.text()
+      throw new Error(`Claude API error: ${res.status} ${body}`)
+    }
+
+    const json = (await res.json()) as {
+      content: Array<{ type: string; text: string }>
+    }
+
+    const responseText =
+      json.content.find((c) => c.type === 'text')?.text ?? ''
+
+    // Parse numbered responses: [1] text, [2] text, etc.
+    const parsed: string[] = []
+    const lines = responseText.split('\n')
+    let current = ''
+    let currentIdx = -1
+
+    for (const line of lines) {
+      const match = line.match(/^\[(\d+)\]\s*(.*)/)
+      if (match) {
+        if (currentIdx >= 0) {
+          parsed[currentIdx] = current.trim()
+        }
+        currentIdx = parseInt(match[1]!, 10) - 1
+        current = match[2] ?? ''
+      } else if (currentIdx >= 0) {
+        current += ' ' + line
+      }
+    }
+    if (currentIdx >= 0) {
+      parsed[currentIdx] = current.trim()
+    }
+
+    // Fill any gaps
+    return texts.map((_: string, i: number) => parsed[i] || 'Minor update')
+  })
+
+// --- Public API ---
+
+export async function rewriteForHumans(text: string): Promise<string> {
+  if (!text || text.trim().length === 0) return 'Minor update'
+
+  const cached = getCached(text)
+  if (cached) return cached
+
+  const results = await rewriteOnServer({ data: { texts: [text] } })
+  const rewritten = results[0] ?? 'Minor update'
+  setCache(text, rewritten)
+  return rewritten
+}
+
+export async function batchRewriteForHumans(
+  texts: string[],
+): Promise<RewriteResult[]> {
+  if (texts.length === 0) return []
+
+  const results: RewriteResult[] = texts.map((t) => ({
+    original: t,
+    rewritten: '',
+  }))
+
+  const uncachedIndices: number[] = []
+  const uncachedTexts: string[] = []
+
+  for (let i = 0; i < texts.length; i++) {
+    const text = texts[i]!
+    if (!text || text.trim().length === 0) {
+      results[i]!.rewritten = 'Minor update'
+      continue
+    }
+    const cached = getCached(text)
+    if (cached) {
+      results[i]!.rewritten = cached
+    } else {
+      uncachedIndices.push(i)
+      uncachedTexts.push(text)
+    }
+  }
+
+  if (uncachedTexts.length === 0) return results
+
+  const BATCH_SIZE = 10
+  for (let start = 0; start < uncachedTexts.length; start += BATCH_SIZE) {
+    const chunk = uncachedTexts.slice(start, start + BATCH_SIZE)
+    const chunkIndices = uncachedIndices.slice(start, start + BATCH_SIZE)
+
+    const rewritten = await rewriteOnServer({ data: { texts: chunk } })
+
+    for (let j = 0; j < chunkIndices.length; j++) {
+      const idx = chunkIndices[j]!
+      const text = chunk[j]!
+      const result = rewritten[j] || 'Minor update'
+      results[idx]!.rewritten = result
+      setCache(text, result)
+    }
+  }
+
+  return results
+}
