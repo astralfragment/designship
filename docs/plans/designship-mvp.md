@@ -31,7 +31,7 @@
   - Set up `src/styles/globals.css` with CSS custom properties for both light/dark
   - Animation utilities: subtle fade-in, slide-up for timeline entries
 
-- [ ] **Task 4: Set up Supabase client + Auth**
+- [x] **Task 4: Set up Supabase client + Auth**
   - Skills: `brainstorming`, `systematic-debugging`
   - Install `@supabase/supabase-js`, `@supabase/auth-helpers-react`
   - Create `src/lib/supabase.ts` client singleton

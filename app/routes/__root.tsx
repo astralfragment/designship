@@ -6,6 +6,7 @@ import {
   ScrollRestoration,
 } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
+import { AuthProvider } from '@/lib/auth'
 import appCss from '@/styles/globals.css?url'
 
 export const Route = createRootRoute({
@@ -38,7 +39,9 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <RootDocument>
-      <Outlet />
+      <AuthProvider>
+        <Outlet />
+      </AuthProvider>
     </RootDocument>
   )
 }
