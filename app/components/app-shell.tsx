@@ -107,10 +107,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <DropdownMenuContent align="end" sideOffset={8}>
               <DropdownMenuLabel>{fullName || 'Account'}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <SettingsIcon />
-                Settings
-              </DropdownMenuItem>
+              <Link to="/settings">
+                <DropdownMenuItem>
+                  <SettingsIcon />
+                  Settings
+                </DropdownMenuItem>
+              </Link>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => signOut()}>
                 <LogOutIcon />

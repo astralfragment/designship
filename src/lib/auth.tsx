@@ -10,17 +10,20 @@ import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from './supabase'
 
 const GITHUB_TOKEN_KEY = 'ds-github-token'
+const FIGMA_TOKEN_KEY = 'ds-figma-token'
 
 interface AuthState {
   user: User | null
   session: Session | null
   loading: boolean
   githubToken: string | null
+  figmaConnected: boolean
 }
 
 interface AuthContextValue extends AuthState {
   signInWithGitHub: () => Promise<void>
   signOut: () => Promise<void>
+  refreshFigmaStatus: () => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -33,6 +36,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     githubToken: typeof window !== 'undefined'
       ? localStorage.getItem(GITHUB_TOKEN_KEY)
       : null,
+    figmaConnected: typeof window !== 'undefined'
+      ? !!localStorage.getItem(FIGMA_TOKEN_KEY)
+      : false,
   })
 
   useEffect(() => {
@@ -47,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         githubToken:
           session?.provider_token ??
           localStorage.getItem(GITHUB_TOKEN_KEY),
+        figmaConnected: !!localStorage.getItem(FIGMA_TOKEN_KEY),
       })
     })
 
@@ -63,6 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         githubToken:
           session?.provider_token ??
           localStorage.getItem(GITHUB_TOKEN_KEY),
+        figmaConnected: !!localStorage.getItem(FIGMA_TOKEN_KEY),
       })
     })
 
@@ -81,12 +89,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     localStorage.removeItem(GITHUB_TOKEN_KEY)
+    localStorage.removeItem(FIGMA_TOKEN_KEY)
     await supabase.auth.signOut()
+  }, [])
+
+  const refreshFigmaStatus = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      figmaConnected: !!localStorage.getItem(FIGMA_TOKEN_KEY),
+    }))
   }, [])
 
   return (
     <AuthContext.Provider
-      value={{ ...state, signInWithGitHub, signOut }}
+      value={{ ...state, signInWithGitHub, signOut, refreshFigmaStatus }}
     >
       {children}
     </AuthContext.Provider>

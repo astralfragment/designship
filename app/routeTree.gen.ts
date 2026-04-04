@@ -15,7 +15,9 @@ import { Route as LoginImport } from './routes/login'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedSummariesImport } from './routes/_authenticated/summaries'
+import { Route as AuthenticatedSettingsImport } from './routes/_authenticated/settings'
 import { Route as AuthCallbackImport } from './routes/auth/callback'
+import { Route as AuthFigmaCallbackImport } from './routes/auth/figma-callback'
 
 // Create/Update Routes
 
@@ -42,9 +44,21 @@ const AuthenticatedSummariesRoute = AuthenticatedSummariesImport.update({
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 
+const AuthenticatedSettingsRoute = AuthenticatedSettingsImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+
 const AuthCallbackRoute = AuthCallbackImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const AuthFigmaCallbackRoute = AuthFigmaCallbackImport.update({
+  id: '/auth/figma-callback',
+  path: '/auth/figma-callback',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -73,6 +87,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackImport
       parentRoute: typeof rootRoute
     }
+    '/auth/figma-callback': {
+      id: '/auth/figma-callback'
+      path: '/auth/figma-callback'
+      fullPath: '/auth/figma-callback'
+      preLoaderRoute: typeof AuthFigmaCallbackImport
+      parentRoute: typeof rootRoute
+    }
     '/_authenticated/': {
       id: '/_authenticated/'
       path: '/'
@@ -87,6 +108,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSummariesImport
       parentRoute: typeof AuthenticatedImport
     }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsImport
+      parentRoute: typeof AuthenticatedImport
+    }
   }
 }
 
@@ -95,11 +123,13 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedSummariesRoute: typeof AuthenticatedSummariesRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedSummariesRoute: AuthenticatedSummariesRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -110,15 +140,19 @@ export interface FileRoutesByFullPath {
   '': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/figma-callback': typeof AuthFigmaCallbackRoute
   '/': typeof AuthenticatedIndexRoute
   '/summaries': typeof AuthenticatedSummariesRoute
+  '/settings': typeof AuthenticatedSettingsRoute
 }
 
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/figma-callback': typeof AuthFigmaCallbackRoute
   '/': typeof AuthenticatedIndexRoute
   '/summaries': typeof AuthenticatedSummariesRoute
+  '/settings': typeof AuthenticatedSettingsRoute
 }
 
 export interface FileRoutesById {
@@ -126,22 +160,26 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/figma-callback': typeof AuthFigmaCallbackRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/summaries': typeof AuthenticatedSummariesRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '' | '/login' | '/auth/callback' | '/' | '/summaries'
+  fullPaths: '' | '/login' | '/auth/callback' | '/auth/figma-callback' | '/' | '/summaries' | '/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/auth/callback' | '/' | '/summaries'
+  to: '/login' | '/auth/callback' | '/auth/figma-callback' | '/' | '/summaries' | '/settings'
   id:
     | '__root__'
     | '/_authenticated'
     | '/login'
     | '/auth/callback'
+    | '/auth/figma-callback'
     | '/_authenticated/'
     | '/_authenticated/summaries'
+    | '/_authenticated/settings'
   fileRoutesById: FileRoutesById
 }
 
@@ -149,12 +187,14 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  AuthFigmaCallbackRoute: typeof AuthFigmaCallbackRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  AuthFigmaCallbackRoute: AuthFigmaCallbackRoute,
 }
 
 export const routeTree = rootRoute
@@ -169,14 +209,16 @@ export const routeTree = rootRoute
       "children": [
         "/_authenticated",
         "/login",
-        "/auth/callback"
+        "/auth/callback",
+        "/auth/figma-callback"
       ]
     },
     "/_authenticated": {
       "filePath": "_authenticated.tsx",
       "children": [
         "/_authenticated/",
-        "/_authenticated/summaries"
+        "/_authenticated/summaries",
+        "/_authenticated/settings"
       ]
     },
     "/login": {
@@ -185,12 +227,19 @@ export const routeTree = rootRoute
     "/auth/callback": {
       "filePath": "auth/callback.tsx"
     },
+    "/auth/figma-callback": {
+      "filePath": "auth/figma-callback.tsx"
+    },
     "/_authenticated/": {
       "filePath": "_authenticated/index.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/summaries": {
       "filePath": "_authenticated/summaries.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/settings": {
+      "filePath": "_authenticated/settings.tsx",
       "parent": "/_authenticated"
     }
   }

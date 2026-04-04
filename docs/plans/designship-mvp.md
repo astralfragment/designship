@@ -135,14 +135,14 @@
 
 ## Phase 5: Figma Integration
 
-- [ ] **Task 14: Figma OAuth + API client**
+- [x] **Task 14: Figma OAuth + API client**
   - Skills: `brainstorming`, `systematic-debugging`
-  - Add Figma OAuth provider to Supabase Auth (or direct OAuth2 flow)
-  - Create `src/lib/figma.ts` — Figma REST API client
-  - Implement `fetchFileScreenshot(fileKey, nodeId)` — get design screenshots
-  - Implement `fetchRecentFiles()` — list user's recent Figma files
-  - Store Figma access token alongside GitHub token
-  - Settings page: "Connect Figma" button with OAuth flow
+  - [x] Add Figma OAuth provider to Supabase Auth (or direct OAuth2 flow)
+  - [x] Create `src/lib/figma.ts` — Figma REST API client
+  - [x] Implement `fetchFileScreenshot(fileKey, nodeId)` — get design screenshots
+  - [x] Implement `fetchRecentFiles()` — list user's recent Figma files
+  - [x] Store Figma access token alongside GitHub token
+  - [x] Settings page: "Connect Figma" button with OAuth flow
 
 - [ ] **Task 15: Figma activity in timeline**
   - Skills: `/cui`, `frontend-design`
