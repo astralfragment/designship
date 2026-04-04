@@ -42,7 +42,7 @@
 
 ## Phase 2: Authentication & GitHub Integration
 
-- [ ] **Task 5: Build GitHub OAuth login flow**
+- [x] **Task 5: Build GitHub OAuth login flow**
   - Skills: `frontend-design`, `/cui`
   - Create login page route (`/login`)
   - Design minimal login screen: centered card, GitHub OAuth button, tagline

@@ -10,8 +10,11 @@ function AuthCallback() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    supabase.auth.getSession().then(() => {
-      // Always navigate to root — auth guard (Task 6) handles unauthenticated redirect
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      // Capture GitHub provider token for API calls
+      if (session?.provider_token) {
+        localStorage.setItem('ds-github-token', session.provider_token)
+      }
       navigate({ to: '/' })
     })
   }, [navigate])

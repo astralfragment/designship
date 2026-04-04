@@ -9,10 +9,13 @@ import type { ReactNode } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from './supabase'
 
+const GITHUB_TOKEN_KEY = 'ds-github-token'
+
 interface AuthState {
   user: User | null
   session: Session | null
   loading: boolean
+  githubToken: string | null
 }
 
 interface AuthContextValue extends AuthState {
@@ -27,24 +30,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user: null,
     session: null,
     loading: true,
+    githubToken: typeof window !== 'undefined'
+      ? localStorage.getItem(GITHUB_TOKEN_KEY)
+      : null,
   })
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.provider_token) {
+        localStorage.setItem(GITHUB_TOKEN_KEY, session.provider_token)
+      }
       setState({
         user: session?.user ?? null,
         session,
         loading: false,
+        githubToken:
+          session?.provider_token ??
+          localStorage.getItem(GITHUB_TOKEN_KEY),
       })
     })
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.provider_token) {
+        localStorage.setItem(GITHUB_TOKEN_KEY, session.provider_token)
+      }
       setState({
         user: session?.user ?? null,
         session,
         loading: false,
+        githubToken:
+          session?.provider_token ??
+          localStorage.getItem(GITHUB_TOKEN_KEY),
       })
     })
 
@@ -62,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signOut = useCallback(async () => {
+    localStorage.removeItem(GITHUB_TOKEN_KEY)
     await supabase.auth.signOut()
   }, [])
 
