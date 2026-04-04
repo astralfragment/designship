@@ -14,10 +14,10 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as LoginImport } from './routes/login'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexImport } from './routes/_authenticated/index'
+import { Route as AuthFigmaCallbackImport } from './routes/auth/figma-callback'
+import { Route as AuthCallbackImport } from './routes/auth/callback'
 import { Route as AuthenticatedSummariesImport } from './routes/_authenticated/summaries'
 import { Route as AuthenticatedSettingsImport } from './routes/_authenticated/settings'
-import { Route as AuthCallbackImport } from './routes/auth/callback'
-import { Route as AuthFigmaCallbackImport } from './routes/auth/figma-callback'
 
 // Create/Update Routes
 
@@ -38,6 +38,18 @@ const AuthenticatedIndexRoute = AuthenticatedIndexImport.update({
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 
+const AuthFigmaCallbackRoute = AuthFigmaCallbackImport.update({
+  id: '/auth/figma-callback',
+  path: '/auth/figma-callback',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const AuthCallbackRoute = AuthCallbackImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const AuthenticatedSummariesRoute = AuthenticatedSummariesImport.update({
   id: '/summaries',
   path: '/summaries',
@@ -48,18 +60,6 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsImport.update({
   id: '/settings',
   path: '/settings',
   getParentRoute: () => AuthenticatedRoute,
-} as any)
-
-const AuthCallbackRoute = AuthCallbackImport.update({
-  id: '/auth/callback',
-  path: '/auth/callback',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const AuthFigmaCallbackRoute = AuthFigmaCallbackImport.update({
-  id: '/auth/figma-callback',
-  path: '/auth/figma-callback',
-  getParentRoute: () => rootRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
@@ -79,6 +79,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/login'
       preLoaderRoute: typeof LoginImport
       parentRoute: typeof rootRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/summaries': {
+      id: '/_authenticated/summaries'
+      path: '/summaries'
+      fullPath: '/summaries'
+      preLoaderRoute: typeof AuthenticatedSummariesImport
+      parentRoute: typeof AuthenticatedImport
     }
     '/auth/callback': {
       id: '/auth/callback'
@@ -101,35 +115,21 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexImport
       parentRoute: typeof AuthenticatedImport
     }
-    '/_authenticated/summaries': {
-      id: '/_authenticated/summaries'
-      path: '/summaries'
-      fullPath: '/summaries'
-      preLoaderRoute: typeof AuthenticatedSummariesImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsImport
-      parentRoute: typeof AuthenticatedImport
-    }
   }
 }
 
 // Create and export the route tree
 
 interface AuthenticatedRouteChildren {
-  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
-  AuthenticatedSummariesRoute: typeof AuthenticatedSummariesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedSummariesRoute: typeof AuthenticatedSummariesRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
-  AuthenticatedSummariesRoute: AuthenticatedSummariesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedSummariesRoute: AuthenticatedSummariesRoute,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -139,47 +139,60 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 export interface FileRoutesByFullPath {
   '': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/summaries': typeof AuthenticatedSummariesRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/figma-callback': typeof AuthFigmaCallbackRoute
   '/': typeof AuthenticatedIndexRoute
-  '/summaries': typeof AuthenticatedSummariesRoute
-  '/settings': typeof AuthenticatedSettingsRoute
 }
 
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/summaries': typeof AuthenticatedSummariesRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/figma-callback': typeof AuthFigmaCallbackRoute
   '/': typeof AuthenticatedIndexRoute
-  '/summaries': typeof AuthenticatedSummariesRoute
-  '/settings': typeof AuthenticatedSettingsRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/summaries': typeof AuthenticatedSummariesRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/figma-callback': typeof AuthFigmaCallbackRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
-  '/_authenticated/summaries': typeof AuthenticatedSummariesRoute
-  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '' | '/login' | '/auth/callback' | '/auth/figma-callback' | '/' | '/summaries' | '/settings'
+  fullPaths:
+    | ''
+    | '/login'
+    | '/settings'
+    | '/summaries'
+    | '/auth/callback'
+    | '/auth/figma-callback'
+    | '/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/auth/callback' | '/auth/figma-callback' | '/' | '/summaries' | '/settings'
+  to:
+    | '/login'
+    | '/settings'
+    | '/summaries'
+    | '/auth/callback'
+    | '/auth/figma-callback'
+    | '/'
   id:
     | '__root__'
     | '/_authenticated'
     | '/login'
+    | '/_authenticated/settings'
+    | '/_authenticated/summaries'
     | '/auth/callback'
     | '/auth/figma-callback'
     | '/_authenticated/'
-    | '/_authenticated/summaries'
-    | '/_authenticated/settings'
   fileRoutesById: FileRoutesById
 }
 
@@ -216,13 +229,21 @@ export const routeTree = rootRoute
     "/_authenticated": {
       "filePath": "_authenticated.tsx",
       "children": [
-        "/_authenticated/",
+        "/_authenticated/settings",
         "/_authenticated/summaries",
-        "/_authenticated/settings"
+        "/_authenticated/"
       ]
     },
     "/login": {
       "filePath": "login.tsx"
+    },
+    "/_authenticated/settings": {
+      "filePath": "_authenticated/settings.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/summaries": {
+      "filePath": "_authenticated/summaries.tsx",
+      "parent": "/_authenticated"
     },
     "/auth/callback": {
       "filePath": "auth/callback.tsx"
@@ -232,14 +253,6 @@ export const routeTree = rootRoute
     },
     "/_authenticated/": {
       "filePath": "_authenticated/index.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/summaries": {
-      "filePath": "_authenticated/summaries.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/settings": {
-      "filePath": "_authenticated/settings.tsx",
       "parent": "/_authenticated"
     }
   }

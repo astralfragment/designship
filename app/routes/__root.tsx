@@ -9,6 +9,7 @@ import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from '@/lib/auth'
+import { ThemeProvider, useThemeSetup } from '@/hooks/use-theme'
 import { ErrorBoundary } from '../components/error-boundary'
 import { ToastProvider } from '../components/toast'
 import { OfflineIndicator } from '../components/offline-indicator'
@@ -67,15 +68,19 @@ function RootComponent() {
     },
   }))
 
+  const themeCtx = useThemeSetup()
+
   return (
-    <RootDocument>
+    <RootDocument theme={themeCtx.theme}>
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
           <ToastProvider>
-            <AuthProvider>
-              <OfflineIndicator />
-              <Outlet />
-            </AuthProvider>
+            <ThemeProvider value={themeCtx}>
+              <AuthProvider>
+                <OfflineIndicator />
+                <Outlet />
+              </AuthProvider>
+            </ThemeProvider>
           </ToastProvider>
         </QueryClientProvider>
       </ErrorBoundary>
@@ -83,9 +88,9 @@ function RootComponent() {
   )
 }
 
-function RootDocument({ children }: { children: ReactNode }) {
+function RootDocument({ children, theme }: { children: ReactNode; theme: string }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className={theme}>
       <head>
         <HeadContent />
       </head>

@@ -173,14 +173,14 @@
   - [x] Offline indicator
   - [x] Rate limit handling for GitHub/Figma APIs
 
-- [ ] **Task 18: Dark/Light mode theming**
+- [x] **Task 18: Dark/Light mode theming**
   - Skills: `/rui`, `frontend-design`
-  - Dark mode is default (already designed)
-  - Add light mode color tokens
-  - Theme toggle in top bar (sun/moon icon)
-  - Persist theme preference in localStorage
-  - System preference detection as default
-  - Smooth transition between themes
+  - [x] Dark mode is default (already designed)
+  - [x] Add light mode color tokens
+  - [x] Theme toggle in top bar (sun/moon icon)
+  - [x] Persist theme preference in localStorage
+  - [x] System preference detection as default
+  - [x] Smooth transition between themes
 
 - [ ] **Task 19: Deploy to Vercel**
   - Skills: `verification-before-completion`

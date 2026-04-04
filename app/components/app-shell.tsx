@@ -19,6 +19,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { LogOutIcon, MenuIcon, SettingsIcon, FileTextIcon } from 'lucide-react'
+import { ThemeToggle } from './theme-toggle'
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth()
@@ -99,6 +100,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
