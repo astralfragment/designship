@@ -82,7 +82,7 @@
   - Skeleton loading state for timeline entries
   - Empty state: "Connect a repo to see your activity"
 
-- [ ] **Task 9: Build Timeline page + data flow**
+- [x] **Task 9: Build Timeline page + data flow**
   - Skills: `/cui`, `refactoring-ui`
   - Create dashboard route (`/`) — the main timeline view
   - Repo selector dropdown at top (fetched from GitHub API)

@@ -144,6 +144,11 @@ export async function fetchUserRepos(
   return repos
 }
 
+export interface PRPage {
+  prs: GitHubPR[]
+  nextPage: number | null
+}
+
 export async function fetchMergedPRs(
   owner: string,
   repo: string,
@@ -184,6 +189,37 @@ export async function fetchMergedPRs(
   }
 
   return prs
+}
+
+const PR_PAGE_SIZE = 15
+
+export async function fetchMergedPRsPage(
+  owner: string,
+  repo: string,
+  page: number,
+  token?: string | null,
+): Promise<PRPage> {
+  const batch = await githubFetch<GitHubPR[]>(
+    `/repos/${owner}/${repo}/pulls`,
+    {
+      token,
+      params: {
+        state: 'closed',
+        sort: 'updated',
+        direction: 'desc',
+        per_page: PR_PAGE_SIZE,
+        page,
+      },
+    },
+  )
+
+  const merged = batch.filter((pr) => pr.merged_at !== null)
+  const hasMore = batch.length === PR_PAGE_SIZE
+
+  return {
+    prs: merged,
+    nextPage: hasMore ? page + 1 : null,
+  }
 }
 
 export async function fetchCommits(
