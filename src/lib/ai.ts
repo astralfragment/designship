@@ -78,6 +78,10 @@ const rewriteOnServer = createServerFn({ method: 'POST' })
     if (!Array.isArray(obj.texts) || !obj.texts.every((t: unknown) => typeof t === 'string')) {
       throw new Error('Invalid input: expected { texts: string[] }')
     }
+    if (obj.texts.length > 100) throw new Error('Too many items: maximum 100 texts per request')
+    for (const t of obj.texts as string[]) {
+      if (t.length > 5000) throw new Error('Text too long: maximum 5000 characters per item')
+    }
     return obj as { texts: string[] }
   })
   .handler(async ({ data }): Promise<string[]> => {
@@ -172,6 +176,7 @@ const classifyOnServer = createServerFn({ method: 'POST' })
     if (!Array.isArray(obj.entries)) {
       throw new Error('Invalid input: expected { entries: Array<{ id, title, description }> }')
     }
+    if (obj.entries.length > 100) throw new Error('Too many items: maximum 100 entries per request')
     return obj as { entries: Array<{ id: string; title: string; description: string | null }> }
   })
   .handler(async ({ data }): Promise<ClassifyResult[]> => {
@@ -260,6 +265,7 @@ const generateSummaryOnServer = createServerFn({ method: 'POST' })
     if (!Array.isArray(obj.entries)) {
       throw new Error('Invalid input: expected { entries: Array<{ title, description, date }> }')
     }
+    if (obj.entries.length > 200) throw new Error('Too many items: maximum 200 entries per request')
     return obj as { entries: Array<{ title: string; description: string | null; date: string }> }
   })
   .handler(async ({ data }): Promise<{ shipped: string[]; inProgress: string[]; keyDecisions: string[] }> => {

@@ -176,7 +176,7 @@ function HomePage() {
     localStorage.setItem('ds-view-mode', viewMode)
   }, [viewMode])
 
-  const loading = !githubToken || reposLoading || prsLoading
+  const loading = !githubToken || reposLoading || (!!activeRepo && prsLoading)
 
   // Pull-to-refresh state
   const [pullDistance, setPullDistance] = useState(0)
