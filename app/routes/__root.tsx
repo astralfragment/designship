@@ -5,7 +5,9 @@ import {
   Scripts,
   ScrollRestoration,
 } from '@tanstack/react-router'
+import { useState } from 'react'
 import type { ReactNode } from 'react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from '@/lib/auth'
 import appCss from '@/styles/globals.css?url'
 
@@ -37,11 +39,22 @@ export const Route = createRootRoute({
 })
 
 function RootComponent() {
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: 1,
+        refetchOnWindowFocus: false,
+      },
+    },
+  }))
+
   return (
     <RootDocument>
-      <AuthProvider>
-        <Outlet />
-      </AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <Outlet />
+        </AuthProvider>
+      </QueryClientProvider>
     </RootDocument>
   )
 }

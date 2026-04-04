@@ -61,7 +61,7 @@
   - Implement sign-out flow
   - Route guard redirects to `/login` if unauthenticated
 
-- [ ] **Task 7: GitHub API client + PR fetching**
+- [x] **Task 7: GitHub API client + PR fetching**
   - Skills: `brainstorming`, `test-driven-development`
   - Create `src/lib/github.ts` — GitHub REST API client using user's OAuth token
   - Implement `fetchMergedPRs(owner, repo, since)` — fetch recent merged PRs
