@@ -1,15 +1,53 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Timeline } from '../../components/timeline'
+import type { TimelineEvent } from '../../components/timeline'
+import { useRepos, useMergedPRs } from '@/hooks/use-github'
+import { useAuth } from '@/lib/auth'
+import type { GitHubPR } from '@/lib/github'
 
 export const Route = createFileRoute('/_authenticated/')({
   component: HomePage,
 })
 
+function prToTimelineEvent(pr: GitHubPR): TimelineEvent {
+  return {
+    id: `pr-${pr.id}`,
+    type: 'pr_merged',
+    title: pr.title,
+    description: pr.body,
+    timestamp: pr.merged_at ?? pr.updated_at,
+    url: pr.html_url,
+    author: {
+      name: pr.user.login,
+      avatarUrl: pr.user.avatar_url,
+    },
+    metadata: {
+      type: 'pr_merged',
+      number: pr.number,
+      branch: pr.head.ref,
+      baseBranch: pr.base.ref,
+      reviewCount: pr.review_comments,
+      filesChanged: pr.changed_files,
+      additions: pr.additions,
+      deletions: pr.deletions,
+      labels: pr.labels,
+    },
+  }
+}
+
 function HomePage() {
+  const { githubToken } = useAuth()
+  const { data: repos, isLoading: reposLoading } = useRepos()
+
+  const topRepo = repos?.[0]
+  const [owner, repo] = topRepo?.full_name.split('/') ?? []
+
+  const { data: prs, isLoading: prsLoading } = useMergedPRs(owner ?? '', repo ?? '')
+
+  const events: TimelineEvent[] = (prs ?? []).map(prToTimelineEvent)
+
+  const loading = !githubToken || reposLoading || prsLoading
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
       <div className="mb-8">
@@ -21,33 +59,7 @@ function HomePage() {
         </p>
       </div>
 
-      <div className="space-y-4">
-        <Card className="animate-ds-slide-up">
-          <CardHeader>
-            <CardTitle>Activity Feed</CardTitle>
-            <CardDescription>Connect a repo to see your activity.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Separator />
-            <div className="flex items-center gap-3">
-              <div className="size-2.5 rounded-full bg-ds-timeline-dot-pr" />
-              <Skeleton className="h-3 w-3/4" />
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="size-2.5 rounded-full bg-ds-timeline-dot-commit" />
-              <Skeleton className="h-3 w-2/3" />
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="size-2.5 rounded-full bg-ds-timeline-dot-deploy" />
-              <Skeleton className="h-3 w-1/2" />
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="size-2.5 rounded-full bg-ds-timeline-dot-design" />
-              <Skeleton className="h-3 w-2/5" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <Timeline events={events} loading={loading} />
     </div>
   )
 }

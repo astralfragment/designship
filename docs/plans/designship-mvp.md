@@ -72,7 +72,7 @@
 
 ## Phase 3: Timeline — The Core UI
 
-- [ ] **Task 8: Design the Timeline component**
+- [x] **Task 8: Design the Timeline component**
   - Skills: `/iui`, `frontend-design`, `ui-ux-design-pro`
   - Browse shadcn studio blocks for timeline/feed inspiration
   - Design TimelineEntry component: dot + connector line + content card
