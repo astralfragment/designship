@@ -79,8 +79,10 @@ function HomePage() {
     error: prsError,
   } = useMergedPRsPaginated(owner ?? '', repo ?? '')
 
-  const events: TimelineEvent[] =
-    prPages?.pages.flatMap((page) => page.prs.map(prToTimelineEvent)) ?? []
+  const events: TimelineEvent[] = useMemo(
+    () => prPages?.pages.flatMap((page) => page.prs.map(prToTimelineEvent)) ?? [],
+    [prPages],
+  )
 
   const isStakeholder = viewMode === 'stakeholder'
 

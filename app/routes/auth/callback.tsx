@@ -10,9 +10,13 @@ function AuthCallback() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error || !session) {
+        navigate({ to: '/login' })
+        return
+      }
       // Capture GitHub provider token for API calls
-      if (session?.provider_token) {
+      if (session.provider_token) {
         localStorage.setItem('ds-github-token', session.provider_token)
       }
       navigate({ to: '/' })
