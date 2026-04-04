@@ -96,10 +96,10 @@ export interface GitHubPR {
   user: { login: string; avatar_url: string }
   head: { ref: string }
   base: { ref: string }
-  changed_files: number
-  additions: number
-  deletions: number
-  review_comments: number
+  changed_files?: number
+  additions?: number
+  deletions?: number
+  review_comments?: number
   labels: Array<{ name: string; color: string }>
 }
 
