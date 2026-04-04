@@ -52,7 +52,7 @@
   - Handle auth callback route
   - Redirect to dashboard on success
 
-- [ ] **Task 6: Build auth guard + navigation shell**
+- [x] **Task 6: Build auth guard + navigation shell**
   - Skills: `/cui`, `ui-ux-design-pro`
   - Create auth-protected route layout
   - Build minimal app shell: sidebar-free, top-bar only
