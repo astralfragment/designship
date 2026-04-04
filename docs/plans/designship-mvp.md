@@ -22,7 +22,7 @@
   - Set up `src/lib/utils.ts` with `cn()` helper
   - Verify components render in dark mode
 
-- [ ] **Task 3: Configure Tailwind + Design Tokens**
+- [x] **Task 3: Configure Tailwind + Design Tokens**
   - Skills: `frontend-design`, `ui-ux-design-pro`
   - Extend Tailwind config with DesignShip design tokens (`--ds-*` prefix)
   - Color palette: slate-based dark theme (inspired by Linear/Vercel)
