@@ -84,10 +84,14 @@ function SummaryCard({
         format === 'markdown'
           ? formatSummaryAsMarkdown(summary)
           : formatSummaryAsText(summary)
-      await navigator.clipboard.writeText(content)
-      setCopied(format)
-      toast(format === 'markdown' ? 'Copied as Markdown' : 'Copied for Slack', 'success')
-      setTimeout(() => setCopied(null), 2000)
+      try {
+        await navigator.clipboard.writeText(content)
+        setCopied(format)
+        toast(format === 'markdown' ? 'Copied as Markdown' : 'Copied for Slack', 'success')
+        setTimeout(() => setCopied(null), 2000)
+      } catch {
+        toast('Failed to copy to clipboard', 'error')
+      }
     },
     [summary, toast],
   )

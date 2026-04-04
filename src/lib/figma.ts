@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/start-client-core'
+import { FIGMA_TOKEN_KEY } from './auth'
 
 const FIGMA_API = 'https://api.figma.com/v1'
-const FIGMA_TOKEN_KEY = 'ds-figma-token'
 
 function getToken(): string | null {
   return typeof window !== 'undefined'

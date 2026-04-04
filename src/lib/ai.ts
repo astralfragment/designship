@@ -72,7 +72,13 @@ function clearOldCache(): void {
 // --- Server function ---
 
 const rewriteOnServer = createServerFn({ method: 'POST' })
-  .inputValidator((d: { texts: string[] }) => d)
+  .inputValidator((d: unknown) => {
+    const obj = d as Record<string, unknown>
+    if (!obj || !Array.isArray(obj.texts) || !obj.texts.every((t: unknown) => typeof t === 'string')) {
+      throw new Error('Invalid input: expected { texts: string[] }')
+    }
+    return obj as { texts: string[] }
+  })
   .handler(async ({ data }): Promise<string[]> => {
     const apiKey = process.env.ANTHROPIC_API_KEY
     if (!apiKey) {
@@ -81,7 +87,7 @@ const rewriteOnServer = createServerFn({ method: 'POST' })
       )
     }
 
-    const { texts } = data as { texts: string[] }
+    const { texts } = data
 
     if (texts.length === 0) return []
 
@@ -159,7 +165,13 @@ ${numbered}`,
 // --- Classify server function ---
 
 const classifyOnServer = createServerFn({ method: 'POST' })
-  .inputValidator((d: { entries: Array<{ id: string; title: string; description: string | null }> }) => d)
+  .inputValidator((d: unknown) => {
+    const obj = d as Record<string, unknown>
+    if (!obj || !Array.isArray(obj.entries)) {
+      throw new Error('Invalid input: expected { entries: Array<{ id, title, description }> }')
+    }
+    return obj as { entries: Array<{ id: string; title: string; description: string | null }> }
+  })
   .handler(async ({ data }): Promise<ClassifyResult[]> => {
     const apiKey = process.env.ANTHROPIC_API_KEY
     if (!apiKey) {
@@ -168,7 +180,7 @@ const classifyOnServer = createServerFn({ method: 'POST' })
       )
     }
 
-    const { entries } = data as { entries: Array<{ id: string; title: string; description: string | null }> }
+    const { entries } = data
 
     if (entries.length === 0) return []
 
@@ -240,9 +252,13 @@ ${numbered}`,
 // --- Weekly summary server function ---
 
 const generateSummaryOnServer = createServerFn({ method: 'POST' })
-  .inputValidator(
-    (d: { entries: Array<{ title: string; description: string | null; date: string }> }) => d,
-  )
+  .inputValidator((d: unknown) => {
+    const obj = d as Record<string, unknown>
+    if (!obj || !Array.isArray(obj.entries)) {
+      throw new Error('Invalid input: expected { entries: Array<{ title, description, date }> }')
+    }
+    return obj as { entries: Array<{ title: string; description: string | null; date: string }> }
+  })
   .handler(async ({ data }): Promise<{ shipped: string[]; inProgress: string[]; keyDecisions: string[] }> => {
     const apiKey = process.env.ANTHROPIC_API_KEY
     if (!apiKey) {
@@ -251,9 +267,7 @@ const generateSummaryOnServer = createServerFn({ method: 'POST' })
       )
     }
 
-    const { entries } = data as {
-      entries: Array<{ title: string; description: string | null; date: string }>
-    }
+    const { entries } = data
 
     if (entries.length === 0) {
       return { shipped: ['No activity this week'], inProgress: [], keyDecisions: [] }

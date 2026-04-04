@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import type { WeeklySummary } from '@/lib/ai'
 import { formatSummaryAsText, formatSummaryAsMarkdown } from '@/lib/format-summary'
+import { useToast } from './toast'
 import {
   CheckCircle2Icon,
   ClockIcon,
@@ -80,6 +81,7 @@ export function WeeklySummaryDialog({
   error,
 }: WeeklySummaryDialogProps) {
   const [copied, setCopied] = useState<'text' | 'markdown' | null>(null)
+  const { toast } = useToast()
 
   const handleCopy = useCallback(
     async (format: 'text' | 'markdown') => {
@@ -93,10 +95,10 @@ export function WeeklySummaryDialog({
         setCopied(format)
         setTimeout(() => setCopied(null), 2000)
       } catch {
-        // Clipboard API not available or page unfocused
+        toast('Failed to copy to clipboard', 'error')
       }
     },
-    [summary],
+    [summary, toast],
   )
 
   return (
