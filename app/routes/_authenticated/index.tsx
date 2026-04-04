@@ -6,6 +6,8 @@ import type { TimelineEvent } from '../../components/timeline'
 import { RepoSelector } from '../../components/repo-selector'
 import { ViewToggle } from '../../components/view-toggle'
 import { WeeklySummaryDialog } from '../../components/weekly-summary-dialog'
+import { ErrorBoundary } from '../../components/error-boundary'
+import { useToast } from '../../components/toast'
 import { useRepos, useMergedPRsPaginated } from '@/hooks/use-github'
 import { useAiRewrite } from '@/hooks/use-ai-rewrite'
 import { useAiClassify } from '@/hooks/use-ai-classify'
@@ -16,7 +18,7 @@ import { useAuth } from '@/lib/auth'
 import type { ViewMode } from '@/lib/ai'
 import type { GitHubRepo, GitHubPR } from '@/lib/github'
 import { Button } from '@/components/ui/button'
-import { RefreshCwIcon, LoaderCircleIcon, FileTextIcon } from 'lucide-react'
+import { RefreshCwIcon, LoaderCircleIcon, FileTextIcon, AlertTriangleIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_authenticated/')({
@@ -52,7 +54,8 @@ function prToTimelineEvent(pr: GitHubPR): TimelineEvent {
 function HomePage() {
   const { githubToken } = useAuth()
   const queryClient = useQueryClient()
-  const { data: repos, isLoading: reposLoading } = useRepos()
+  const { toast } = useToast()
+  const { data: repos, isLoading: reposLoading, error: reposError } = useRepos()
 
   const [selectedRepo, setSelectedRepo] = useState<GitHubRepo | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
@@ -73,6 +76,7 @@ function HomePage() {
     hasNextPage,
     fetchNextPage,
     isRefetching,
+    error: prsError,
   } = useMergedPRsPaginated(owner ?? '', repo ?? '')
 
   const events: TimelineEvent[] =
@@ -131,6 +135,28 @@ function HomePage() {
     },
     [resetSummary],
   )
+
+  // Show toast on summary error
+  useEffect(() => {
+    if (summaryError) {
+      toast(summaryError, 'error', 5000)
+    }
+  }, [summaryError, toast])
+
+  // Show toast on rate limit / fetch errors
+  useEffect(() => {
+    if (reposError) {
+      const msg = reposError instanceof Error ? reposError.message : 'Failed to load repos'
+      toast(msg, 'error', 5000)
+    }
+  }, [reposError, toast])
+
+  useEffect(() => {
+    if (prsError) {
+      const msg = prsError instanceof Error ? prsError.message : 'Failed to load activity'
+      toast(msg, 'error', 5000)
+    }
+  }, [prsError, toast])
 
   // Persist view mode preference
   useEffect(() => {
@@ -278,17 +304,42 @@ function HomePage() {
         key={viewMode}
         className="animate-ds-fade-in"
       >
-        <Timeline
-          events={events}
-          loading={loading}
-          hasMore={!!hasNextPage}
-          loadingMore={isFetchingNextPage}
-          onLoadMore={() => fetchNextPage()}
-          rewrittenDescriptions={rewrittenDescriptions}
-          viewMode={viewMode}
-          categories={categories}
-          figmaData={figmaData}
-        />
+        {prsError && !prsLoading ? (
+          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-destructive/40 py-16">
+            <AlertTriangleIcon className="mb-3 size-8 text-destructive/60" />
+            <p className="text-sm font-medium text-destructive">
+              {prsError?.name === 'GitHubRateLimitError'
+                ? 'GitHub rate limit reached'
+                : 'Failed to load activity'}
+            </p>
+            <p className="mt-1 max-w-sm text-center text-xs text-ds-text-tertiary">
+              {prsError instanceof Error ? prsError.message : 'Please try again later.'}
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleRefresh()}
+              className="mt-4 gap-1.5"
+            >
+              <RefreshCwIcon className="size-3.5" />
+              Retry
+            </Button>
+          </div>
+        ) : (
+          <ErrorBoundary>
+            <Timeline
+              events={events}
+              loading={loading}
+              hasMore={!!hasNextPage}
+              loadingMore={isFetchingNextPage}
+              onLoadMore={() => fetchNextPage()}
+              rewrittenDescriptions={rewrittenDescriptions}
+              viewMode={viewMode}
+              categories={categories}
+              figmaData={figmaData}
+            />
+          </ErrorBoundary>
+        )}
       </div>
 
       {/* Weekly Summary Dialog */}

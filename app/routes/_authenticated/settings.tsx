@@ -6,6 +6,7 @@ import {
   hasFigmaToken,
   clearFigmaToken,
 } from '@/lib/figma'
+import { useToast } from '../../components/toast'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -39,6 +40,7 @@ function GitHubIcon({ className }: { className?: string }) {
 
 function SettingsPage() {
   const { user } = useAuth()
+  const { toast } = useToast()
   const [figmaConnected, setFigmaConnected] = useState(hasFigmaToken)
 
   const handleConnectFigma = () => {
@@ -48,6 +50,7 @@ function SettingsPage() {
   const handleDisconnectFigma = () => {
     clearFigmaToken()
     setFigmaConnected(false)
+    toast('Figma disconnected', 'success')
   }
 
   const githubLogin = user?.user_metadata?.user_name as string | undefined

@@ -4,6 +4,8 @@ import { useSummaries, useDeleteSummary } from '@/hooks/use-summaries'
 import { storedToWeeklySummary } from '@/lib/summaries'
 import type { StoredSummary } from '@/lib/summaries'
 import type { WeeklySummary } from '@/lib/ai'
+import { useToast } from '../../components/toast'
+import { ErrorBoundary } from '../../components/error-boundary'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -137,9 +139,8 @@ function SummaryCard({
   onDelete: () => void
 }) {
   const [copied, setCopied] = useState<'text' | 'markdown' | null>(null)
+  const { toast } = useToast()
   const summary = storedToWeeklySummary(stored)
-  const totalItems =
-    stored.shipped.length + stored.in_progress.length + stored.key_decisions.length
 
   const handleCopy = useCallback(
     async (format: 'text' | 'markdown', e: React.MouseEvent) => {
@@ -150,9 +151,10 @@ function SummaryCard({
           : formatSummaryAsText(summary)
       await navigator.clipboard.writeText(content)
       setCopied(format)
+      toast(format === 'markdown' ? 'Copied as Markdown' : 'Copied for Slack', 'success')
       setTimeout(() => setCopied(null), 2000)
     },
-    [summary],
+    [summary, toast],
   )
 
   return (
@@ -255,6 +257,7 @@ function SummaryDetailDialog({
   onOpenChange: (open: boolean) => void
 }) {
   const [copied, setCopied] = useState<'text' | 'markdown' | null>(null)
+  const { toast } = useToast()
 
   if (!stored) return null
 
@@ -267,6 +270,7 @@ function SummaryDetailDialog({
         : formatSummaryAsText(summary)
     await navigator.clipboard.writeText(content)
     setCopied(format)
+    toast(format === 'markdown' ? 'Copied as Markdown' : 'Copied for Slack', 'success')
     setTimeout(() => setCopied(null), 2000)
   }
 
@@ -414,10 +418,21 @@ function SummariesSkeleton() {
 }
 
 function SummariesPage() {
-  const { data: summaries, isLoading } = useSummaries()
+  const { data: summaries, isLoading, error } = useSummaries()
   const deleteM = useDeleteSummary()
+  const { toast } = useToast()
   const [viewingSummary, setViewingSummary] = useState<StoredSummary | null>(
     null,
+  )
+
+  const handleDelete = useCallback(
+    (id: string) => {
+      deleteM.mutate(id, {
+        onSuccess: () => toast('Summary deleted', 'success'),
+        onError: () => toast('Failed to delete summary', 'error'),
+      })
+    },
+    [deleteM, toast],
   )
 
   return (
@@ -433,7 +448,18 @@ function SummariesPage() {
 
       {isLoading && <SummariesSkeleton />}
 
-      {!isLoading && summaries && summaries.length === 0 && (
+      {!isLoading && error && (
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-destructive/40 py-16">
+          <p className="text-sm font-medium text-destructive">
+            Failed to load summaries
+          </p>
+          <p className="mt-1 text-xs text-ds-text-tertiary">
+            {error instanceof Error ? error.message : 'An unexpected error occurred.'}
+          </p>
+        </div>
+      )}
+
+      {!isLoading && !error && summaries && summaries.length === 0 && (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border/60 py-16">
           <FileTextIcon className="mb-3 size-8 text-ds-text-tertiary" />
           <p className="text-sm font-medium text-ds-text-secondary">
@@ -445,17 +471,19 @@ function SummariesPage() {
         </div>
       )}
 
-      {!isLoading && summaries && summaries.length > 0 && (
-        <div className="space-y-3">
-          {summaries.map((s) => (
-            <SummaryCard
-              key={s.id}
-              stored={s}
-              onView={() => setViewingSummary(s)}
-              onDelete={() => deleteM.mutate(s.id)}
-            />
-          ))}
-        </div>
+      {!isLoading && !error && summaries && summaries.length > 0 && (
+        <ErrorBoundary>
+          <div className="space-y-3">
+            {summaries.map((s) => (
+              <SummaryCard
+                key={s.id}
+                stored={s}
+                onView={() => setViewingSummary(s)}
+                onDelete={() => handleDelete(s.id)}
+              />
+            ))}
+          </div>
+        </ErrorBoundary>
       )}
 
       <SummaryDetailDialog

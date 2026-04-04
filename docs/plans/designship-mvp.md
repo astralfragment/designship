@@ -164,14 +164,14 @@
   - [x] Test on tablet viewport (768px)
   - [x] Run accessibility audit (WCAG AA compliance)
 
-- [ ] **Task 17: Loading states + error handling**
+- [x] **Task 17: Loading states + error handling**
   - Skills: `systematic-debugging`, `verification-before-completion`
-  - Skeleton loaders for all async content
-  - Error boundaries for component failures
-  - Toast notifications for user actions (copy, share, connect)
-  - Retry logic for failed API calls
-  - Offline indicator
-  - Rate limit handling for GitHub/Figma APIs
+  - [x] Skeleton loaders for all async content
+  - [x] Error boundaries for component failures
+  - [x] Toast notifications for user actions (copy, share, connect)
+  - [x] Retry logic for failed API calls
+  - [x] Offline indicator
+  - [x] Rate limit handling for GitHub/Figma APIs
 
 - [ ] **Task 18: Dark/Light mode theming**
   - Skills: `/rui`, `frontend-design`
