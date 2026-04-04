@@ -4,13 +4,15 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Timeline } from '../../components/timeline'
 import type { TimelineEvent } from '../../components/timeline'
 import { RepoSelector } from '../../components/repo-selector'
+import { ViewToggle } from '../../components/view-toggle'
 import { useRepos, useMergedPRsPaginated } from '@/hooks/use-github'
 import { useAiRewrite } from '@/hooks/use-ai-rewrite'
+import { useAiClassify } from '@/hooks/use-ai-classify'
 import { useAuth } from '@/lib/auth'
+import type { ViewMode } from '@/lib/ai'
 import type { GitHubRepo, GitHubPR } from '@/lib/github'
-import { RefreshCwIcon, BookOpenIcon, CodeIcon, LoaderCircleIcon } from 'lucide-react'
+import { RefreshCwIcon, LoaderCircleIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
 
 export const Route = createFileRoute('/_authenticated/')({
   component: HomePage,
@@ -48,9 +50,11 @@ function HomePage() {
   const { data: repos, isLoading: reposLoading } = useRepos()
 
   const [selectedRepo, setSelectedRepo] = useState<GitHubRepo | null>(null)
-  const [showPlainEnglish, setShowPlainEnglish] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return localStorage.getItem('ds-view-mode') === 'plain'
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    if (typeof window === 'undefined') return 'builder'
+    return (localStorage.getItem('ds-view-mode') as ViewMode) === 'stakeholder'
+      ? 'stakeholder'
+      : 'builder'
   })
 
   // Default to first repo if none selected
@@ -69,17 +73,24 @@ function HomePage() {
   const events: TimelineEvent[] =
     prPages?.pages.flatMap((page) => page.prs.map(prToTimelineEvent)) ?? []
 
-  // AI rewriting
+  const isStakeholder = viewMode === 'stakeholder'
+
+  // AI rewriting (active in stakeholder mode)
   const {
     data: rewrittenDescriptions,
-    isLoading: aiLoading,
     isFetching: aiFetching,
-  } = useAiRewrite(events, showPlainEnglish)
+  } = useAiRewrite(events, isStakeholder)
+
+  // AI classification for feature grouping (active in stakeholder mode)
+  const {
+    data: categories,
+    isFetching: classifyFetching,
+  } = useAiClassify(events, isStakeholder)
 
   // Persist view mode preference
   useEffect(() => {
-    localStorage.setItem('ds-view-mode', showPlainEnglish ? 'plain' : 'technical')
-  }, [showPlainEnglish])
+    localStorage.setItem('ds-view-mode', viewMode)
+  }, [viewMode])
 
   const loading = !githubToken || reposLoading || prsLoading
 
@@ -171,28 +182,16 @@ function HomePage() {
             Timeline
           </h1>
           <p className="mt-1 text-sm text-ds-text-secondary">
-            Your recent development activity at a glance.
+            {isStakeholder
+              ? 'What your team shipped, in plain English.'
+              : 'Your recent development activity at a glance.'}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowPlainEnglish((v) => !v)}
-            className={cn(
-              'gap-1.5 text-xs',
-              showPlainEnglish && 'border-primary/50 bg-primary/5 text-primary',
-            )}
-          >
-            {aiFetching ? (
-              <LoaderCircleIcon className="size-3.5 animate-spin" />
-            ) : showPlainEnglish ? (
-              <BookOpenIcon className="size-3.5" />
-            ) : (
-              <CodeIcon className="size-3.5" />
-            )}
-            {showPlainEnglish ? 'Plain English' : 'Technical'}
-          </Button>
+          {(aiFetching || classifyFetching) && (
+            <LoaderCircleIcon className="size-3.5 animate-spin text-ds-text-tertiary" />
+          )}
+          <ViewToggle mode={viewMode} onChange={setViewMode} />
           <RepoSelector
             repos={repos ?? []}
             selectedRepo={activeRepo}
@@ -203,15 +202,21 @@ function HomePage() {
       </div>
 
       {/* Timeline */}
-      <Timeline
-        events={events}
-        loading={loading}
-        hasMore={!!hasNextPage}
-        loadingMore={isFetchingNextPage}
-        onLoadMore={() => fetchNextPage()}
-        rewrittenDescriptions={rewrittenDescriptions}
-        showPlainEnglish={showPlainEnglish}
-      />
+      <div
+        key={viewMode}
+        className="animate-ds-fade-in"
+      >
+        <Timeline
+          events={events}
+          loading={loading}
+          hasMore={!!hasNextPage}
+          loadingMore={isFetchingNextPage}
+          onLoadMore={() => fetchNextPage()}
+          rewrittenDescriptions={rewrittenDescriptions}
+          viewMode={viewMode}
+          categories={categories}
+        />
+      </div>
     </div>
   )
 }

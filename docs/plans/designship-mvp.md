@@ -106,7 +106,7 @@
 
 ## Phase 4: Stakeholder View + Summary Generation
 
-- [ ] **Task 11: Builder vs Stakeholder view toggle**
+- [x] **Task 11: Builder vs Stakeholder view toggle**
   - Skills: `/rui`, `frontend-design`
   - Add view toggle to timeline header: "Builder" / "Stakeholder"
   - Builder view: technical details (branch names, file counts, commit hashes)

@@ -2,9 +2,16 @@ import { createServerFn } from '@tanstack/start-client-core'
 
 // --- Types ---
 
+export type ViewMode = 'builder' | 'stakeholder'
+
 export interface RewriteResult {
   original: string
   rewritten: string
+}
+
+export interface ClassifyResult {
+  id: string
+  category: string
 }
 
 // --- Cache ---
@@ -137,7 +144,101 @@ ${numbered}`,
     return texts.map((_: string, i: number) => parsed[i] || 'Minor update')
   })
 
+// --- Classify server function ---
+
+const classifyOnServer = createServerFn({ method: 'POST' })
+  .inputValidator((d: { entries: Array<{ id: string; title: string; description: string | null }> }) => d)
+  .handler(async ({ data }): Promise<ClassifyResult[]> => {
+    const apiKey = process.env.ANTHROPIC_API_KEY
+    if (!apiKey) {
+      throw new Error(
+        'ANTHROPIC_API_KEY is not configured. Set it in your environment variables.',
+      )
+    }
+
+    const { entries } = data as { entries: Array<{ id: string; title: string; description: string | null }> }
+
+    if (entries.length === 0) return []
+
+    const numbered = entries
+      .map((e, i) => `[${i + 1}] ${e.title}${e.description ? ` — ${e.description.slice(0, 200)}` : ''}`)
+      .join('\n')
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        messages: [
+          {
+            role: 'user',
+            content: `Classify these development activities into feature areas. Use short, human-friendly category names (2-3 words max) like "User Authentication", "UI Updates", "Performance", "Bug Fixes", "Data Pipeline", "Documentation", etc.
+
+Rules:
+- Group similar items under the same category name
+- Use consistent naming (don't use "Auth" for one and "Authentication" for another)
+- Return ONLY numbered lines in format: [N] Category Name
+- Keep category names non-technical and stakeholder-friendly
+
+${numbered}`,
+          },
+        ],
+      }),
+    })
+
+    if (!res.ok) {
+      const body = await res.text()
+      throw new Error(`Claude API error: ${res.status} ${body}`)
+    }
+
+    const json = (await res.json()) as {
+      content: Array<{ type: string; text: string }>
+    }
+
+    const responseText =
+      json.content.find((c) => c.type === 'text')?.text ?? ''
+
+    const results: ClassifyResult[] = []
+    for (const line of responseText.split('\n')) {
+      const match = line.match(/^\[(\d+)\]\s*(.+)/)
+      if (match) {
+        const idx = parseInt(match[1]!, 10) - 1
+        const entry = entries[idx]
+        if (entry) {
+          results.push({ id: entry.id, category: match[2]!.trim() })
+        }
+      }
+    }
+
+    // Fill any gaps with "Other Updates"
+    for (const entry of entries) {
+      if (!results.find((r) => r.id === entry.id)) {
+        results.push({ id: entry.id, category: 'Other Updates' })
+      }
+    }
+
+    return results
+  })
+
 // --- Public API ---
+
+export async function classifyByFeature(
+  entries: Array<{ id: string; title: string; description: string | null }>,
+): Promise<Record<string, string>> {
+  if (entries.length === 0) return {}
+
+  const results = await classifyOnServer({ data: { entries } })
+  const map: Record<string, string> = {}
+  for (const r of results) {
+    map[r.id] = r.category
+  }
+  return map
+}
 
 export async function rewriteForHumans(text: string): Promise<string> {
   if (!text || text.trim().length === 0) return 'Minor update'

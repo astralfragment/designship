@@ -14,6 +14,7 @@ import {
   MinusIcon,
   MessageSquareIcon,
 } from 'lucide-react'
+import type { ViewMode } from '@/lib/ai'
 import type { TimelineEvent, TimelineEventType } from './types'
 import { relativeTime, eventTypeConfig } from './utils'
 
@@ -28,16 +29,17 @@ export function TimelineEntry({
   event,
   isLast,
   rewrittenDescription,
-  showPlainEnglish,
+  viewMode = 'builder',
 }: {
   event: TimelineEvent
   isLast: boolean
   rewrittenDescription?: string
-  showPlainEnglish?: boolean
+  viewMode?: ViewMode
 }) {
   const [expanded, setExpanded] = useState(false)
   const config = eventTypeConfig[event.type]
   const Icon = eventIcons[event.type]
+  const isStakeholder = viewMode === 'stakeholder'
 
   return (
     <div className="group relative flex gap-4 animate-ds-slide-up">
@@ -71,15 +73,19 @@ export function TimelineEntry({
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 space-y-1">
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-[10px] font-medium uppercase tracking-wider">
-                  {config.label}
-                </Badge>
+                {!isStakeholder && (
+                  <Badge variant="secondary" className="text-[10px] font-medium uppercase tracking-wider">
+                    {config.label}
+                  </Badge>
+                )}
                 <span className="text-xs text-ds-text-tertiary">
                   {relativeTime(event.timestamp)}
                 </span>
               </div>
               <h3 className="text-sm font-medium leading-snug text-ds-text-primary">
-                {event.title}
+                {isStakeholder && rewrittenDescription
+                  ? rewrittenDescription
+                  : event.title}
               </h3>
             </div>
             <ChevronDownIcon
@@ -90,7 +96,7 @@ export function TimelineEntry({
             />
           </div>
 
-          {/* Author + description preview */}
+          {/* Author */}
           <div className="mt-3 flex items-center gap-2">
             <Avatar size="sm">
               {event.author.avatarUrl && (
@@ -105,15 +111,15 @@ export function TimelineEntry({
             </span>
           </div>
 
-          {/* Metadata badges */}
-          <EntryMetaBadges event={event} />
+          {/* Metadata badges — hidden in Stakeholder view */}
+          {!isStakeholder && <EntryMetaBadges event={event} />}
 
           {/* Expanded detail */}
           {expanded && (
             <EntryDetail
               event={event}
               rewrittenDescription={rewrittenDescription}
-              showPlainEnglish={showPlainEnglish}
+              viewMode={viewMode}
             />
           )}
         </button>
@@ -200,12 +206,14 @@ function EntryMetaBadges({ event }: { event: TimelineEvent }) {
 function EntryDetail({
   event,
   rewrittenDescription,
-  showPlainEnglish,
+  viewMode = 'builder',
 }: {
   event: TimelineEvent
   rewrittenDescription?: string
-  showPlainEnglish?: boolean
+  viewMode?: ViewMode
 }) {
+  const isStakeholder = viewMode === 'stakeholder'
+
   return (
     <div
       className="mt-4 animate-ds-slide-down space-y-3 border-t border-border/40 pt-4"
@@ -213,13 +221,14 @@ function EntryDetail({
     >
       {(event.description || rewrittenDescription) && (
         <p className="text-xs leading-relaxed text-ds-text-secondary whitespace-pre-wrap">
-          {showPlainEnglish && rewrittenDescription
+          {isStakeholder && rewrittenDescription
             ? rewrittenDescription
             : event.description}
         </p>
       )}
 
-      {event.metadata.type === 'pr_merged' && (
+      {/* Technical stats — only in Builder view */}
+      {!isStakeholder && event.metadata.type === 'pr_merged' && (
         <div className="flex items-center gap-4 text-xs text-ds-text-tertiary">
           <span className="flex items-center gap-1">
             <PlusIcon className="size-3 text-ds-success" />
