@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { LoaderCircleIcon, FolderIcon } from 'lucide-react'
 import type { ViewMode } from '@/lib/ai'
 import type { TimelineEvent } from './types'
+import type { EventFigmaData } from '@/hooks/use-figma'
 import { TimelineEntry } from './timeline-entry'
 import { TimelineSkeleton } from './timeline-skeleton'
 import { TimelineEmpty } from './timeline-empty'
@@ -16,6 +17,7 @@ interface TimelineProps {
   rewrittenDescriptions?: Record<string, string>
   viewMode: ViewMode
   categories?: Record<string, string>
+  figmaData?: Map<string, EventFigmaData>
 }
 
 export function Timeline({
@@ -27,6 +29,7 @@ export function Timeline({
   rewrittenDescriptions,
   viewMode,
   categories,
+  figmaData,
 }: TimelineProps) {
   if (loading) {
     return <TimelineSkeleton />
@@ -47,6 +50,7 @@ export function Timeline({
         hasMore={hasMore}
         loadingMore={loadingMore}
         onLoadMore={onLoadMore}
+        figmaData={figmaData}
       />
     )
   }
@@ -60,6 +64,7 @@ export function Timeline({
           isLast={i === events.length - 1 && !hasMore}
           rewrittenDescription={rewrittenDescriptions?.[event.id]}
           viewMode={viewMode}
+          figmaLinks={figmaData?.get(event.id)?.links}
         />
       ))}
 
@@ -79,6 +84,7 @@ function StakeholderTimeline({
   hasMore,
   loadingMore,
   onLoadMore,
+  figmaData,
 }: {
   events: TimelineEvent[]
   categories: Record<string, string>
@@ -86,6 +92,7 @@ function StakeholderTimeline({
   hasMore?: boolean
   loadingMore?: boolean
   onLoadMore?: () => void
+  figmaData?: Map<string, EventFigmaData>
 }) {
   const grouped = useMemo(() => {
     const groups: Record<string, TimelineEvent[]> = {}
@@ -118,6 +125,7 @@ function StakeholderTimeline({
               isLast={i === groupEvents.length - 1}
               rewrittenDescription={rewrittenDescriptions?.[event.id]}
               viewMode="stakeholder"
+              figmaLinks={figmaData?.get(event.id)?.links}
             />
           ))}
         </div>

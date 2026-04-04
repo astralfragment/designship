@@ -16,7 +16,9 @@ import {
 } from 'lucide-react'
 import type { ViewMode } from '@/lib/ai'
 import type { TimelineEvent, TimelineEventType } from './types'
+import type { FigmaLinkWithScreenshot } from '@/hooks/use-figma'
 import { relativeTime, eventTypeConfig } from './utils'
+import { FigmaThumbnails } from './figma-preview'
 
 const eventIcons: Record<TimelineEventType, React.ElementType> = {
   pr_merged: GitMergeIcon,
@@ -30,11 +32,13 @@ export function TimelineEntry({
   isLast,
   rewrittenDescription,
   viewMode = 'builder',
+  figmaLinks,
 }: {
   event: TimelineEvent
   isLast: boolean
   rewrittenDescription?: string
   viewMode?: ViewMode
+  figmaLinks?: FigmaLinkWithScreenshot[]
 }) {
   const [expanded, setExpanded] = useState(false)
   const config = eventTypeConfig[event.type]
@@ -113,6 +117,11 @@ export function TimelineEntry({
 
           {/* Metadata badges — hidden in Stakeholder view */}
           {!isStakeholder && <EntryMetaBadges event={event} />}
+
+          {/* Figma thumbnails — shown even when collapsed if links exist */}
+          {figmaLinks && figmaLinks.length > 0 && (
+            <FigmaThumbnails links={figmaLinks} />
+          )}
 
           {/* Expanded detail */}
           {expanded && (

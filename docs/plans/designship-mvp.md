@@ -144,14 +144,14 @@
   - [x] Store Figma access token alongside GitHub token
   - [x] Settings page: "Connect Figma" button with OAuth flow
 
-- [ ] **Task 15: Figma activity in timeline**
+- [x] **Task 15: Figma activity in timeline**
   - Skills: `/cui`, `frontend-design`
-  - When a PR description contains a Figma link, extract file key + node ID
-  - Fetch design screenshot from Figma API
-  - Display screenshot thumbnail in timeline entry alongside PR
-  - Click to expand: full-size design preview in modal
-  - Before/after comparison when multiple Figma links are present
-  - Fallback: show Figma link as text if screenshot fetch fails
+  - [x] When a PR description contains a Figma link, extract file key + node ID
+  - [x] Fetch design screenshot from Figma API
+  - [x] Display screenshot thumbnail in timeline entry alongside PR
+  - [x] Click to expand: full-size design preview in modal
+  - [x] Before/after comparison when multiple Figma links are present
+  - [x] Fallback: show Figma link as text if screenshot fetch fails
 
 ## Phase 6: Polish & Deploy
 

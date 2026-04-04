@@ -11,6 +11,7 @@ import { useAiRewrite } from '@/hooks/use-ai-rewrite'
 import { useAiClassify } from '@/hooks/use-ai-classify'
 import { useWeeklySummary } from '@/hooks/use-weekly-summary'
 import { useSaveSummary } from '@/hooks/use-summaries'
+import { useFigmaScreenshots } from '@/hooks/use-figma'
 import { useAuth } from '@/lib/auth'
 import type { ViewMode } from '@/lib/ai'
 import type { GitHubRepo, GitHubPR } from '@/lib/github'
@@ -90,6 +91,9 @@ function HomePage() {
     data: categories,
     isFetching: classifyFetching,
   } = useAiClassify(events, isStakeholder)
+
+  // Figma screenshot extraction from PR descriptions
+  const figmaData = useFigmaScreenshots(events)
 
   // Weekly summary generation + persistence
   const {
@@ -266,6 +270,7 @@ function HomePage() {
           rewrittenDescriptions={rewrittenDescriptions}
           viewMode={viewMode}
           categories={categories}
+          figmaData={figmaData}
         />
       </div>
 
