@@ -14,6 +14,14 @@ export interface ClassifyResult {
   category: string
 }
 
+export interface WeeklySummary {
+  shipped: string[]
+  inProgress: string[]
+  keyDecisions: string[]
+  dateRange: { from: string; to: string }
+  generatedAt: string
+}
+
 // --- Cache ---
 
 const CACHE_PREFIX = 'ds-ai-cache:'
@@ -225,6 +233,102 @@ ${numbered}`,
     return results
   })
 
+// --- Weekly summary server function ---
+
+const generateSummaryOnServer = createServerFn({ method: 'POST' })
+  .inputValidator(
+    (d: { entries: Array<{ title: string; description: string | null; date: string }> }) => d,
+  )
+  .handler(async ({ data }): Promise<{ shipped: string[]; inProgress: string[]; keyDecisions: string[] }> => {
+    const apiKey = process.env.ANTHROPIC_API_KEY
+    if (!apiKey) {
+      throw new Error(
+        'ANTHROPIC_API_KEY is not configured. Set it in your environment variables.',
+      )
+    }
+
+    const { entries } = data as {
+      entries: Array<{ title: string; description: string | null; date: string }>
+    }
+
+    if (entries.length === 0) {
+      return { shipped: ['No activity this week'], inProgress: [], keyDecisions: [] }
+    }
+
+    const formatted = entries
+      .map(
+        (e, i) =>
+          `[${i + 1}] ${e.title} (${e.date})${e.description ? `\n    ${e.description.slice(0, 300)}` : ''}`,
+      )
+      .join('\n')
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        messages: [
+          {
+            role: 'user',
+            content: `You are a technical writer generating a weekly team update. Given these merged pull requests from the past week, create a structured summary.
+
+Rules:
+- Write in plain English that non-technical stakeholders can understand
+- No technical jargon (no "refactor", "endpoint", "API", "merge", "branch", etc.)
+- Use active voice, concise bullet points (1 sentence each)
+- Group related items together
+- If something looks like a bug fix, mention it in "What shipped"
+- Return ONLY valid JSON with this exact structure:
+{"shipped": ["item 1", "item 2"], "inProgress": ["item 1"], "keyDecisions": ["item 1"]}
+- "shipped" = completed features, fixes, improvements
+- "inProgress" = items that appear partial or ongoing based on PR titles
+- "keyDecisions" = architectural or design choices visible in the PRs
+- Each array should have 2-6 items. Combine related items.
+- If no items fit a category, use an empty array
+
+Activity from this week:
+${formatted}`,
+          },
+        ],
+      }),
+    })
+
+    if (!res.ok) {
+      const body = await res.text()
+      throw new Error(`Claude API error: ${res.status} ${body}`)
+    }
+
+    const json = (await res.json()) as {
+      content: Array<{ type: string; text: string }>
+    }
+
+    const responseText =
+      json.content.find((c) => c.type === 'text')?.text ?? ''
+
+    // Extract JSON from response (handle markdown code fences)
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/)
+    if (!jsonMatch) {
+      return { shipped: ['Weekly summary generated but could not be parsed'], inProgress: [], keyDecisions: [] }
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]) as {
+      shipped?: string[]
+      inProgress?: string[]
+      keyDecisions?: string[]
+    }
+
+    return {
+      shipped: parsed.shipped ?? [],
+      inProgress: parsed.inProgress ?? [],
+      keyDecisions: parsed.keyDecisions ?? [],
+    }
+  })
+
 // --- Public API ---
 
 export async function classifyByFeature(
@@ -299,4 +403,22 @@ export async function batchRewriteForHumans(
   }
 
   return results
+}
+
+export async function generateWeeklySummary(
+  entries: Array<{ title: string; description: string | null; date: string }>,
+): Promise<WeeklySummary> {
+  const now = new Date()
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+
+  const result = await generateSummaryOnServer({ data: { entries } })
+
+  return {
+    ...result,
+    dateRange: {
+      from: weekAgo.toISOString().split('T')[0]!,
+      to: now.toISOString().split('T')[0]!,
+    },
+    generatedAt: now.toISOString(),
+  }
 }

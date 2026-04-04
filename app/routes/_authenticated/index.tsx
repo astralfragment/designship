@@ -5,13 +5,16 @@ import { Timeline } from '../../components/timeline'
 import type { TimelineEvent } from '../../components/timeline'
 import { RepoSelector } from '../../components/repo-selector'
 import { ViewToggle } from '../../components/view-toggle'
+import { WeeklySummaryDialog } from '../../components/weekly-summary-dialog'
 import { useRepos, useMergedPRsPaginated } from '@/hooks/use-github'
 import { useAiRewrite } from '@/hooks/use-ai-rewrite'
 import { useAiClassify } from '@/hooks/use-ai-classify'
+import { useWeeklySummary } from '@/hooks/use-weekly-summary'
 import { useAuth } from '@/lib/auth'
 import type { ViewMode } from '@/lib/ai'
 import type { GitHubRepo, GitHubPR } from '@/lib/github'
-import { RefreshCwIcon, LoaderCircleIcon } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { RefreshCwIcon, LoaderCircleIcon, FileTextIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_authenticated/')({
@@ -86,6 +89,29 @@ function HomePage() {
     data: categories,
     isFetching: classifyFetching,
   } = useAiClassify(events, isStakeholder)
+
+  // Weekly summary generation
+  const {
+    summary,
+    isGenerating: summaryGenerating,
+    error: summaryError,
+    generate: generateSummary,
+    reset: resetSummary,
+  } = useWeeklySummary(events)
+  const [summaryOpen, setSummaryOpen] = useState(false)
+
+  const handleGenerateSummary = useCallback(() => {
+    setSummaryOpen(true)
+    generateSummary()
+  }, [generateSummary])
+
+  const handleSummaryOpenChange = useCallback(
+    (open: boolean) => {
+      setSummaryOpen(open)
+      if (!open) resetSummary()
+    },
+    [resetSummary],
+  )
 
   // Persist view mode preference
   useEffect(() => {
@@ -191,6 +217,16 @@ function HomePage() {
           {(aiFetching || classifyFetching) && (
             <LoaderCircleIcon className="size-3.5 animate-spin text-ds-text-tertiary" />
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleGenerateSummary}
+            disabled={loading || events.length === 0 || summaryGenerating}
+            className="gap-1.5 text-xs"
+          >
+            <FileTextIcon className="size-3.5" />
+            Weekly Summary
+          </Button>
           <ViewToggle mode={viewMode} onChange={setViewMode} />
           <RepoSelector
             repos={repos ?? []}
@@ -217,6 +253,15 @@ function HomePage() {
           categories={categories}
         />
       </div>
+
+      {/* Weekly Summary Dialog */}
+      <WeeklySummaryDialog
+        open={summaryOpen}
+        onOpenChange={handleSummaryOpenChange}
+        summary={summary}
+        isGenerating={summaryGenerating}
+        error={summaryError}
+      />
     </div>
   )
 }

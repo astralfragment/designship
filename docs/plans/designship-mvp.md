@@ -115,15 +115,15 @@
   - Smooth transition animation between views
   - Remember user's preferred view in localStorage
 
-- [ ] **Task 12: Weekly Summary generation**
+- [x] **Task 12: Weekly Summary generation**
   - Skills: `brainstorming`, `ui-ux-design-pro`
-  - "Generate Weekly Summary" button in timeline header
-  - Collects all activity from past 7 days
-  - Sends to Claude API for structured summary generation
-  - Output format: "What shipped", "What's in progress", "Key decisions"
-  - Render summary in a modal/dialog with formatted sections
-  - Copy to clipboard button (formatted for Slack/Teams paste)
-  - Share link generation (optional)
+  - [x] "Generate Weekly Summary" button in timeline header
+  - [x] Collects all activity from past 7 days
+  - [x] Sends to Claude API for structured summary generation
+  - [x] Output format: "What shipped", "What's in progress", "Key decisions"
+  - [x] Render summary in a modal/dialog with formatted sections
+  - [x] Copy to clipboard button (formatted for Slack/Teams paste)
+  - [x] Share link generation (optional) — skipped, not MVP-critical
 
 - [ ] **Task 13: Summary history + export**
   - Skills: `/rui`, `test-driven-development`
