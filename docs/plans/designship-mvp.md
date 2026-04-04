@@ -13,7 +13,7 @@
   - Verify dev server starts with `npm run dev`
   - Initialize git repo with proper `.gitignore`
 
-- [ ] **Task 2: Install shadcn/ui + Studio Pro theme**
+- [x] **Task 2: Install shadcn/ui + Studio Pro theme**
   - Skills: `/shadcn`, `/rui`
   - Run `npx shadcn@latest init` using existing `components.json`
   - Install Material Design theme: `npx shadcn@latest add @ss-themes/material-design`
