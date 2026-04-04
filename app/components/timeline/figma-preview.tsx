@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import {
   Dialog,
@@ -188,6 +188,10 @@ function FigmaPreviewDialog({
   const hasMultiple = screenshotLinks.length > 1
   const current = screenshotLinks[currentIndex] ?? screenshotLinks[0]
   const [compareMode, setCompareMode] = useState(false)
+
+  useEffect(() => {
+    if (open) setCompareMode(false)
+  }, [open])
 
   if (!current) return null
 

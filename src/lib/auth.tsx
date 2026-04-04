@@ -9,8 +9,8 @@ import type { ReactNode } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from './supabase'
 
-const GITHUB_TOKEN_KEY = 'ds-github-token'
-const FIGMA_TOKEN_KEY = 'ds-figma-token'
+export const GITHUB_TOKEN_KEY = 'ds-github-token'
+export const FIGMA_TOKEN_KEY = 'ds-figma-token'
 
 interface AuthState {
   user: User | null

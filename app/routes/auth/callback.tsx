@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { GITHUB_TOKEN_KEY } from '@/lib/auth'
 
 export const Route = createFileRoute('/auth/callback')({
   component: AuthCallback,
@@ -17,7 +18,7 @@ function AuthCallback() {
       }
       // Capture GitHub provider token for API calls
       if (session.provider_token) {
-        localStorage.setItem('ds-github-token', session.provider_token)
+        localStorage.setItem(GITHUB_TOKEN_KEY, session.provider_token)
       }
       navigate({ to: '/' })
     })

@@ -1,5 +1,6 @@
+import { GITHUB_TOKEN_KEY } from './auth'
+
 const GITHUB_API = 'https://api.github.com'
-const GITHUB_TOKEN_KEY = 'ds-github-token'
 
 function getToken(): string | null {
   return typeof window !== 'undefined'
