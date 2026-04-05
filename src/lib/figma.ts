@@ -152,12 +152,14 @@ export const exchangeFigmaCode = createServerFn({ method: 'POST' })
     if (typeof obj.code !== 'string' || obj.code.length === 0 || obj.code.length > 512) {
       throw new Error('Invalid authorization code')
     }
-    return { code: obj.code }
+    if (typeof obj.redirectUri !== 'string' || obj.redirectUri.length === 0 || obj.redirectUri.length > 512) {
+      throw new Error('Invalid redirect URI')
+    }
+    return { code: obj.code, redirectUri: obj.redirectUri }
   })
   .handler(async ({ data }): Promise<{ access_token: string }> => {
     const clientId = process.env.FIGMA_CLIENT_ID
     const clientSecret = process.env.FIGMA_CLIENT_SECRET
-    const siteUrl = process.env.SITE_URL || 'http://localhost:3000'
 
     if (!clientId || !clientSecret) {
       throw new Error(
@@ -165,7 +167,17 @@ export const exchangeFigmaCode = createServerFn({ method: 'POST' })
       )
     }
 
-    const redirectUri = `${siteUrl}/auth/figma-callback`
+    // Validate redirect URI against allowed origins
+    const allowedOrigins = [
+      process.env.SITE_URL || 'http://localhost:3000',
+      'http://localhost:3000',
+    ]
+    const redirectOrigin = new URL(data.redirectUri).origin
+    if (!allowedOrigins.includes(redirectOrigin)) {
+      throw new Error('Invalid redirect URI origin')
+    }
+
+    const redirectUri = data.redirectUri
 
     const res = await fetch('https://api.figma.com/v1/oauth/token', {
       method: 'POST',

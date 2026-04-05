@@ -296,7 +296,7 @@ ${formatted}`,
     )
 
     // Extract JSON from response (handle markdown code fences)
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/)
+    const jsonMatch = responseText.match(/\{[\s\S]*?\}/)
     if (!jsonMatch) {
       return { shipped: ['Weekly summary generated but could not be parsed'], inProgress: [], keyDecisions: [] }
     }

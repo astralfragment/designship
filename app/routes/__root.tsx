@@ -50,8 +50,8 @@ function RootComponent() {
       queries: {
         retry: (failureCount, error) => {
           // Don't retry auth errors
-          if (error instanceof GitHubRateLimitError) return false
-          if (error instanceof FigmaRateLimitError) return false
+          if (error instanceof GitHubRateLimitError || error?.name === 'GitHubRateLimitError') return false
+          if (error instanceof FigmaRateLimitError || error?.name === 'FigmaRateLimitError') return false
           if (error?.name === 'GitHubAuthError' || error?.name === 'FigmaAuthError') return false
           return failureCount < 3
         },
@@ -60,8 +60,8 @@ function RootComponent() {
       },
       mutations: {
         retry: (failureCount, error) => {
-          if (error instanceof GitHubRateLimitError) return false
-          if (error instanceof FigmaRateLimitError) return false
+          if (error instanceof GitHubRateLimitError || error?.name === 'GitHubRateLimitError') return false
+          if (error instanceof FigmaRateLimitError || error?.name === 'FigmaRateLimitError') return false
           return failureCount < 1
         },
       },

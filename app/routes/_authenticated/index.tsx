@@ -150,13 +150,6 @@ function HomePage() {
     [resetSummary],
   )
 
-  // Show toast on summary error
-  useEffect(() => {
-    if (summaryError) {
-      toast(summaryError, 'error', 5000)
-    }
-  }, [summaryError, toast])
-
   // Show toast on rate limit / fetch errors
   useEffect(() => {
     if (reposError) {

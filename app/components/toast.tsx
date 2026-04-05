@@ -63,13 +63,17 @@ function ToastItem({
 }) {
   const [exiting, setExiting] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const exitTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   useEffect(() => {
     timerRef.current = setTimeout(() => {
       setExiting(true)
-      setTimeout(() => onDismiss(t.id), 200)
+      exitTimerRef.current = setTimeout(() => onDismiss(t.id), 200)
     }, t.duration)
-    return () => clearTimeout(timerRef.current)
+    return () => {
+      clearTimeout(timerRef.current)
+      clearTimeout(exitTimerRef.current)
+    }
   }, [t.id, t.duration, onDismiss])
 
   const Icon = icons[t.variant]
@@ -89,7 +93,7 @@ function ToastItem({
       <button
         onClick={() => {
           setExiting(true)
-          setTimeout(() => onDismiss(t.id), 200)
+          exitTimerRef.current = setTimeout(() => onDismiss(t.id), 200)
         }}
         className="shrink-0 rounded p-0.5 text-ds-text-tertiary transition-colors hover:text-ds-text-secondary"
         aria-label="Dismiss"
