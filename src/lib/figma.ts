@@ -157,14 +157,12 @@ export const exchangeFigmaCode = createServerFn({ method: 'POST' })
     if (typeof obj.code !== 'string' || obj.code.length === 0 || obj.code.length > 512) {
       throw new Error('Invalid authorization code')
     }
-    if (typeof obj.redirectUri !== 'string' || obj.redirectUri.length === 0 || obj.redirectUri.length > 512) {
-      throw new Error('Invalid redirectUri')
-    }
-    return { code: obj.code, redirectUri: obj.redirectUri }
+    return { code: obj.code }
   })
   .handler(async ({ data }): Promise<{ access_token: string }> => {
     const clientId = process.env.FIGMA_CLIENT_ID
     const clientSecret = process.env.FIGMA_CLIENT_SECRET
+    const siteUrl = process.env.SITE_URL || 'http://localhost:3000'
 
     if (!clientId || !clientSecret) {
       throw new Error(
@@ -172,8 +170,8 @@ export const exchangeFigmaCode = createServerFn({ method: 'POST' })
       )
     }
 
-    // Use the same redirect URI the client sent to Figma (must match exactly)
-    const redirectUri = data.redirectUri
+    // Construct redirect URI server-side to prevent OAuth redirect manipulation
+    const redirectUri = `${siteUrl}/auth/figma-callback`
 
     const res = await fetch('https://api.figma.com/v1/oauth/token', {
       method: 'POST',

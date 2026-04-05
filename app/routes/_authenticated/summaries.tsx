@@ -1,12 +1,12 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useSummaries, useDeleteSummary } from '@/hooks/use-summaries'
 import { storedToWeeklySummary } from '@/lib/summaries'
 import { formatRelativeDate } from '../../components/timeline'
 import type { StoredSummary } from '@/lib/summaries'
-import type { WeeklySummary } from '@/lib/ai'
-import { formatSummaryAsText, formatSummaryAsMarkdown } from '@/lib/format-summary'
+import { useCopySummary } from '@/hooks/use-copy-summary'
 import { useToast } from '../../components/toast'
+import { SummarySection } from '../../components/weekly-summary-dialog'
 import { ErrorBoundary } from '../../components/error-boundary'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -54,28 +54,8 @@ function SummaryCard({
   onView: () => void
   onDelete: () => void
 }) {
-  const [copied, setCopied] = useState<'text' | 'markdown' | null>(null)
-  const { toast } = useToast()
   const summary = storedToWeeklySummary(stored)
-
-  const handleCopy = useCallback(
-    async (format: 'text' | 'markdown', e: React.MouseEvent) => {
-      e.stopPropagation()
-      const content =
-        format === 'markdown'
-          ? formatSummaryAsMarkdown(summary)
-          : formatSummaryAsText(summary)
-      try {
-        await navigator.clipboard.writeText(content)
-        setCopied(format)
-        toast(format === 'markdown' ? 'Copied as Markdown' : 'Copied for Slack', 'success')
-        setTimeout(() => setCopied(null), 2000)
-      } catch {
-        toast('Failed to copy to clipboard', 'error')
-      }
-    },
-    [summary, toast],
-  )
+  const { copied, handleCopy } = useCopySummary(summary)
 
   return (
     <Card
@@ -112,11 +92,11 @@ function SummaryCard({
             <MoreVerticalIcon className="size-4 text-ds-text-tertiary" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={(e) => handleCopy('text', e)}>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleCopy('text') }}>
               <CopyIcon className="size-3.5" />
               {copied === 'text' ? 'Copied!' : 'Copy for Slack'}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={(e) => handleCopy('markdown', e)}>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleCopy('markdown') }}>
               <CopyIcon className="size-3.5" />
               {copied === 'markdown' ? 'Copied!' : 'Copy as Markdown'}
             </DropdownMenuItem>
@@ -176,31 +156,12 @@ function SummaryDetailDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
-  const [copied, setCopied] = useState<'text' | 'markdown' | null>(null)
-  const { toast } = useToast()
+  const summaryOrNull = stored ? storedToWeeklySummary(stored) : null
+  const { copied, handleCopy } = useCopySummary(summaryOrNull)
 
-  useEffect(() => {
-    setCopied(null)
-  }, [stored?.id, open])
+  if (!stored || !summaryOrNull) return null
 
-  if (!stored) return null
-
-  const summary = storedToWeeklySummary(stored)
-
-  const handleCopy = async (format: 'text' | 'markdown') => {
-    const content =
-      format === 'markdown'
-        ? formatSummaryAsMarkdown(summary)
-        : formatSummaryAsText(summary)
-    try {
-      await navigator.clipboard.writeText(content)
-      setCopied(format)
-      toast(format === 'markdown' ? 'Copied as Markdown' : 'Copied for Slack', 'success')
-      setTimeout(() => setCopied(null), 2000)
-    } catch {
-      toast('Failed to copy to clipboard', 'error')
-    }
-  }
+  const summary = summaryOrNull
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -214,81 +175,34 @@ function SummaryDetailDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          {summary.shipped.length > 0 && (
-            <div>
-              <div className="mb-2 flex items-center gap-2">
-                <CheckCircle2Icon className="size-4 text-emerald-400" />
-                <h3 className="text-sm font-medium text-ds-text-primary">
-                  What shipped
-                </h3>
-                <Badge variant="secondary" className="text-[10px]">
-                  {summary.shipped.length}
-                </Badge>
-              </div>
-              <ul className="space-y-1.5 pl-6">
-                {summary.shipped.map((item, i) => (
-                  <li
-                    key={i}
-                    className="text-sm leading-relaxed text-ds-text-secondary"
-                  >
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          <SummarySection
+            icon={<CheckCircle2Icon className="size-4" />}
+            title="What shipped"
+            items={summary.shipped}
+            variant="shipped"
+          />
 
           {summary.inProgress.length > 0 && (
             <>
               <Separator />
-              <div>
-                <div className="mb-2 flex items-center gap-2">
-                  <ClockIcon className="size-4 text-amber-400" />
-                  <h3 className="text-sm font-medium text-ds-text-primary">
-                    What's in progress
-                  </h3>
-                  <Badge variant="secondary" className="text-[10px]">
-                    {summary.inProgress.length}
-                  </Badge>
-                </div>
-                <ul className="space-y-1.5 pl-6">
-                  {summary.inProgress.map((item, i) => (
-                    <li
-                      key={i}
-                      className="text-sm leading-relaxed text-ds-text-secondary"
-                    >
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <SummarySection
+                icon={<ClockIcon className="size-4" />}
+                title="What's in progress"
+                items={summary.inProgress}
+                variant="progress"
+              />
             </>
           )}
 
           {summary.keyDecisions.length > 0 && (
             <>
               <Separator />
-              <div>
-                <div className="mb-2 flex items-center gap-2">
-                  <LightbulbIcon className="size-4 text-blue-400" />
-                  <h3 className="text-sm font-medium text-ds-text-primary">
-                    Key decisions
-                  </h3>
-                  <Badge variant="secondary" className="text-[10px]">
-                    {summary.keyDecisions.length}
-                  </Badge>
-                </div>
-                <ul className="space-y-1.5 pl-6">
-                  {summary.keyDecisions.map((item, i) => (
-                    <li
-                      key={i}
-                      className="text-sm leading-relaxed text-ds-text-secondary"
-                    >
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <SummarySection
+                icon={<LightbulbIcon className="size-4" />}
+                title="Key decisions"
+                items={summary.keyDecisions}
+                variant="decisions"
+              />
             </>
           )}
         </div>

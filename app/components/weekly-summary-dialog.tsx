@@ -1,4 +1,3 @@
-import { useCallback, useState } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -11,8 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import type { WeeklySummary } from '@/lib/ai'
-import { formatSummaryAsText, formatSummaryAsMarkdown } from '@/lib/format-summary'
-import { useToast } from './toast'
+import { useCopySummary } from '@/hooks/use-copy-summary'
 import {
   CheckCircle2Icon,
   ClockIcon,
@@ -31,7 +29,7 @@ interface WeeklySummaryDialogProps {
   error: string | null
 }
 
-function SummarySection({
+export function SummarySection({
   icon,
   title,
   items,
@@ -80,26 +78,7 @@ export function WeeklySummaryDialog({
   isGenerating,
   error,
 }: WeeklySummaryDialogProps) {
-  const [copied, setCopied] = useState<'text' | 'markdown' | null>(null)
-  const { toast } = useToast()
-
-  const handleCopy = useCallback(
-    async (format: 'text' | 'markdown') => {
-      if (!summary) return
-      const content =
-        format === 'markdown'
-          ? formatSummaryAsMarkdown(summary)
-          : formatSummaryAsText(summary)
-      try {
-        await navigator.clipboard.writeText(content)
-        setCopied(format)
-        setTimeout(() => setCopied(null), 2000)
-      } catch {
-        toast('Failed to copy to clipboard', 'error')
-      }
-    },
-    [summary, toast],
-  )
+  const { copied, handleCopy } = useCopySummary(summary)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

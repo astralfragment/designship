@@ -42,7 +42,18 @@ function AuthCallback() {
       }
     })
 
-    return () => subscription.unsubscribe()
+    // Safety timeout: redirect to login if auth flow doesn't complete
+    const timeout = setTimeout(() => {
+      if (!navigated.current) {
+        navigated.current = true
+        navigate({ to: '/login' })
+      }
+    }, 10_000)
+
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(timeout)
+    }
   }, [navigate])
 
   return (

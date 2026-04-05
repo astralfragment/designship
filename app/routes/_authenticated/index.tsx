@@ -195,9 +195,8 @@ function HomePage() {
   }, [queryClient, owner, repo])
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
-    const scrollTop = containerRef.current?.scrollTop ?? window.scrollY
     const touch = e.touches[0]
-    if (scrollTop <= 0 && touch) {
+    if (touch) {
       touchStartY.current = touch.clientY
     }
   }, [])
