@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
+import type { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { GITHUB_TOKEN_KEY } from '@/lib/auth'
 
@@ -9,18 +10,25 @@ export const Route = createFileRoute('/auth/callback')({
 
 function AuthCallback() {
   const navigate = useNavigate()
+  const navigated = useRef(false)
 
   useEffect(() => {
+    function handleSession(session: Session) {
+      if (navigated.current) return
+      navigated.current = true
+      if (session.provider_token) {
+        localStorage.setItem(GITHUB_TOKEN_KEY, session.provider_token)
+      }
+      navigate({ to: '/' })
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === 'SIGNED_IN' && session) {
-          if (session.provider_token) {
-            localStorage.setItem(GITHUB_TOKEN_KEY, session.provider_token)
-          }
-          navigate({ to: '/' })
+          handleSession(session)
         } else if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
-          // TOKEN_REFRESHED without session means auth failed
-          if (!session) {
+          if (!session && !navigated.current) {
+            navigated.current = true
             navigate({ to: '/login' })
           }
         }
@@ -30,10 +38,7 @@ function AuthCallback() {
     // Fallback: if Supabase already processed the URL before the listener was set up
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        if (session.provider_token) {
-          localStorage.setItem(GITHUB_TOKEN_KEY, session.provider_token)
-        }
-        navigate({ to: '/' })
+        handleSession(session)
       }
     })
 

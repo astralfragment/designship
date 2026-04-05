@@ -1,4 +1,5 @@
 import { createServerFn } from '@tanstack/start-client-core'
+import { supabase } from './supabase'
 
 // --- Types ---
 
@@ -137,12 +138,22 @@ async function callClaude(prompt: string, maxTokens: number): Promise<string> {
   return json.content.find((c) => c.type === 'text')?.text ?? ''
 }
 
+async function verifyAuth(accessToken: string): Promise<void> {
+  const { data: { user }, error } = await supabase.auth.getUser(accessToken)
+  if (error || !user) {
+    throw new Error('Unauthorized')
+  }
+}
+
 // --- Server function ---
 
 const rewriteOnServer = createServerFn({ method: 'POST' })
   .inputValidator((d: unknown) => {
-    if (!d || typeof d !== 'object') throw new Error('Invalid input: expected { texts: string[] }')
+    if (!d || typeof d !== 'object') throw new Error('Invalid input: expected { texts: string[], accessToken: string }')
     const obj = d as Record<string, unknown>
+    if (typeof obj.accessToken !== 'string' || obj.accessToken.length === 0) {
+      throw new Error('Unauthorized: accessToken is required')
+    }
     if (!Array.isArray(obj.texts) || !obj.texts.every((t: unknown) => typeof t === 'string')) {
       throw new Error('Invalid input: expected { texts: string[] }')
     }
@@ -150,9 +161,10 @@ const rewriteOnServer = createServerFn({ method: 'POST' })
     for (const t of obj.texts as string[]) {
       if (t.length > 5000) throw new Error('Text too long: maximum 5000 characters per item')
     }
-    return obj as { texts: string[] }
+    return obj as { texts: string[]; accessToken: string }
   })
   .handler(async ({ data }): Promise<string[]> => {
+    await verifyAuth(data.accessToken)
     const { texts } = data
 
     if (texts.length === 0) return []
@@ -206,8 +218,11 @@ ${numbered}`,
 
 const classifyOnServer = createServerFn({ method: 'POST' })
   .inputValidator((d: unknown) => {
-    if (!d || typeof d !== 'object') throw new Error('Invalid input: expected { entries: Array<{ id, title, description }> }')
+    if (!d || typeof d !== 'object') throw new Error('Invalid input: expected { entries: Array<{ id, title, description }>, accessToken: string }')
     const obj = d as Record<string, unknown>
+    if (typeof obj.accessToken !== 'string' || obj.accessToken.length === 0) {
+      throw new Error('Unauthorized: accessToken is required')
+    }
     if (!Array.isArray(obj.entries)) {
       throw new Error('Invalid input: expected { entries: Array<{ id, title, description }> }')
     }
@@ -222,9 +237,10 @@ const classifyOnServer = createServerFn({ method: 'POST' })
         throw new Error('Invalid entry: description must be string or null')
       }
     }
-    return obj as { entries: Array<{ id: string; title: string; description: string | null }> }
+    return obj as { entries: Array<{ id: string; title: string; description: string | null }>; accessToken: string }
   })
   .handler(async ({ data }): Promise<ClassifyResult[]> => {
+    await verifyAuth(data.accessToken)
     const { entries } = data
 
     if (entries.length === 0) return []
@@ -272,8 +288,11 @@ ${numbered}`,
 
 const generateSummaryOnServer = createServerFn({ method: 'POST' })
   .inputValidator((d: unknown) => {
-    if (!d || typeof d !== 'object') throw new Error('Invalid input: expected { entries: Array<{ title, description, date }> }')
+    if (!d || typeof d !== 'object') throw new Error('Invalid input: expected { entries: Array<{ title, description, date }>, accessToken: string }')
     const obj = d as Record<string, unknown>
+    if (typeof obj.accessToken !== 'string' || obj.accessToken.length === 0) {
+      throw new Error('Unauthorized: accessToken is required')
+    }
     if (!Array.isArray(obj.entries)) {
       throw new Error('Invalid input: expected { entries: Array<{ title, description, date }> }')
     }
@@ -288,9 +307,10 @@ const generateSummaryOnServer = createServerFn({ method: 'POST' })
         throw new Error('Invalid entry: description must be string or null')
       }
     }
-    return obj as { entries: Array<{ title: string; description: string | null; date: string }> }
+    return obj as { entries: Array<{ title: string; description: string | null; date: string }>; accessToken: string }
   })
   .handler(async ({ data }): Promise<{ shipped: string[]; inProgress: string[]; keyDecisions: string[] }> => {
+    await verifyAuth(data.accessToken)
     const { entries } = data
 
     if (entries.length === 0) {
@@ -355,10 +375,11 @@ ${formatted}`,
 
 export async function classifyByFeature(
   entries: Array<{ id: string; title: string; description: string | null }>,
+  accessToken: string,
 ): Promise<Record<string, string>> {
   if (entries.length === 0) return {}
 
-  const results = await classifyOnServer({ data: { entries } })
+  const results = await classifyOnServer({ data: { entries, accessToken } })
   const map: Record<string, string> = {}
   for (const r of results) {
     map[r.id] = r.category
@@ -368,6 +389,7 @@ export async function classifyByFeature(
 
 export async function batchRewriteForHumans(
   texts: string[],
+  accessToken: string,
 ): Promise<RewriteResult[]> {
   if (texts.length === 0) return []
 
@@ -401,7 +423,7 @@ export async function batchRewriteForHumans(
     const chunk = uncachedTexts.slice(start, start + BATCH_SIZE)
     const chunkIndices = uncachedIndices.slice(start, start + BATCH_SIZE)
 
-    const rewritten = await rewriteOnServer({ data: { texts: chunk } })
+    const rewritten = await rewriteOnServer({ data: { texts: chunk, accessToken } })
 
     for (let j = 0; j < chunkIndices.length; j++) {
       const idx = chunkIndices[j]!
@@ -418,8 +440,9 @@ export async function batchRewriteForHumans(
 export async function generateWeeklySummary(
   entries: Array<{ title: string; description: string | null; date: string }>,
   dateRange: { from: string; to: string },
+  accessToken: string,
 ): Promise<WeeklySummary> {
-  const result = await generateSummaryOnServer({ data: { entries } })
+  const result = await generateSummaryOnServer({ data: { entries, accessToken } })
 
   return {
     ...result,
