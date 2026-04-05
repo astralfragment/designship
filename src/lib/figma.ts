@@ -84,13 +84,6 @@ export interface FigmaFile {
   last_modified: string
 }
 
-export interface FigmaFileDetail {
-  name: string
-  lastModified: string
-  thumbnailUrl: string
-  version: string
-}
-
 export interface FigmaImage {
   url: string
   nodeId: string
@@ -113,13 +106,6 @@ export async function fetchFileScreenshot(
     { token },
   )
   return response.images[nodeId] ?? null
-}
-
-export async function fetchFileInfo(
-  fileKey: string,
-  token?: string | null,
-): Promise<FigmaFileDetail> {
-  return figmaFetch<FigmaFileDetail>(`/files/${fileKey}?depth=1`, { token })
 }
 
 // --- OAuth flow ---
@@ -151,8 +137,11 @@ export function getFigmaOAuthUrl(): string {
 export function validateOAuthState(state: string): boolean {
   if (typeof window === 'undefined') return false
   const stored = sessionStorage.getItem('ds-figma-oauth-state')
-  sessionStorage.removeItem('ds-figma-oauth-state')
-  return stored === state
+  if (stored === state) {
+    sessionStorage.removeItem('ds-figma-oauth-state')
+    return true
+  }
+  return false
 }
 
 // Server function for token exchange (client_secret stays server-side)
@@ -196,7 +185,8 @@ export const exchangeFigmaCode = createServerFn({ method: 'POST' })
 
     if (!res.ok) {
       const body = await res.text()
-      throw new Error(`Figma token exchange failed: ${res.status} ${body}`)
+      console.error(`Figma token exchange failed: ${res.status}`, body)
+      throw new Error('Figma token exchange failed. Please try again.')
     }
 
     const json = (await res.json()) as { access_token: string }

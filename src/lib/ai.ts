@@ -69,6 +69,43 @@ function clearOldCache(): void {
   }
 }
 
+// --- Shared Claude API helper (server-only) ---
+
+async function callClaude(prompt: string, maxTokens: number): Promise<string> {
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) {
+    throw new Error(
+      'ANTHROPIC_API_KEY is not configured. Set it in your environment variables.',
+    )
+  }
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: maxTokens,
+      messages: [{ role: 'user', content: prompt }],
+    }),
+  })
+
+  if (!res.ok) {
+    const body = await res.text()
+    console.error(`Claude API error: ${res.status}`, body)
+    throw new Error('Failed to process AI request. Please try again.')
+  }
+
+  const json = (await res.json()) as {
+    content: Array<{ type: string; text: string }>
+  }
+
+  return json.content.find((c) => c.type === 'text')?.text ?? ''
+}
+
 // --- Server function ---
 
 const rewriteOnServer = createServerFn({ method: 'POST' })
@@ -85,13 +122,6 @@ const rewriteOnServer = createServerFn({ method: 'POST' })
     return obj as { texts: string[] }
   })
   .handler(async ({ data }): Promise<string[]> => {
-    const apiKey = process.env.ANTHROPIC_API_KEY
-    if (!apiKey) {
-      throw new Error(
-        'ANTHROPIC_API_KEY is not configured. Set it in your environment variables.',
-      )
-    }
-
     const { texts } = data
 
     if (texts.length === 0) return []
@@ -100,20 +130,8 @@ const rewriteOnServer = createServerFn({ method: 'POST' })
       .map((t: string, i: number) => `[${i + 1}] ${t}`)
       .join('\n\n')
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2048,
-        messages: [
-          {
-            role: 'user',
-            content: `You are a technical writer for a software team. Rewrite the following technical PR descriptions and commit messages into plain English that a non-technical stakeholder can understand.
+    const responseText = await callClaude(
+      `You are a technical writer for a software team. Rewrite the following technical PR descriptions and commit messages into plain English that a non-technical stakeholder can understand.
 
 Rules:
 - Keep each rewrite concise (1-2 sentences max)
@@ -124,22 +142,8 @@ Rules:
 - Return ONLY the numbered rewrites in the same [N] format, nothing else
 
 ${numbered}`,
-          },
-        ],
-      }),
-    })
-
-    if (!res.ok) {
-      const body = await res.text()
-      throw new Error(`Claude API error: ${res.status} ${body}`)
-    }
-
-    const json = (await res.json()) as {
-      content: Array<{ type: string; text: string }>
-    }
-
-    const responseText =
-      json.content.find((c) => c.type === 'text')?.text ?? ''
+      2048,
+    )
 
     // Parse numbered responses: [1] text, [2] text, etc.
     const parsed: string[] = []
@@ -180,13 +184,6 @@ const classifyOnServer = createServerFn({ method: 'POST' })
     return obj as { entries: Array<{ id: string; title: string; description: string | null }> }
   })
   .handler(async ({ data }): Promise<ClassifyResult[]> => {
-    const apiKey = process.env.ANTHROPIC_API_KEY
-    if (!apiKey) {
-      throw new Error(
-        'ANTHROPIC_API_KEY is not configured. Set it in your environment variables.',
-      )
-    }
-
     const { entries } = data
 
     if (entries.length === 0) return []
@@ -195,20 +192,8 @@ const classifyOnServer = createServerFn({ method: 'POST' })
       .map((e, i) => `[${i + 1}] ${e.title}${e.description ? ` — ${e.description.slice(0, 200)}` : ''}`)
       .join('\n')
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1024,
-        messages: [
-          {
-            role: 'user',
-            content: `Classify these development activities into feature areas. Use short, human-friendly category names (2-3 words max) like "User Authentication", "UI Updates", "Performance", "Bug Fixes", "Data Pipeline", "Documentation", etc.
+    const responseText = await callClaude(
+      `Classify these development activities into feature areas. Use short, human-friendly category names (2-3 words max) like "User Authentication", "UI Updates", "Performance", "Bug Fixes", "Data Pipeline", "Documentation", etc.
 
 Rules:
 - Group similar items under the same category name
@@ -217,22 +202,8 @@ Rules:
 - Keep category names non-technical and stakeholder-friendly
 
 ${numbered}`,
-          },
-        ],
-      }),
-    })
-
-    if (!res.ok) {
-      const body = await res.text()
-      throw new Error(`Claude API error: ${res.status} ${body}`)
-    }
-
-    const json = (await res.json()) as {
-      content: Array<{ type: string; text: string }>
-    }
-
-    const responseText =
-      json.content.find((c) => c.type === 'text')?.text ?? ''
+      1024,
+    )
 
     const results: ClassifyResult[] = []
     for (const line of responseText.split('\n')) {
@@ -269,13 +240,6 @@ const generateSummaryOnServer = createServerFn({ method: 'POST' })
     return obj as { entries: Array<{ title: string; description: string | null; date: string }> }
   })
   .handler(async ({ data }): Promise<{ shipped: string[]; inProgress: string[]; keyDecisions: string[] }> => {
-    const apiKey = process.env.ANTHROPIC_API_KEY
-    if (!apiKey) {
-      throw new Error(
-        'ANTHROPIC_API_KEY is not configured. Set it in your environment variables.',
-      )
-    }
-
     const { entries } = data
 
     if (entries.length === 0) {
@@ -289,20 +253,8 @@ const generateSummaryOnServer = createServerFn({ method: 'POST' })
       )
       .join('\n')
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1024,
-        messages: [
-          {
-            role: 'user',
-            content: `You are a technical writer generating a weekly team update. Given these merged pull requests from the past week, create a structured summary.
+    const responseText = await callClaude(
+      `You are a technical writer generating a weekly team update. Given these merged pull requests from the past week, create a structured summary.
 
 Rules:
 - Write in plain English that non-technical stakeholders can understand
@@ -320,22 +272,8 @@ Rules:
 
 Activity from this week:
 ${formatted}`,
-          },
-        ],
-      }),
-    })
-
-    if (!res.ok) {
-      const body = await res.text()
-      throw new Error(`Claude API error: ${res.status} ${body}`)
-    }
-
-    const json = (await res.json()) as {
-      content: Array<{ type: string; text: string }>
-    }
-
-    const responseText =
-      json.content.find((c) => c.type === 'text')?.text ?? ''
+      1024,
+    )
 
     // Extract JSON from response (handle markdown code fences)
     const jsonMatch = responseText.match(/\{[\s\S]*\}/)
@@ -343,21 +281,22 @@ ${formatted}`,
       return { shipped: ['Weekly summary generated but could not be parsed'], inProgress: [], keyDecisions: [] }
     }
 
-    let parsed: {
-      shipped?: string[]
-      inProgress?: string[]
-      keyDecisions?: string[]
-    }
+    let parsed: Record<string, unknown>
     try {
       parsed = JSON.parse(jsonMatch[0])
     } catch {
       return { shipped: ['Weekly summary generated but could not be parsed'], inProgress: [], keyDecisions: [] }
     }
 
+    const toStringArray = (val: unknown): string[] => {
+      if (!Array.isArray(val)) return []
+      return val.filter((item): item is string => typeof item === 'string')
+    }
+
     return {
-      shipped: parsed.shipped ?? [],
-      inProgress: parsed.inProgress ?? [],
-      keyDecisions: parsed.keyDecisions ?? [],
+      shipped: toStringArray(parsed.shipped),
+      inProgress: toStringArray(parsed.inProgress),
+      keyDecisions: toStringArray(parsed.keyDecisions),
     }
   })
 
@@ -427,18 +366,13 @@ export async function batchRewriteForHumans(
 
 export async function generateWeeklySummary(
   entries: Array<{ title: string; description: string | null; date: string }>,
+  dateRange: { from: string; to: string },
 ): Promise<WeeklySummary> {
-  const now = new Date()
-  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-
   const result = await generateSummaryOnServer({ data: { entries } })
 
   return {
     ...result,
-    dateRange: {
-      from: weekAgo.toISOString().split('T')[0]!,
-      to: now.toISOString().split('T')[0]!,
-    },
-    generatedAt: now.toISOString(),
+    dateRange,
+    generatedAt: new Date().toISOString(),
   }
 }

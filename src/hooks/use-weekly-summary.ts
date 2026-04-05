@@ -21,15 +21,17 @@ export function useWeeklySummary(events: TimelineEvent[]) {
         (e) => new Date(e.timestamp) >= weekAgo,
       )
 
+      const dateRange = {
+        from: weekAgo.toISOString().split('T')[0]!,
+        to: new Date().toISOString().split('T')[0]!,
+      }
+
       if (recentEvents.length === 0) {
         setSummary({
           shipped: ['No activity in the past 7 days'],
           inProgress: [],
           keyDecisions: [],
-          dateRange: {
-            from: weekAgo.toISOString().split('T')[0]!,
-            to: new Date().toISOString().split('T')[0]!,
-          },
+          dateRange,
           generatedAt: new Date().toISOString(),
         })
         return
@@ -44,7 +46,7 @@ export function useWeeklySummary(events: TimelineEvent[]) {
         }),
       }))
 
-      const result = await generateWeeklySummary(entries)
+      const result = await generateWeeklySummary(entries, dateRange)
       setSummary(result)
     } catch (err) {
       setError(
