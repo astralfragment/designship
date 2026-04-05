@@ -18,7 +18,7 @@ import { useAuth } from '@/lib/auth'
 import type { ViewMode } from '@/lib/ai'
 import type { GitHubRepo, GitHubPR } from '@/lib/github'
 import { Button } from '@/components/ui/button'
-import { RefreshCwIcon, LoaderCircleIcon, FileTextIcon, AlertTriangleIcon } from 'lucide-react'
+import { RefreshCwIcon, LoaderCircleIcon, FileTextIcon, AlertTriangleIcon, LogOutIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_authenticated/')({
@@ -52,7 +52,7 @@ function prToTimelineEvent(pr: GitHubPR): TimelineEvent {
 }
 
 function HomePage() {
-  const { githubToken } = useAuth()
+  const { githubToken, signOut } = useAuth()
   const queryClient = useQueryClient()
   const { toast } = useToast()
   const { data: repos, isLoading: reposLoading, error: reposError } = useRepos()
@@ -170,7 +170,8 @@ function HomePage() {
     localStorage.setItem('ds-view-mode', viewMode)
   }, [viewMode])
 
-  const loading = !githubToken || reposLoading || (!!activeRepo && prsLoading)
+  const missingGithubToken = !githubToken
+  const loading = reposLoading || (!!activeRepo && prsLoading)
 
   // Pull-to-refresh state
   const [pullDistance, setPullDistance] = useState(0)
@@ -314,7 +315,26 @@ function HomePage() {
         key={viewMode}
         className="animate-ds-fade-in"
       >
-        {prsError && !prsLoading ? (
+        {missingGithubToken ? (
+          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-ds-border py-16">
+            <AlertTriangleIcon className="mb-3 size-8 text-ds-text-tertiary" />
+            <p className="text-sm font-medium text-ds-text-primary">
+              GitHub connection lost
+            </p>
+            <p className="mt-1 max-w-sm text-center text-xs text-ds-text-tertiary">
+              Your GitHub token has expired or been revoked. Please sign out and sign in again to reconnect.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => signOut()}
+              className="mt-4 gap-1.5"
+            >
+              <LogOutIcon className="size-3.5" />
+              Sign out &amp; reconnect
+            </Button>
+          </div>
+        ) : prsError && !prsLoading ? (
           <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-destructive/40 py-16">
             <AlertTriangleIcon className="mb-3 size-8 text-destructive/60" />
             <p className="text-sm font-medium text-destructive">

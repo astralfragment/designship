@@ -69,6 +69,20 @@ function clearOldCache(): void {
   }
 }
 
+// --- JSON extraction helper ---
+
+function extractJsonObject(text: string): string | null {
+  const start = text.indexOf('{')
+  if (start === -1) return null
+  let depth = 0
+  for (let i = start; i < text.length; i++) {
+    if (text[i] === '{') depth++
+    else if (text[i] === '}') depth--
+    if (depth === 0) return text.slice(start, i + 1)
+  }
+  return null
+}
+
 // --- Shared Claude API helper (server-only) ---
 
 async function callClaude(prompt: string, maxTokens: number): Promise<string> {
@@ -295,15 +309,15 @@ ${formatted}`,
       1024,
     )
 
-    // Extract JSON from response (handle markdown code fences)
-    const jsonMatch = responseText.match(/\{[\s\S]*?\}/)
-    if (!jsonMatch) {
+    // Extract JSON from response using brace-balancing (handles nested braces in string values)
+    const jsonStr = extractJsonObject(responseText)
+    if (!jsonStr) {
       return { shipped: ['Weekly summary generated but could not be parsed'], inProgress: [], keyDecisions: [] }
     }
 
     let parsed: Record<string, unknown>
     try {
-      parsed = JSON.parse(jsonMatch[0])
+      parsed = JSON.parse(jsonStr)
     } catch {
       return { shipped: ['Weekly summary generated but could not be parsed'], inProgress: [], keyDecisions: [] }
     }

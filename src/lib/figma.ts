@@ -95,11 +95,16 @@ interface FigmaImagesResponse {
 
 // --- API Functions ---
 
+const FIGMA_KEY_PATTERN = /^[a-zA-Z0-9]+$/
+
 export async function fetchFileScreenshot(
   fileKey: string,
   nodeId: string,
   token?: string | null,
 ): Promise<string | null> {
+  if (!FIGMA_KEY_PATTERN.test(fileKey)) {
+    throw new Error('Invalid Figma file key')
+  }
   const encodedNodeId = encodeURIComponent(nodeId)
   const response = await figmaFetch<FigmaImagesResponse>(
     `/images/${fileKey}?ids=${encodedNodeId}&format=png&scale=2`,

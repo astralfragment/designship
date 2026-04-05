@@ -52,6 +52,9 @@ async function githubFetch<T>(
   })
 
   if (res.status === 401) {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('ds-github-token')
+    }
     throw new GitHubAuthError()
   }
 

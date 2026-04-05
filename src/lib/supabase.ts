@@ -14,11 +14,12 @@ function getSupabase(): SupabaseClient {
     )
   }
 
+  const isBrowser = typeof window !== 'undefined'
   _supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
+      persistSession: isBrowser,
+      autoRefreshToken: isBrowser,
+      detectSessionInUrl: isBrowser,
     },
   })
   return _supabase
