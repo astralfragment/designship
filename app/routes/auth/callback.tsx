@@ -11,17 +11,33 @@ function AuthCallback() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error || !session) {
-        navigate({ to: '/login' })
-        return
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          if (session.provider_token) {
+            localStorage.setItem(GITHUB_TOKEN_KEY, session.provider_token)
+          }
+          navigate({ to: '/' })
+        } else if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+          // TOKEN_REFRESHED without session means auth failed
+          if (!session) {
+            navigate({ to: '/login' })
+          }
+        }
+      },
+    )
+
+    // Fallback: if Supabase already processed the URL before the listener was set up
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        if (session.provider_token) {
+          localStorage.setItem(GITHUB_TOKEN_KEY, session.provider_token)
+        }
+        navigate({ to: '/' })
       }
-      // Capture GitHub provider token for API calls
-      if (session.provider_token) {
-        localStorage.setItem(GITHUB_TOKEN_KEY, session.provider_token)
-      }
-      navigate({ to: '/' })
     })
+
+    return () => subscription.unsubscribe()
   }, [navigate])
 
   return (

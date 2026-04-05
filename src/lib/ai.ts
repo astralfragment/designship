@@ -181,6 +181,16 @@ const classifyOnServer = createServerFn({ method: 'POST' })
       throw new Error('Invalid input: expected { entries: Array<{ id, title, description }> }')
     }
     if (obj.entries.length > 100) throw new Error('Too many items: maximum 100 entries per request')
+    for (const entry of obj.entries) {
+      if (!entry || typeof entry !== 'object') throw new Error('Invalid entry: expected { id, title, description }')
+      const e = entry as Record<string, unknown>
+      if (typeof e.id !== 'string' || typeof e.title !== 'string') {
+        throw new Error('Invalid entry: id and title must be strings')
+      }
+      if (e.description !== null && typeof e.description !== 'string') {
+        throw new Error('Invalid entry: description must be string or null')
+      }
+    }
     return obj as { entries: Array<{ id: string; title: string; description: string | null }> }
   })
   .handler(async ({ data }): Promise<ClassifyResult[]> => {
@@ -237,6 +247,16 @@ const generateSummaryOnServer = createServerFn({ method: 'POST' })
       throw new Error('Invalid input: expected { entries: Array<{ title, description, date }> }')
     }
     if (obj.entries.length > 200) throw new Error('Too many items: maximum 200 entries per request')
+    for (const entry of obj.entries) {
+      if (!entry || typeof entry !== 'object') throw new Error('Invalid entry: expected { title, description, date }')
+      const e = entry as Record<string, unknown>
+      if (typeof e.title !== 'string' || typeof e.date !== 'string') {
+        throw new Error('Invalid entry: title and date must be strings')
+      }
+      if (e.description !== null && typeof e.description !== 'string') {
+        throw new Error('Invalid entry: description must be string or null')
+      }
+    }
     return obj as { entries: Array<{ title: string; description: string | null; date: string }> }
   })
   .handler(async ({ data }): Promise<{ shipped: string[]; inProgress: string[]; keyDecisions: string[] }> => {

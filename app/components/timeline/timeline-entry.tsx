@@ -282,9 +282,7 @@ function EntryDetail({
     >
       {event.description && (
         <p className="text-xs leading-relaxed text-ds-text-secondary whitespace-pre-wrap">
-          {isStakeholder && rewrittenDescription
-            ? rewrittenDescription
-            : event.description}
+          {event.description}
         </p>
       )}
 
