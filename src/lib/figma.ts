@@ -162,7 +162,9 @@ export const exchangeFigmaCode = createServerFn({ method: 'POST' })
   .handler(async ({ data }): Promise<{ access_token: string }> => {
     const clientId = process.env.FIGMA_CLIENT_ID
     const clientSecret = process.env.FIGMA_CLIENT_SECRET
-    const siteUrl = process.env.SITE_URL || 'http://localhost:3000'
+    const siteUrl =
+      process.env.SITE_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
 
     if (!clientId || !clientSecret) {
       throw new Error(

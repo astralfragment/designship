@@ -208,20 +208,23 @@ function EntryMetaBadges({ event }: { event: TimelineEvent }) {
             {meta.filesChanged} files
           </Badge>
         )}
-        {meta.labels.map((label) => (
+        {meta.labels.map((label) => {
+          const color = /^[0-9a-fA-F]{6}$/.test(label.color) ? label.color : '888888'
+          return (
           <Badge
             key={label.name}
             variant="secondary"
             className="text-[10px]"
             style={{
-              backgroundColor: `#${label.color}20`,
-              color: `#${label.color}`,
-              borderColor: `#${label.color}40`,
+              backgroundColor: `#${color}20`,
+              color: `#${color}`,
+              borderColor: `#${color}40`,
             }}
           >
             {label.name}
           </Badge>
-        ))}
+          )
+        })}
       </div>
     )
   }

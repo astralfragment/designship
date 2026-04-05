@@ -33,11 +33,16 @@ const ThemeContext = createContext<ThemeContext | null>(null)
 export const ThemeProvider = ThemeContext.Provider
 
 export function useThemeSetup(): ThemeContext {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    return getStoredTheme() ?? getSystemTheme()
-  })
+  // Default to 'dark' for SSR to avoid hydration mismatch, then sync in useEffect
+  const [theme, setThemeState] = useState<Theme>('dark')
 
-  // Apply theme to <html> on mount and changes
+  // Sync with stored/system preference on mount, then apply on changes
+  useEffect(() => {
+    const resolved = getStoredTheme() ?? getSystemTheme()
+    setThemeState(resolved)
+    applyTheme(resolved)
+  }, [])
+
   useEffect(() => {
     applyTheme(theme)
   }, [theme])
