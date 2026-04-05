@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   exchangeFigmaCode,
   setFigmaToken,
@@ -13,8 +13,12 @@ export const Route = createFileRoute('/auth/figma-callback')({
 function FigmaCallback() {
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
+  const exchanged = useRef(false)
 
   useEffect(() => {
+    if (exchanged.current) return
+    exchanged.current = true
+
     const params = new URLSearchParams(window.location.search)
     const code = params.get('code')
     const state = params.get('state')
