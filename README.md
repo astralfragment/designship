@@ -60,6 +60,9 @@ cp .env.example .env
 | `VITE_FIGMA_CLIENT_ID` | No | Figma OAuth app client ID (shown in browser) |
 | `FIGMA_CLIENT_ID` | No | Figma OAuth app client ID (server-only, for token exchange) |
 | `FIGMA_CLIENT_SECRET` | No | Figma OAuth app client secret (server-only) |
+| `SITE_URL` | No | Base URL for OAuth redirects (defaults to `http://localhost:3000`) |
+| `EMAIL` | No | shadcn Studio Pro license email (for installing studio components) |
+| `LICENSE_KEY` | No | shadcn Studio Pro license key |
 
 4. Set up Supabase Auth with GitHub as an OAuth provider, and add your app's callback URL (`http://localhost:3000/auth/callback`) to the allowed redirect URLs. If using the Figma integration, also register `http://localhost:3000/auth/figma-callback` as the callback URL in your Figma Developer App settings.
 

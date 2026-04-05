@@ -149,12 +149,18 @@ export interface PRPage {
 
 const PR_PAGE_SIZE = 15
 
+const GITHUB_NAME_PATTERN = /^[a-zA-Z0-9._-]+$/
+
 export async function fetchMergedPRsPage(
   owner: string,
   repo: string,
   page: number,
   token?: string | null,
 ): Promise<PRPage> {
+  if (!GITHUB_NAME_PATTERN.test(owner) || !GITHUB_NAME_PATTERN.test(repo)) {
+    throw new Error('Invalid repository owner or name')
+  }
+
   const batch = await githubFetch<GitHubPR[]>(
     `/repos/${owner}/${repo}/pulls`,
     {

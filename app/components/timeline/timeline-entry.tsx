@@ -100,7 +100,7 @@ export function TimelineEntry({
                 </span>
               </div>
               <h3 className="text-sm font-medium leading-snug text-ds-text-primary">
-                {isStakeholder && rewrittenDescription && !event.description
+                {isStakeholder && rewrittenDescription
                   ? rewrittenDescription
                   : event.title}
               </h3>

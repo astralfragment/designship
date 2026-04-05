@@ -58,12 +58,13 @@ function HomePage() {
   const { data: repos, isLoading: reposLoading, error: reposError } = useRepos()
 
   const [selectedRepo, setSelectedRepo] = useState<GitHubRepo | null>(null)
-  const [viewMode, setViewMode] = useState<ViewMode>(() => {
-    if (typeof window === 'undefined') return 'builder'
-    return (localStorage.getItem('ds-view-mode') as ViewMode) === 'stakeholder'
-      ? 'stakeholder'
-      : 'builder'
-  })
+  const [viewMode, setViewMode] = useState<ViewMode>('builder')
+
+  // Sync view mode from localStorage after hydration
+  useEffect(() => {
+    const stored = localStorage.getItem('ds-view-mode')
+    if (stored === 'stakeholder') setViewMode('stakeholder')
+  }, [])
 
   // Default to first repo if none selected
   const activeRepo = selectedRepo ?? repos?.[0] ?? null

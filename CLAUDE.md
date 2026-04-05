@@ -135,14 +135,17 @@ LICENSE_KEY=your-license-key
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
 | Framework | TanStack Start | Client-side focused React framework |
+| Build Tool | Vinxi (v0.5+) | Server framework used by TanStack Start (invoked via npm scripts) |
+| Runtime | React 19 | UI library |
+| Language | TypeScript 6 | Type-safe JavaScript |
 | Routing | TanStack Router | File-based routing with type safety |
 | Styling | Tailwind CSS v4 | Utility-first CSS (CSS-native config via @tailwindcss/vite) |
-| Components | shadcn/ui + Studio Pro | Premium component library |
+| Components | shadcn/ui + Studio Pro | Premium component library (uses @base-ui/react for unstyled primitives) |
 | Database | Supabase | Postgres + Auth + Realtime |
 | AI | Claude API | Summarisation, technical → plain English |
 | Integrations | GitHub REST API | OAuth + PR/commit data |
 | Integrations | Figma REST API | Design screenshots |
-| Deployment | Vercel | Edge deployment |
+| Deployment | Vercel | `vercel.json` sets `framework: null` and `outputDirectory: .output`; TanStack Start Vercel preset is configured in `app.config.ts` via `server: { preset: 'vercel' }` |
 | Auth | Supabase Auth | GitHub OAuth (connects repos too) |
 
 ## Architectural Patterns
@@ -153,7 +156,7 @@ LICENSE_KEY=your-license-key
 - **Claude model:** API calls use `claude-sonnet-4-20250514` via a shared `callClaude` helper in `src/lib/ai.ts`. Three server functions: `rewriteOnServer` (batch text rewriting), `classifyOnServer` (feature area classification), `generateSummaryOnServer` (weekly summary). All route through `callClaude(prompt, maxTokens)` which handles API key, fetch, error logging, and response text extraction.
 - **AI error handling:** Server functions log raw Claude API error responses server-side via `console.error` but throw generic user-friendly messages to the client (`'Failed to process AI request. Please try again.'`). Never expose API response bodies or status codes to the browser.
 - **Server function validation:** All `createServerFn` handlers use `.inputValidator()` to enforce type checks and size limits (e.g., max 100 items, max 5000 chars per text). New server functions must follow this pattern.
-- **Figma OAuth CSRF:** The Figma OAuth flow generates a random UUID state parameter via `crypto.randomUUID()`, stores it in sessionStorage (`ds-figma-oauth-state`), and validates it on callback. The state is only cleared on a successful match.
+- **Figma OAuth CSRF:** The Figma OAuth flow generates a random UUID state parameter via `crypto.randomUUID()`, stores it in sessionStorage (`ds-figma-oauth-state`), and validates it on callback. The state is only cleared on a successful match. The Figma token exchange `redirectUri` is hardcoded server-side from `SITE_URL` (defaults to `http://localhost:3000`) to prevent OAuth redirect manipulation.
 - **AI rewrite caching:** Rewritten descriptions are cached client-side in localStorage under `ds-ai-cache:*` keys using a DJB2 hash. API calls are batched in chunks of 10 to balance latency and token usage.
 
 ## Important Conventions

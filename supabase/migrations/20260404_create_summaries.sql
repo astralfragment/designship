@@ -27,5 +27,9 @@ CREATE POLICY "Users can insert own summaries" ON summaries
 CREATE POLICY "Users can delete own summaries" ON summaries
   FOR DELETE USING (auth.uid() = user_id);
 
+-- Users can update their own summaries
+CREATE POLICY "Users can update own summaries" ON summaries
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
 -- Index for fast lookups by user
 CREATE INDEX idx_summaries_user_id ON summaries (user_id, generated_at DESC);

@@ -152,14 +152,12 @@ export const exchangeFigmaCode = createServerFn({ method: 'POST' })
     if (typeof obj.code !== 'string' || obj.code.length === 0 || obj.code.length > 512) {
       throw new Error('Invalid authorization code')
     }
-    if (typeof obj.redirectUri !== 'string' || obj.redirectUri.length === 0) {
-      throw new Error('Invalid redirect URI')
-    }
-    return { code: obj.code, redirectUri: obj.redirectUri }
+    return { code: obj.code }
   })
   .handler(async ({ data }): Promise<{ access_token: string }> => {
     const clientId = process.env.FIGMA_CLIENT_ID
     const clientSecret = process.env.FIGMA_CLIENT_SECRET
+    const siteUrl = process.env.SITE_URL || 'http://localhost:3000'
 
     if (!clientId || !clientSecret) {
       throw new Error(
@@ -167,7 +165,7 @@ export const exchangeFigmaCode = createServerFn({ method: 'POST' })
       )
     }
 
-    const { code, redirectUri } = data
+    const redirectUri = `${siteUrl}/auth/figma-callback`
 
     const res = await fetch('https://api.figma.com/v1/oauth/token', {
       method: 'POST',
@@ -178,7 +176,7 @@ export const exchangeFigmaCode = createServerFn({ method: 'POST' })
         client_id: clientId,
         client_secret: clientSecret,
         redirect_uri: redirectUri,
-        code,
+        code: data.code,
         grant_type: 'authorization_code',
       }),
     })
