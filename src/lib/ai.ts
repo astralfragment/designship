@@ -236,6 +236,9 @@ const classifyOnServer = createServerFn({ method: 'POST' })
       if (e.description !== null && typeof e.description !== 'string') {
         throw new Error('Invalid entry: description must be string or null')
       }
+      if (typeof e.description === 'string' && e.description.length > 5000) {
+        throw new Error('Description too long: maximum 5000 characters per entry')
+      }
     }
     return obj as { entries: Array<{ id: string; title: string; description: string | null }>; accessToken: string }
   })

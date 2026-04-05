@@ -15,11 +15,10 @@ export function useAiClassify(events: TimelineEvent[], enabled: boolean) {
       if (!session?.access_token) throw new Error('Not authenticated')
 
       // Carry forward previous classifications to avoid re-sending already-classified events
-      const prevData = queryClient.getQueryData<Record<string, string>>(['ai-classify'])
-        ?? Object.fromEntries(
-          queryClient.getQueriesData<Record<string, string>>({ queryKey: ['ai-classify'] })
-            .flatMap(([, data]) => data ? Object.entries(data) : []),
-        )
+      const prevData = Object.fromEntries(
+        queryClient.getQueriesData<Record<string, string>>({ queryKey: ['ai-classify'] })
+          .flatMap(([, data]) => data ? Object.entries(data) : []),
+      )
 
       const unclassified = events.filter((e) => !prevData[e.id])
 

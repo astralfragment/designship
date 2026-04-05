@@ -127,6 +127,9 @@ function HomePage() {
         { summary, repoName },
         {
           onSuccess: () => setSummarySaved(true),
+          onError: () => {
+            saveInitiated.current = false
+          },
         },
       )
     }
