@@ -188,10 +188,13 @@ function HomePage() {
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true)
-    await queryClient.invalidateQueries({
-      queryKey: ['github', 'prs-paginated', owner, repo],
-    })
-    setIsRefreshing(false)
+    try {
+      await queryClient.invalidateQueries({
+        queryKey: ['github', 'prs-paginated', owner, repo],
+      })
+    } finally {
+      setIsRefreshing(false)
+    }
   }, [queryClient, owner, repo])
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {

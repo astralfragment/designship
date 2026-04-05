@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useSummaries, useDeleteSummary } from '@/hooks/use-summaries'
 import { storedToWeeklySummary } from '@/lib/summaries'
@@ -178,6 +178,10 @@ function SummaryDetailDialog({
 }) {
   const [copied, setCopied] = useState<'text' | 'markdown' | null>(null)
   const { toast } = useToast()
+
+  useEffect(() => {
+    setCopied(null)
+  }, [stored?.id, open])
 
   if (!stored) return null
 

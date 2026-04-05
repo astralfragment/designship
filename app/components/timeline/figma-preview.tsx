@@ -30,7 +30,8 @@ export function FigmaThumbnails({ links }: FigmaThumbnailsProps) {
 
   if (links.length === 0) return null
 
-  const hasScreenshots = links.some((l) => l.screenshotUrl)
+  const screenshotLinks = links.filter((l) => l.screenshotUrl)
+  const hasScreenshots = screenshotLinks.length > 0
   const allLoading = links.every((l) => l.loading)
   const hasMultiple = links.length > 1
 
@@ -69,7 +70,8 @@ export function FigmaThumbnails({ links }: FigmaThumbnailsProps) {
                 key={`${link.fileKey}-${link.nodeId ?? i}`}
                 link={link}
                 onClick={() => {
-                  setPreviewIndex(i)
+                  const idx = screenshotLinks.indexOf(link)
+                  setPreviewIndex(idx >= 0 ? idx : 0)
                   setPreviewOpen(true)
                 }}
                 label={hasMultiple ? (i === 0 ? 'Before' : 'After') : undefined}
@@ -92,7 +94,7 @@ export function FigmaThumbnails({ links }: FigmaThumbnailsProps) {
         <FigmaPreviewDialog
           open={previewOpen}
           onOpenChange={setPreviewOpen}
-          links={links}
+          links={screenshotLinks}
           currentIndex={previewIndex}
           onIndexChange={setPreviewIndex}
         />
@@ -184,9 +186,8 @@ function FigmaPreviewDialog({
   currentIndex: number
   onIndexChange: (index: number) => void
 }) {
-  const screenshotLinks = links.filter((l) => l.screenshotUrl)
-  const hasMultiple = screenshotLinks.length > 1
-  const current = screenshotLinks[currentIndex] ?? screenshotLinks[0]
+  const hasMultiple = links.length > 1
+  const current = links[currentIndex] ?? links[0]
   const [compareMode, setCompareMode] = useState(false)
 
   useEffect(() => {
@@ -204,7 +205,7 @@ function FigmaPreviewDialog({
             Design Preview
             {hasMultiple && (
               <Badge variant="secondary" className="text-[10px]">
-                {currentIndex + 1} / {screenshotLinks.length}
+                {currentIndex + 1} / {links.length}
               </Badge>
             )}
           </DialogTitle>
@@ -221,8 +222,8 @@ function FigmaPreviewDialog({
                 size="icon-sm"
                 onClick={() =>
                   onIndexChange(
-                    (currentIndex - 1 + screenshotLinks.length) %
-                      screenshotLinks.length,
+                    (currentIndex - 1 + links.length) %
+                      links.length,
                   )
                 }
               >
@@ -232,13 +233,13 @@ function FigmaPreviewDialog({
                 variant="ghost"
                 size="icon-sm"
                 onClick={() =>
-                  onIndexChange((currentIndex + 1) % screenshotLinks.length)
+                  onIndexChange((currentIndex + 1) % links.length)
                 }
               >
                 <ChevronRightIcon className="size-4" />
               </Button>
             </div>
-            {screenshotLinks.length === 2 && (
+            {links.length === 2 && (
               <Button
                 variant="outline"
                 size="sm"
@@ -251,7 +252,7 @@ function FigmaPreviewDialog({
           </div>
         )}
 
-        {compareMode && screenshotLinks.length >= 2 ? (
+        {compareMode && links.length >= 2 ? (
           <div className="space-y-2">
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <div className="space-y-1">
@@ -259,7 +260,7 @@ function FigmaPreviewDialog({
                   Before
                 </span>
                 <img
-                  src={screenshotLinks[0]!.screenshotUrl!}
+                  src={links[0]!.screenshotUrl!}
                   alt="Before design"
                   className="w-full rounded-md border border-border/40"
                 />
@@ -269,7 +270,7 @@ function FigmaPreviewDialog({
                   After
                 </span>
                 <img
-                  src={screenshotLinks[1]!.screenshotUrl!}
+                  src={links[1]!.screenshotUrl!}
                   alt="After design"
                   className="w-full rounded-md border border-border/40"
                 />
