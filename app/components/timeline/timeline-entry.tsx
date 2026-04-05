@@ -100,7 +100,7 @@ export function TimelineEntry({
                 </span>
               </div>
               <h3 className="text-sm font-medium leading-snug text-ds-text-primary">
-                {isStakeholder && rewrittenDescription
+                {isStakeholder && rewrittenDescription && !event.description
                   ? rewrittenDescription
                   : event.title}
               </h3>
@@ -280,7 +280,7 @@ function EntryDetail({
       className="mt-4 animate-ds-slide-down space-y-3 border-t border-border/40 pt-4"
       onClick={(e) => e.stopPropagation()}
     >
-      {(event.description || rewrittenDescription) && (
+      {event.description && (
         <p className="text-xs leading-relaxed text-ds-text-secondary whitespace-pre-wrap">
           {isStakeholder && rewrittenDescription
             ? rewrittenDescription
