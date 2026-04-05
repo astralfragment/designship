@@ -7,10 +7,10 @@ export function useAiRewrite(events: TimelineEvent[], enabled: boolean) {
     (e) => e.description || e.title,
   )
 
-  const eventIds = events.map((e) => e.id)
+  const stableKey = events.map((e) => e.id).join(',')
 
   return useQuery({
-    queryKey: ['ai-rewrite', eventIds],
+    queryKey: ['ai-rewrite', stableKey],
     queryFn: async () => {
       const results = await batchRewriteForHumans(texts)
       const map: Record<string, string> = {}
@@ -27,5 +27,6 @@ export function useAiRewrite(events: TimelineEvent[], enabled: boolean) {
     staleTime: 10 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
+    placeholderData: (prev) => prev,
   })
 }

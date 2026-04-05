@@ -316,7 +316,7 @@ function HomePage() {
         className="animate-ds-fade-in"
       >
         {missingGithubToken ? (
-          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-ds-border py-16">
+          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-16">
             <AlertTriangleIcon className="mb-3 size-8 text-ds-text-tertiary" />
             <p className="text-sm font-medium text-ds-text-primary">
               GitHub connection lost

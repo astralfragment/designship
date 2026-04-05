@@ -35,8 +35,7 @@ function FigmaCallback() {
       return
     }
 
-    const redirectUri = `${window.location.origin}/auth/figma-callback`
-    exchangeFigmaCode({ data: { code, redirectUri } })
+    exchangeFigmaCode({ data: { code } })
       .then(({ access_token }) => {
         setFigmaToken(access_token)
         navigate({ to: '/settings' })

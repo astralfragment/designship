@@ -9,14 +9,15 @@ export function useAiClassify(events: TimelineEvent[], enabled: boolean) {
     description: e.description,
   }))
 
-  const eventIds = events.map((e) => e.id)
+  const stableKey = events.map((e) => e.id).join(',')
 
   return useQuery({
-    queryKey: ['ai-classify', eventIds],
+    queryKey: ['ai-classify', stableKey],
     queryFn: () => classifyByFeature(entries),
     enabled: enabled && events.length > 0,
     staleTime: 10 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
+    placeholderData: (prev) => prev,
   })
 }
