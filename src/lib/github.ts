@@ -164,27 +164,41 @@ export async function fetchMergedPRsPage(
     throw new Error('Invalid repository owner or name')
   }
 
-  const batch = await githubFetch<GitHubPR[]>(
-    `/repos/${owner}/${repo}/pulls`,
-    {
-      token,
-      params: {
-        state: 'closed',
-        sort: 'updated',
-        direction: 'desc',
-        per_page: PR_PAGE_SIZE,
-        page,
+  // Fetch pages until we find merged PRs or run out of results.
+  // The closed PR list includes unmerged-closed PRs, so a page may have
+  // zero merged results. We auto-advance to avoid returning empty pages.
+  let currentPage = page
+  const merged: GitHubPR[] = []
+  const MAX_EMPTY_PAGES = 5
+
+  for (let attempt = 0; attempt < MAX_EMPTY_PAGES; attempt++) {
+    const batch = await githubFetch<GitHubPR[]>(
+      `/repos/${owner}/${repo}/pulls`,
+      {
+        token,
+        params: {
+          state: 'closed',
+          sort: 'updated',
+          direction: 'desc',
+          per_page: PR_PAGE_SIZE,
+          page: currentPage,
+        },
       },
-    },
-  )
+    )
 
-  const merged = batch.filter((pr) => pr.merged_at !== null)
-  const hasMore = batch.length === PR_PAGE_SIZE
+    merged.push(...batch.filter((pr) => pr.merged_at !== null))
+    const hasMore = batch.length === PR_PAGE_SIZE
+    currentPage++
 
-  return {
-    prs: merged,
-    nextPage: hasMore ? page + 1 : null,
+    if (merged.length > 0 || !hasMore) {
+      return {
+        prs: merged,
+        nextPage: hasMore ? currentPage : null,
+      }
+    }
   }
+
+  return { prs: merged, nextPage: null }
 }
 
 export { GitHubRateLimitError, GitHubAuthError }

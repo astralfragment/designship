@@ -45,6 +45,7 @@ function FigmaCallback() {
         navigate({ to: '/settings' })
       })
       .catch(() => {
+        exchanged.current = false
         setError('Failed to connect Figma. Please try again.')
       })
   }, [navigate])

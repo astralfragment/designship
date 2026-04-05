@@ -11,6 +11,7 @@ export function useWeeklySummary(events: TimelineEvent[]) {
   const [error, setError] = useState<string | null>(null)
 
   const generate = useCallback(async () => {
+    if (isGenerating) return
     if (events.length === 0) return
     if (!session?.access_token) {
       setError('Not authenticated')
@@ -61,7 +62,7 @@ export function useWeeklySummary(events: TimelineEvent[]) {
     } finally {
       setIsGenerating(false)
     }
-  }, [events, session?.access_token])
+  }, [events, session?.access_token, isGenerating])
 
   const reset = useCallback(() => {
     setSummary(null)
