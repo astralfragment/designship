@@ -114,6 +114,7 @@ function HomePage() {
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [summarySaved, setSummarySaved] = useState(false)
   const saveInitiated = useRef(false)
+  const summaryRepoRef = useRef<string | undefined>(undefined)
 
   // Auto-save summary to Supabase when generated
   const saveMutate = saveSummaryMutation.mutate
@@ -121,7 +122,7 @@ function HomePage() {
   useEffect(() => {
     if (summary && !summaryGenerating && !summarySaved && !isSaving && !saveInitiated.current) {
       saveInitiated.current = true
-      const repoName = activeRepo?.full_name
+      const repoName = summaryRepoRef.current
       saveMutate(
         { summary, repoName },
         {
@@ -130,14 +131,15 @@ function HomePage() {
         },
       )
     }
-  }, [summary, summaryGenerating, summarySaved, isSaving, activeRepo?.full_name, saveMutate])
+  }, [summary, summaryGenerating, summarySaved, isSaving, saveMutate])
 
   const handleGenerateSummary = useCallback(() => {
     setSummaryOpen(true)
     setSummarySaved(false)
     saveInitiated.current = false
+    summaryRepoRef.current = activeRepo?.full_name
     generateSummary()
-  }, [generateSummary])
+  }, [generateSummary, activeRepo?.full_name])
 
   const handleSummaryOpenChange = useCallback(
     (open: boolean) => {
