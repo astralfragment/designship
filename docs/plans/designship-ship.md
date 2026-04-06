@@ -172,11 +172,11 @@ Every task names the skills under **Skills:**. Load them via the `Skill` tool be
 **Files:** none
 
 ### Task 12: Create the GitHub repository via gh CLI
-- [ ] `gh repo create designship --public --source=. --description "Zero-input communication layer for GitHub + Figma activity. Generates standups, release notes, and stakeholder updates."`
-- [ ] Do NOT pass `--push` yet — we want to inspect remotes first
-- [ ] `git remote -v` shows the new `origin` pointing at `github.com/<user>/designship.git`
-- [ ] `git remote get-url origin` returns the expected HTTPS URL
-- [ ] **No commit for this task — repo creation only.** Note the repo URL in the loop output.
+- [x] `gh repo create designship --public --source=. --description "Zero-input communication layer for GitHub + Figma activity. Generates standups, release notes, and stakeholder updates."`
+- [x] Do NOT pass `--push` yet — we want to inspect remotes first
+- [x] `git remote -v` shows the new `origin` pointing at `github.com/<user>/designship.git`
+- [x] `git remote get-url origin` returns the expected HTTPS URL
+- [x] **No commit for this task — repo creation only.** Note the repo URL in the loop output.
 
 **Skills:** none
 **Files:** none
