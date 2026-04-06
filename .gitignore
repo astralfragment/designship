@@ -29,6 +29,7 @@ Thumbs.db
 
 # Ralphex
 .ralphex/progress/
+.ralphex/config.backup
 .claude/ralph-loop.local.md
 
 # Debug
