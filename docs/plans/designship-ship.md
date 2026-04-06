@@ -94,16 +94,16 @@ Every task names the skills under **Skills:**. Load them via the `Skill` tool be
 **Files:** `README.md`
 
 ### Task 5: Write Quick Start section
-- [ ] Prereqs: Node ≥ 20, pnpm or npm, a Supabase project, a GitHub OAuth App, optional Figma OAuth App, Anthropic API key
-- [ ] Steps:
+- [x] Prereqs: Node ≥ 20, pnpm or npm, a Supabase project, a GitHub OAuth App, optional Figma OAuth App, Anthropic API key
+- [x] Steps:
   1. `git clone <repo>`
   2. `cd designship`
   3. `cp .env.example .env` and fill in values
   4. `npm install`
   5. `npm run dev`
   6. Open `http://localhost:3000`
-- [ ] Note that the Vercel deployment URL will be added after Phase 2
-- [ ] Commit: `readme: write Quick Start section`
+- [x] Note that the Vercel deployment URL will be added after Phase 2
+- [x] Commit: `readme: write Quick Start section`
 
 **Skills:** `superpowers:writing-skills`
 **Files:** `README.md`
