@@ -182,10 +182,10 @@ Every task names the skills under **Skills:**. Load them via the `Skill` tool be
 **Files:** none
 
 ### Task 13: Push initial history to GitHub
-- [ ] `git push -u origin master` (or `main` — whichever the local branch is named)
-- [ ] `gh repo view --web` to confirm the repo loads in the browser, OR `gh repo view` to see the repo summary in the terminal
-- [ ] Verify the README renders correctly on GitHub
-- [ ] **No commit for this task — push only.** The repo URL should be captured in the loop output for use in later tasks.
+- [x] `git push -u origin master` (or `main` — whichever the local branch is named)
+- [x] `gh repo view --web` to confirm the repo loads in the browser, OR `gh repo view` to see the repo summary in the terminal
+- [x] Verify the README renders correctly on GitHub
+- [x] **No commit for this task — push only.** The repo URL should be captured in the loop output for use in later tasks.
 
 **Skills:** none
 **Files:** none
