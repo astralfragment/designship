@@ -127,14 +127,14 @@ Every task names the skills under **Skills:**. Load them via the `Skill` tool be
 **Files:** `README.md`
 
 ### Task 8: Write Deployment section (Vercel)
-- [ ] Step 1: install Vercel CLI (`npm i -g vercel`)
-- [ ] Step 2: `vercel login`
-- [ ] Step 3: `vercel link` (single project)
-- [ ] Step 4: add env vars via `vercel env add` for each variable in `.env.example`, scope to Production + Preview + Development
-- [ ] Step 5: `vercel --prod` for first production deploy
-- [ ] Mention that `vercel.json` already sets `framework: null` and `outputDirectory: .output` for TanStack Start (per `CLAUDE.md`)
-- [ ] Add a note about updating Supabase Auth redirect URLs and Figma OAuth callback URLs to the production domain after first deploy
-- [ ] Commit: `readme: write Vercel Deployment section`
+- [x] Step 1: install Vercel CLI (`npm i -g vercel`)
+- [x] Step 2: `vercel login`
+- [x] Step 3: `vercel link` (single project)
+- [x] Step 4: add env vars via `vercel env add` for each variable in `.env.example`, scope to Production + Preview + Development
+- [x] Step 5: `vercel --prod` for first production deploy
+- [x] Mention that `vercel.json` already sets `framework: null` and `outputDirectory: .output` for TanStack Start (per `CLAUDE.md`)
+- [x] Add a note about updating Supabase Auth redirect URLs and Figma OAuth callback URLs to the production domain after first deploy
+- [x] Commit: `readme: write Vercel Deployment section`
 
 **Skills:** `superpowers:writing-skills`, `vercel-cli`
 **Files:** `README.md`

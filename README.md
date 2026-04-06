@@ -172,17 +172,61 @@ All server functions validate input with `.inputValidator()` and authenticate th
 
 ## Deployment
 
-The project is configured for Vercel deployment with the TanStack Start preset.
+DesignShip deploys to [Vercel](https://vercel.com) using the TanStack Start preset. The repo includes a `vercel.json` that sets `framework: null` and `outputDirectory: .output`, and `app.config.ts` configures `server: { preset: 'vercel' }` — no manual build configuration is needed.
 
-1. Push your code to a Git repository
-2. Import the project in the [Vercel dashboard](https://vercel.com/new)
-3. Add all environment variables from `.env.example` in Project Settings > Environment Variables
-4. Deploy
+### 1. Install the Vercel CLI
 
-Notes:
-- `VITE_*` variables are exposed to the client bundle
-- `ANTHROPIC_API_KEY` and `FIGMA_CLIENT_SECRET` are server-only and must NOT be prefixed with `VITE_`
-- Update OAuth callback URLs in Supabase and Figma to point to your production domain
+```bash
+npm i -g vercel
+```
+
+### 2. Authenticate
+
+```bash
+vercel login
+```
+
+### 3. Link the project
+
+```bash
+vercel link
+```
+
+When prompted, create a new project named `designship` with the code directory set to `./`.
+
+### 4. Add environment variables
+
+Add each variable from `.env.example` scoped to Production, Preview, and Development:
+
+```bash
+vercel env add VITE_SUPABASE_URL
+vercel env add VITE_SUPABASE_ANON_KEY
+vercel env add ANTHROPIC_API_KEY
+vercel env add VITE_FIGMA_CLIENT_ID
+vercel env add FIGMA_CLIENT_ID
+vercel env add FIGMA_CLIENT_SECRET
+vercel env add SITE_URL
+```
+
+For `SITE_URL`, use `https://designship.vercel.app` for Production, `https://$VERCEL_URL` for Preview, and `http://localhost:3000` for Development.
+
+### 5. Deploy to production
+
+```bash
+vercel --prod
+```
+
+### Post-deploy: update OAuth callback URLs
+
+After your first production deploy, update the callback URLs in these services:
+
+- **Supabase** (Authentication → URL Configuration → Redirect URLs):
+  - `https://<your-domain>/auth/callback`
+  - `https://<your-domain>/auth/figma-callback`
+- **GitHub OAuth App** (Settings → Developer settings → OAuth Apps):
+  - Homepage URL → your production domain
+- **Figma Developer App** (Callback URL):
+  - `https://<your-domain>/auth/figma-callback`
 
 ## License
 
