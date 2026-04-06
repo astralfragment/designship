@@ -162,11 +162,11 @@ Every task names the skills under **Skills:**. Load them via the `Skill` tool be
 ## Phase 2 — GitHub Repository
 
 ### Task 11: Verify gh CLI auth + clean working tree
-- [ ] `gh --version` reports a version (already installed at v2.88+)
-- [ ] `gh auth status` shows a logged-in user; if not, run `gh auth login` and use the GitHub.com / HTTPS / browser flow
-- [ ] `git status --short` is clean (commit any pending work first, including any docs work from Phase 1 that hasn't landed)
-- [ ] `git log --oneline -5` shows the last 5 commits — confirm they look healthy
-- [ ] **No commit for this task — precondition check only.** If anything fails, stop and surface the failure.
+- [x] `gh --version` reports a version (already installed at v2.88+)
+- [x] `gh auth status` shows a logged-in user; if not, run `gh auth login` and use the GitHub.com / HTTPS / browser flow
+- [x] `git status --short` is clean (commit any pending work first, including any docs work from Phase 1 that hasn't landed)
+- [x] `git log --oneline -5` shows the last 5 commits — confirm they look healthy
+- [x] **No commit for this task — precondition check only.** If anything fails, stop and surface the failure.
 
 **Skills:** none
 **Files:** none
