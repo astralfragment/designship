@@ -14,6 +14,18 @@ Zero-input communication layer that turns your GitHub + Figma activity into stan
 
 </div>
 
+## Table of Contents
+
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Quick Start](#quick-start)
+- [Environment Variables](#environment-variables)
+- [Development](#development)
+- [Architecture](#architecture)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## Features
 
 ### Core
