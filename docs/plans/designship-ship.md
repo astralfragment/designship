@@ -148,11 +148,11 @@ Every task names the skills under **Skills:**. Load them via the `Skill` tool be
 **Files:** `README.md`, `LICENSE` (new if missing)
 
 ### Task 10: Add table of contents + final README review
-- [ ] Generate a TOC at the top under the hero block, linking to every H2
-- [ ] Re-read the full README and fix any ordering issues, broken links, or stale references
-- [ ] Run a markdown lint (or visual check) for heading hierarchy
-- [ ] Dispatch `PR-Reviewer` to confirm structure, tone, and accuracy against `CLAUDE.md`
-- [ ] Commit: `readme: add table of contents + final review`
+- [x] Generate a TOC at the top under the hero block, linking to every H2
+- [x] Re-read the full README and fix any ordering issues, broken links, or stale references
+- [x] Run a markdown lint (or visual check) for heading hierarchy
+- [x] Dispatch `PR-Reviewer` to confirm structure, tone, and accuracy against `CLAUDE.md`
+- [x] Commit: `readme: add table of contents + final review`
 
 **Skills:** `superpowers:writing-skills`
 **Files:** `README.md`
