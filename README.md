@@ -16,12 +16,32 @@ Zero-input communication layer that turns your GitHub + Figma activity into stan
 
 ## Features
 
-- **Timeline view** -- Your recent merged PRs, commits, and design changes in one feed
-- **Builder / Stakeholder toggle** -- Technical details for devs, plain English for everyone else
-- **AI-powered rewrites** -- Claude converts commit messages and PR descriptions into stakeholder-friendly language
-- **Weekly summaries** -- One-click generation of "What shipped / In progress / Key decisions" reports, ready to paste into Slack or Teams
-- **Figma integration** -- Design screenshots appear inline when PRs reference Figma links
-- **Dark/light mode** -- Dark by default, with system preference detection
+### Core
+
+- Authenticate via GitHub OAuth and browse connected repositories
+- View merged PRs in a chronological timeline with metadata badges
+- Select any repo to filter the timeline feed
+- Toggle between Builder and Stakeholder views per audience
+- Generate weekly summaries and browse or export from history
+
+### Integrations
+
+- Connect Figma via OAuth from the settings page
+- Display Figma design screenshots inline when PRs reference links
+- Fetch repositories, PRs, and commits via GitHub REST API
+
+### AI-powered
+
+- Rewrite technical PR descriptions into plain English with Claude
+- Generate structured weekly reports: Shipped, In Progress, Decisions
+- Classify timeline events by feature area automatically
+
+### Polish
+
+- Switch dark and light themes with system preference detection
+- Adapt layout responsively across mobile, tablet, and desktop
+- Show skeleton loaders, error boundaries, and toast notifications
+- Detect offline status and display a network indicator
 
 ## Tech Stack
 

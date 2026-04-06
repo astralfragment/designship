@@ -75,10 +75,10 @@ Every task names the skills under **Skills:**. Load them via the `Skill` tool be
 **Files:** `README.md`, `public/screenshot-timeline.png`
 
 ### Task 3: Write Features section
-- [ ] List the shipped features from `designship-mvp.md`: GitHub OAuth, repo selector, merged-PR timeline, AI plain-English rewriting, Builder/Stakeholder view toggle, weekly summary generator, summary history, Figma OAuth, Figma screenshots in timeline, dark/light theme, mobile responsive
-- [ ] Each feature is a single bullet, leading with a verb and ≤ 14 words
-- [ ] Group as: **Core**, **Integrations**, **AI-powered**, **Polish**
-- [ ] Commit: `readme: write Features section grouped by category`
+- [x] List the shipped features from `designship-mvp.md`: GitHub OAuth, repo selector, merged-PR timeline, AI plain-English rewriting, Builder/Stakeholder view toggle, weekly summary generator, summary history, Figma OAuth, Figma screenshots in timeline, dark/light theme, mobile responsive
+- [x] Each feature is a single bullet, leading with a verb and ≤ 14 words
+- [x] Group as: **Core**, **Integrations**, **AI-powered**, **Polish**
+- [x] Commit: `readme: write Features section grouped by category`
 
 **Skills:** `superpowers:writing-skills`
 **Files:** `README.md`
