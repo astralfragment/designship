@@ -118,10 +118,10 @@ Every task names the skills under **Skills:**. Load them via the `Skill` tool be
 **Files:** `README.md`
 
 ### Task 7: Write Development & Architecture sections
-- [ ] **Development** subsection: `npm run dev`, `npm run build`, `npm run preview`, `npm run lint`, `npm run typecheck` — what each does and when to use it
-- [ ] **Architecture** subsection: route structure (file-based via TanStack Router), `app/routes/_authenticated/*` for protected pages, `src/lib/` for clients (Supabase, GitHub, Figma, Claude), `src/hooks/` for React Query data fetching, server functions in `src/lib/ai.ts` and `src/lib/figma.ts`
-- [ ] Mention the Supabase lazy-proxy pattern and the `ds-*` localStorage prefix from `CLAUDE.md`
-- [ ] Commit: `readme: write Development + Architecture sections`
+- [x] **Development** subsection: `npm run dev`, `npm run build`, `npm run preview`, `npm run lint`, `npm run typecheck` — what each does and when to use it
+- [x] **Architecture** subsection: route structure (file-based via TanStack Router), `app/routes/_authenticated/*` for protected pages, `src/lib/` for clients (Supabase, GitHub, Figma, Claude), `src/hooks/` for React Query data fetching, server functions in `src/lib/ai.ts` and `src/lib/figma.ts`
+- [x] Mention the Supabase lazy-proxy pattern and the `ds-*` localStorage prefix from `CLAUDE.md`
+- [x] Commit: `readme: write Development + Architecture sections`
 
 **Skills:** `superpowers:writing-skills`
 **Files:** `README.md`

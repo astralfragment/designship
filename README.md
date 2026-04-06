@@ -97,6 +97,79 @@ Copy `.env.example` to `.env` and fill in the values. The table below describes 
 
 > **Security:** Server-only variables must **not** be prefixed with `VITE_`. The `VITE_` prefix tells Vite to bundle the value into the client JavaScript, which would expose secrets to the browser. Only `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, and `VITE_FIGMA_CLIENT_ID` are safe to expose — they are public by design.
 
+## Development
+
+| Command | Description | When to use |
+|---------|-------------|-------------|
+| `npm run dev` | Start the Vinxi dev server with HMR | Day-to-day development |
+| `npm run build` | Production build via Vinxi | Before deploying or testing the production bundle locally |
+| `npm run start` | Serve the production build | Verify the built app works before pushing to Vercel |
+| `npm run lint` | Run `tsc --noEmit` for type checking | Before committing — catches type errors without emitting files |
+
+The dev server runs at [http://localhost:3000](http://localhost:3000) by default. Hot module replacement is handled by Vite under the hood (via Vinxi).
+
+## Architecture
+
+### Route structure
+
+Routes use TanStack Router's file-based convention inside `app/routes/`:
+
+```
+app/routes/
+├── __root.tsx              ← Root layout (AuthProvider, ThemeProvider, QueryClient)
+├── login.tsx               ← GitHub OAuth login page
+├── auth/callback.tsx       ← Supabase auth callback
+├── auth/figma-callback.tsx ← Figma OAuth callback
+├── _authenticated.tsx      ← Auth guard layout (redirects to /login if unauthenticated)
+└── _authenticated/
+    ├── index.tsx           ← Main timeline (/)
+    ├── summaries.tsx       ← Summary history (/summaries)
+    └── settings.tsx        ← Connected accounts (/settings)
+```
+
+The `_authenticated` prefix is a TanStack Router layout route — all children require a valid Supabase session.
+
+### Library modules (`src/lib/`)
+
+| Module | Purpose |
+|--------|---------|
+| `supabase.ts` | Supabase client, lazily initialized via a JS Proxy to avoid accessing `import.meta.env` during server-side module evaluation |
+| `auth.tsx` | Auth context and provider wrapping Supabase Auth |
+| `github.ts` | GitHub REST API client for repos, PRs, and commits |
+| `figma.ts` | Figma REST API client + server function for OAuth token exchange |
+| `ai.ts` | Claude API integration — `callClaude` helper plus server functions for rewriting, classifying, and summarising |
+| `summaries.ts` | Summary CRUD operations against Supabase |
+| `format-summary.ts` | Text and Markdown export formatters |
+| `utils.ts` | `cn()` helper (clsx + tailwind-merge) |
+
+### Hooks (`src/hooks/`)
+
+| Hook | Purpose |
+|------|---------|
+| `use-github.ts` | Fetch repos and paginated merged PRs via React Query |
+| `use-figma.ts` | Fetch Figma design screenshots for timeline entries |
+| `use-ai-rewrite.ts` | Batch-rewrite PR descriptions into plain English (stakeholder view) |
+| `use-ai-classify.ts` | Classify timeline events by feature area |
+| `use-weekly-summary.ts` | Generate weekly summaries via Claude |
+| `use-summaries.ts` | Summary CRUD operations via React Query |
+| `use-theme.ts` | Dark/light theme with system preference detection |
+| `use-mobile.ts` | Responsive breakpoint detection |
+| `use-copy-summary.ts` | Copy summary text to clipboard |
+
+### Server functions
+
+Server-side logic uses `createServerFn` from `@tanstack/start-client-core`. These functions run on the server during SSR and as API endpoints from the client. They are used for:
+
+- **Claude API calls** (`src/lib/ai.ts`) — `rewriteOnServer`, `classifyOnServer`, `generateSummaryOnServer`, all routed through a shared `callClaude(prompt, maxTokens)` helper
+- **Figma token exchange** (`src/lib/figma.ts`) — exchanges the OAuth code for an access token server-side
+
+All server functions validate input with `.inputValidator()` and authenticate the caller via `verifyAuth(accessToken)` before processing.
+
+### Conventions
+
+- **Supabase lazy proxy:** The client in `src/lib/supabase.ts` uses a JS `Proxy` for lazy initialization, avoiding `import.meta.env` access during server-side module evaluation. Use it like `supabase.auth.getUser()`.
+- **localStorage keys:** All keys use the `ds-` prefix — `ds-github-token`, `ds-figma-token`, `ds-theme`, `ds-view-mode`, `ds-ai-cache:*`, and `ds-figma-oauth-state` (sessionStorage).
+
 ## Deployment
 
 The project is configured for Vercel deployment with the TanStack Start preset.
@@ -110,15 +183,6 @@ Notes:
 - `VITE_*` variables are exposed to the client bundle
 - `ANTHROPIC_API_KEY` and `FIGMA_CLIENT_SECRET` are server-only and must NOT be prefixed with `VITE_`
 - Update OAuth callback URLs in Supabase and Figma to point to your production domain
-
-## Scripts
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Production build |
-| `npm run start` | Start production server |
-| `npm run lint` | TypeScript type check |
 
 ## License
 
