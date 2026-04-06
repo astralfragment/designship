@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { generateWeeklySummary } from '@/lib/ai'
 import { useAuth } from '@/lib/auth'
 import type { WeeklySummary } from '@/lib/ai'
@@ -9,15 +9,17 @@ export function useWeeklySummary(events: TimelineEvent[]) {
   const [summary, setSummary] = useState<WeeklySummary | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const isGeneratingRef = useRef(false)
 
   const generate = useCallback(async () => {
-    if (isGenerating) return
+    if (isGeneratingRef.current) return
     if (events.length === 0) return
     if (!session?.access_token) {
       setError('Not authenticated')
       return
     }
 
+    isGeneratingRef.current = true
     setIsGenerating(true)
     setError(null)
 
@@ -60,9 +62,10 @@ export function useWeeklySummary(events: TimelineEvent[]) {
         err instanceof Error ? err.message : 'Failed to generate summary',
       )
     } finally {
+      isGeneratingRef.current = false
       setIsGenerating(false)
     }
-  }, [events, session?.access_token, isGenerating])
+  }, [events, session?.access_token])
 
   const reset = useCallback(() => {
     setSummary(null)

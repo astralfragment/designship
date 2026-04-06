@@ -5,6 +5,7 @@ import {
   setFigmaToken,
   validateOAuthState,
 } from '@/lib/figma'
+import { useAuth } from '@/lib/auth'
 
 export const Route = createFileRoute('/auth/figma-callback')({
   component: FigmaCallback,
@@ -12,6 +13,7 @@ export const Route = createFileRoute('/auth/figma-callback')({
 
 function FigmaCallback() {
   const navigate = useNavigate()
+  const { session } = useAuth()
   const [error, setError] = useState<string | null>(null)
   const exchanged = useRef(false)
 
@@ -39,7 +41,13 @@ function FigmaCallback() {
       return
     }
 
-    exchangeFigmaCode({ data: { code } })
+    if (!session?.access_token) {
+      setError('Not authenticated. Please sign in first.')
+      exchanged.current = false
+      return
+    }
+
+    exchangeFigmaCode({ data: { code, accessToken: session.access_token } })
       .then(({ access_token }) => {
         setFigmaToken(access_token)
         navigate({ to: '/settings' })
@@ -48,7 +56,7 @@ function FigmaCallback() {
         exchanged.current = false
         setError('Failed to connect Figma. Please try again.')
       })
-  }, [navigate])
+  }, [navigate, session?.access_token])
 
   if (error) {
     return (

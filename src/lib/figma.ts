@@ -1,5 +1,6 @@
 import { createServerFn } from '@tanstack/start-client-core'
 import { FIGMA_TOKEN_KEY } from './auth'
+import { supabase } from './supabase'
 
 const FIGMA_API = 'https://api.figma.com/v1'
 
@@ -154,12 +155,19 @@ export const exchangeFigmaCode = createServerFn({ method: 'POST' })
   .inputValidator((d: unknown) => {
     if (!d || typeof d !== 'object') throw new Error('Invalid input')
     const obj = d as Record<string, unknown>
+    if (typeof obj.accessToken !== 'string' || obj.accessToken.length === 0) {
+      throw new Error('Unauthorized: accessToken is required')
+    }
     if (typeof obj.code !== 'string' || obj.code.length === 0 || obj.code.length > 512) {
       throw new Error('Invalid authorization code')
     }
-    return { code: obj.code }
+    return { code: obj.code, accessToken: obj.accessToken }
   })
   .handler(async ({ data }): Promise<{ access_token: string }> => {
+    const { data: { user }, error: authError } = await supabase.auth.getUser(data.accessToken)
+    if (authError || !user) {
+      throw new Error('Unauthorized')
+    }
     const clientId = process.env.FIGMA_CLIENT_ID
     const clientSecret = process.env.FIGMA_CLIENT_SECRET
     const siteUrl =
