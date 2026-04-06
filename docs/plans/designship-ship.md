@@ -54,22 +54,22 @@ Every task names the skills under **Skills:**. Load them via the `Skill` tool be
 ## Phase 1 — README & Documentation
 
 ### Task 1: Audit current README and identify gaps
-- [ ] Read the existing `README.md` end-to-end
-- [ ] List which sections exist vs the standard structure (Overview, Features, Quick start, Tech stack, Setup, Environment variables, Development, Architecture, Deployment, License)
-- [ ] Read `CLAUDE.md` and the file structure under `app/` + `src/lib/` + `src/hooks/` to understand what should actually be documented
-- [ ] Write a short gap report to `.ralphex/notes/readme-gap.md` (≤ 30 lines) listing every section that needs writing or rewriting and what each should cover
-- [ ] Commit: `docs: audit README and document gaps`
+- [x] Read the existing `README.md` end-to-end
+- [x] List which sections exist vs the standard structure (Overview, Features, Quick start, Tech stack, Setup, Environment variables, Development, Architecture, Deployment, License)
+- [x] Read `CLAUDE.md` and the file structure under `app/` + `src/lib/` + `src/hooks/` to understand what should actually be documented
+- [x] Write a short gap report to `.ralphex/notes/readme-gap.md` (≤ 30 lines) listing every section that needs writing or rewriting and what each should cover
+- [x] Commit: `docs: audit README and document gaps`
 
 **Skills:** `superpowers:writing-skills`
 **Subagents:** `Explore` × 2 in parallel — (a) read `app/routes/` + `src/lib/` to map the routes and library modules, (b) read the existing `README.md` and report what's already there
 **Files:** `.ralphex/notes/readme-gap.md` (new)
 
 ### Task 2: Write README hero + tagline + screenshot block
-- [ ] Top of README: project name, tagline, one-line value prop, badges row (license, framework, status), and a placeholder `![DesignShip Timeline](public/screenshot-timeline.png)` for the timeline screenshot
-- [ ] Tagline must match `CLAUDE.md`: "Design it. Ship it. The tool that connects the two."
-- [ ] One-line value prop: "Zero-input communication layer that turns your GitHub + Figma activity into standups, release notes, and stakeholder updates."
-- [ ] Add `public/screenshot-timeline.png` placeholder file (1×1 transparent PNG is fine for now — the real screenshot is captured in Task 14)
-- [ ] Commit: `readme: add hero + tagline + screenshot placeholder`
+- [x] Top of README: project name, tagline, one-line value prop, badges row (license, framework, status), and a placeholder `![DesignShip Timeline](public/screenshot-timeline.png)` for the timeline screenshot
+- [x] Tagline must match `CLAUDE.md`: "Design it. Ship it. The tool that connects the two."
+- [x] One-line value prop: "Zero-input communication layer that turns your GitHub + Figma activity into standups, release notes, and stakeholder updates."
+- [x] Add `public/screenshot-timeline.png` placeholder file (1×1 transparent PNG is fine for now — the real screenshot is captured in Task 14)
+- [x] Commit: `readme: add hero + tagline + screenshot placeholder`
 
 **Skills:** `superpowers:writing-skills`, `frontend-design`
 **Files:** `README.md`, `public/screenshot-timeline.png`

@@ -1,8 +1,18 @@
+<div align="center">
+
 # DesignShip
 
-> Design it. Ship it. The tool that connects the two.
+**Design it. Ship it. The tool that connects the two.**
 
-Zero-input communication layer that sits on top of your dev tools. DesignShip watches your GitHub and Figma activity, then auto-generates standups, release notes, stakeholder updates, and visual changelogs -- so you never have to write them yourself.
+Zero-input communication layer that turns your GitHub + Figma activity into standups, release notes, and stakeholder updates.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Framework: TanStack Start](https://img.shields.io/badge/Framework-TanStack%20Start-ff4154)](https://tanstack.com/start)
+[![Status: Alpha](https://img.shields.io/badge/Status-Alpha-orange)]()
+
+![DesignShip Timeline](public/screenshot-timeline.png)
+
+</div>
 
 ## Features
 
