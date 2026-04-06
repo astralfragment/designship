@@ -45,16 +45,23 @@ Zero-input communication layer that turns your GitHub + Figma activity into stan
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | TanStack Start |
-| Routing | TanStack Router (file-based) |
-| Styling | Tailwind CSS v4 |
-| Components | shadcn/ui + Studio Pro |
-| Database | Supabase (Postgres + Auth + Realtime) |
-| AI | Claude API (Anthropic) |
-| Integrations | GitHub REST API, Figma REST API |
-| Deployment | Vercel |
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| Framework | TanStack Start | Client-side focused React framework |
+| Build Tool | Vinxi (v0.5+) | Server framework used by TanStack Start |
+| Runtime | React 19 | UI library |
+| Language | TypeScript | Type-safe JavaScript |
+| Routing | TanStack Router | File-based routing with type safety |
+| Styling | Tailwind CSS v4 | Utility-first CSS (CSS-native config via @tailwindcss/vite) |
+| Components | shadcn/ui + Studio Pro | Premium component library |
+| Database | Supabase | Postgres + Auth + Realtime |
+| AI | Claude API (sonnet-4) | Summarisation, technical → plain English |
+| Integrations | GitHub REST API | OAuth + PR/commit data |
+| Integrations | Figma REST API | Design screenshots |
+| Deployment | Vercel | TanStack Start Vercel preset |
+| Auth | Supabase Auth | GitHub OAuth (connects repos too) |
+
+Server-only secrets (`ANTHROPIC_API_KEY`, `FIGMA_CLIENT_SECRET`) are accessed via TanStack server functions and never exposed to the client bundle.
 
 ## Prerequisites
 

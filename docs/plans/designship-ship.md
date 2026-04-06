@@ -84,11 +84,11 @@ Every task names the skills under **Skills:**. Load them via the `Skill` tool be
 **Files:** `README.md`
 
 ### Task 4: Write Tech Stack section
-- [ ] Mirror the table from `CLAUDE.md` "Tech Stack Details"
-- [ ] Columns: Layer, Technology, Purpose
-- [ ] Include: TanStack Start, Vinxi, React 19, TypeScript, Tailwind CSS v4, shadcn/ui + Studio Pro, Supabase, Claude API (sonnet-4), GitHub REST API, Figma REST API, Vercel
-- [ ] Add a sentence below the table noting that server-only secrets (`ANTHROPIC_API_KEY`, `FIGMA_CLIENT_SECRET`) are accessed via TanStack server functions
-- [ ] Commit: `readme: write Tech Stack section`
+- [x] Mirror the table from `CLAUDE.md` "Tech Stack Details"
+- [x] Columns: Layer, Technology, Purpose
+- [x] Include: TanStack Start, Vinxi, React 19, TypeScript, Tailwind CSS v4, shadcn/ui + Studio Pro, Supabase, Claude API (sonnet-4), GitHub REST API, Figma REST API, Vercel
+- [x] Add a sentence below the table noting that server-only secrets (`ANTHROPIC_API_KEY`, `FIGMA_CLIENT_SECRET`) are accessed via TanStack server functions
+- [x] Commit: `readme: write Tech Stack section`
 
 **Skills:** `superpowers:writing-skills`
 **Files:** `README.md`
