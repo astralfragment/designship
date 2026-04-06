@@ -79,6 +79,24 @@ Open [http://localhost:3000](http://localhost:3000) to start.
 
 > The live deployment URL will be added once Vercel deployment is complete.
 
+## Environment Variables
+
+Copy `.env.example` to `.env` and fill in the values. The table below describes each variable.
+
+| Variable | Required | Scope | Description |
+|----------|----------|-------|-------------|
+| `VITE_SUPABASE_URL` | Yes | Client | Supabase project URL (`https://<ref>.supabase.co`) |
+| `VITE_SUPABASE_ANON_KEY` | Yes | Client | Supabase anonymous (public) API key |
+| `ANTHROPIC_API_KEY` | Yes | Server | Anthropic API key for Claude-powered AI features |
+| `VITE_FIGMA_CLIENT_ID` | No | Client | Figma OAuth app client ID (enables Figma integration UI) |
+| `FIGMA_CLIENT_ID` | No | Server | Figma OAuth app client ID (used in server-side token exchange) |
+| `FIGMA_CLIENT_SECRET` | No | Server | Figma OAuth app secret (used in server-side token exchange) |
+| `SITE_URL` | No | Server | Base URL for OAuth redirect URIs (defaults to `http://localhost:3000`) |
+| `EMAIL` | No | Build | shadcn Studio Pro license email |
+| `LICENSE_KEY` | No | Build | shadcn Studio Pro license key |
+
+> **Security:** Server-only variables must **not** be prefixed with `VITE_`. The `VITE_` prefix tells Vite to bundle the value into the client JavaScript, which would expose secrets to the browser. Only `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, and `VITE_FIGMA_CLIENT_ID` are safe to expose — they are public by design.
+
 ## Deployment
 
 The project is configured for Vercel deployment with the TanStack Start preset.

@@ -109,10 +109,10 @@ Every task names the skills under **Skills:**. Load them via the `Skill` tool be
 **Files:** `README.md`
 
 ### Task 6: Write Environment Variables section
-- [ ] Read `.env.example` and list every variable with: name, required/optional, where to get it, whether it's client (`VITE_*`) or server-only
-- [ ] Render as a markdown table with columns: Variable, Required, Scope, Description
-- [ ] Below the table, add a callout: server-only secrets must NOT be prefixed with `VITE_` to keep them out of the client bundle
-- [ ] Commit: `readme: document environment variables`
+- [x] Read `.env.example` and list every variable with: name, required/optional, where to get it, whether it's client (`VITE_*`) or server-only
+- [x] Render as a markdown table with columns: Variable, Required, Scope, Description
+- [x] Below the table, add a callout: server-only secrets must NOT be prefixed with `VITE_` to keep them out of the client bundle
+- [x] Commit: `readme: document environment variables`
 
 **Skills:** `superpowers:writing-skills`
 **Files:** `README.md`
