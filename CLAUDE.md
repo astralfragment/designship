@@ -4,7 +4,7 @@
 
 **DesignShip** — Zero-input communication layer that sits on top of existing dev tools (GitHub, Figma, Jira, Slack/Teams). Watches activity and auto-generates standups, release notes, stakeholder updates, and visual changelogs.
 
-- **Stack:** TanStack Start (client-side focused) + Tailwind CSS + shadcn/ui + shadcn studio pro + Supabase (Postgres + Auth + Realtime) + Claude API + Vercel
+- **Stack:** TanStack Start (client-side focused) + Tailwind CSS v4 + shadcn/ui + shadcn studio pro + Supabase (Postgres + Auth + Realtime) + Claude API + Vercel
 - **Project dir:** `C:\Users\char\Desktop\designship`
 - **Deployment:** Vercel
 
@@ -34,26 +34,60 @@ designship/
 │   ├── config                 ← ralphex settings
 │   └── progress/              ← task completion tracking
 ├── docs/plans/                ← ralphex plan files
-├── .env                       ← shadcn studio license (gitignored)
+├── .env                       ← env vars (gitignored)
+├── .env.example               ← env var template
 ├── components.json            ← shadcn/ui + studio config
 ├── package.json
 ├── tsconfig.json
-├── tailwind.config.ts
-├── app.config.ts              ← TanStack Start config
+├── vercel.json                ← Vercel deployment config
+├── app.config.ts              ← TanStack Start + Tailwind v4 config
 ├── app/
 │   ├── routes/                ← TanStack file-based routes
-│   ├── components/            ← shared components
-│   ├── lib/                   ← utilities, API clients
-│   └── styles/                ← global CSS
+│   │   ├── __root.tsx         ← Root layout (AuthProvider, ThemeProvider, QueryClient)
+│   │   ├── login.tsx          ← GitHub OAuth login
+│   │   ├── auth/callback.tsx  ← Supabase auth callback
+│   │   ├── auth/figma-callback.tsx ← Figma OAuth callback
+│   │   ├── _authenticated.tsx ← Auth guard layout
+│   │   └── _authenticated/    ← Protected pages
+│   │       ├── index.tsx      ← Main timeline (/)
+│   │       ├── summaries.tsx  ← Summary history (/summaries)
+│   │       └── settings.tsx   ← Connected accounts (/settings)
+│   └── components/            ← shared components
+│       ├── app-shell.tsx      ← Navigation shell
+│       ├── icons.tsx           ← Shared icon components
+│       ├── offline-indicator.tsx ← Network status indicator
+│       ├── theme-toggle.tsx    ← Dark/light mode toggle
+│       ├── timeline/          ← Timeline components
+│       ├── toast.tsx           ← Toast notification system
+│       ├── error-boundary.tsx  ← Error boundary
+│       ├── weekly-summary-dialog.tsx
+│       ├── view-toggle.tsx
+│       └── repo-selector.tsx
 ├── src/
 │   ├── components/
 │   │   └── ui/                ← shadcn/ui components
 │   ├── lib/
 │   │   ├── supabase.ts        ← Supabase client
+│   │   ├── auth.tsx           ← Auth context/provider
 │   │   ├── github.ts          ← GitHub API client
 │   │   ├── figma.ts           ← Figma API client
-│   │   └── ai.ts              ← Claude API integration
-│   └── hooks/                 ← custom React hooks
+│   │   ├── ai.ts              ← Claude API integration
+│   │   ├── summaries.ts       ← Summary persistence (Supabase)
+│   │   ├── format-summary.ts  ← Text/Markdown export formatters
+│   │   └── utils.ts           ← cn() helper
+│   ├── hooks/                 ← custom React hooks
+│   │   ├── use-ai-classify.ts ← AI-powered event categorization
+│   │   ├── use-ai-rewrite.ts  ← AI description rewriting (stakeholder view)
+│   │   ├── use-figma.ts       ← Figma screenshot fetching for timeline
+│   │   ├── use-github.ts      ← GitHub repos + paginated merged PRs
+│   │   ├── use-mobile.ts      ← Responsive breakpoint detection
+│   │   ├── use-summaries.ts   ← Summary CRUD operations (Supabase)
+│   │   ├── use-theme.ts       ← Dark/light theme with system detection
+│   │   └── use-weekly-summary.ts ← Weekly summary generation
+│   └── styles/
+│       └── globals.css        ← Global CSS + Tailwind v4 config
+├── supabase/
+│   └── migrations/            ← Database migrations
 └── public/                    ← static assets
 ```
 
@@ -92,8 +126,8 @@ shadcn commands:
 
 License credentials in `.env` (gitignored):
 ```
-EMAIL=designer@aie.ac
-LICENSE_KEY=BB2FB7B1-8AFB-4A59-BD02-6C86AFF12B9C
+EMAIL=your-email@example.com
+LICENSE_KEY=your-license-key
 ```
 
 ## Tech Stack Details
@@ -101,15 +135,30 @@ LICENSE_KEY=BB2FB7B1-8AFB-4A59-BD02-6C86AFF12B9C
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
 | Framework | TanStack Start | Client-side focused React framework |
+| Build Tool | Vinxi (v0.5+) | Server framework used by TanStack Start (invoked via npm scripts) |
+| Runtime | React 19 | UI library |
+| Language | TypeScript 6 | Type-safe JavaScript |
 | Routing | TanStack Router | File-based routing with type safety |
-| Styling | Tailwind CSS | Utility-first CSS |
-| Components | shadcn/ui + Studio Pro | Premium component library |
+| Styling | Tailwind CSS v4 | Utility-first CSS (CSS-native config via @tailwindcss/vite) |
+| Components | shadcn/ui + Studio Pro | Premium component library (uses @base-ui/react for unstyled primitives) |
 | Database | Supabase | Postgres + Auth + Realtime |
 | AI | Claude API | Summarisation, technical → plain English |
 | Integrations | GitHub REST API | OAuth + PR/commit data |
 | Integrations | Figma REST API | Design screenshots |
-| Deployment | Vercel | Edge deployment |
+| Deployment | Vercel | `vercel.json` sets `framework: null` and `outputDirectory: .output`; TanStack Start Vercel preset is configured in `app.config.ts` via `server: { preset: 'vercel' }` |
 | Auth | Supabase Auth | GitHub OAuth (connects repos too) |
+
+## Architectural Patterns
+
+- **TanStack Server Functions:** Server-side logic uses `createServerFn` from `@tanstack/start-client-core`. These run on the server during SSR and as API endpoints on the client. Used for Claude API calls (`src/lib/ai.ts`) and Figma OAuth token exchange (`src/lib/figma.ts`). Server-only secrets (e.g., `ANTHROPIC_API_KEY`, `FIGMA_CLIENT_SECRET`) are accessed via `process.env` inside server function handlers.
+- **Supabase lazy proxy:** The Supabase client (`src/lib/supabase.ts`) is lazily initialized via a JS `Proxy` to avoid accessing `import.meta.env` during server-side module evaluation. Access it as `supabase.auth.getUser()` etc.
+- **localStorage keys:** All use the `ds-` prefix: `ds-github-token` (GitHub OAuth), `ds-figma-token` (Figma OAuth), `ds-theme` (theme preference), `ds-view-mode` (builder/stakeholder), `ds-figma-oauth-state` (sessionStorage, Figma CSRF), `ds-ai-cache:*` (AI rewrite cache).
+- **Claude model:** API calls use `claude-sonnet-4-20250514` via a shared `callClaude` helper in `src/lib/ai.ts`. Three server functions: `rewriteOnServer` (batch text rewriting), `classifyOnServer` (feature area classification), `generateSummaryOnServer` (weekly summary). All route through `callClaude(prompt, maxTokens)` which handles API key, fetch, error logging, and response text extraction.
+- **AI error handling:** Server functions log raw Claude API error responses server-side via `console.error` but throw generic user-friendly messages to the client (`'Failed to process AI request. Please try again.'`). Never expose API response bodies or status codes to the browser.
+- **Server function authentication:** All AI server functions accept an `accessToken` parameter (the Supabase session access token). The `verifyAuth(accessToken)` helper in `src/lib/ai.ts` calls `supabase.auth.getUser(accessToken)` to validate the token server-side before processing. New server functions that access user data or external APIs must follow this pattern.
+- **Server function validation:** All `createServerFn` handlers use `.inputValidator()` to enforce type checks and size limits (e.g., max 100 items for rewrite/classify, max 200 for summary generation, max 5000 chars per text). New server functions must follow this pattern.
+- **Figma OAuth CSRF:** The Figma OAuth flow generates a random UUID state parameter via `crypto.randomUUID()`, stores it in sessionStorage (`ds-figma-oauth-state`), and validates it on callback. The state is only cleared on a successful match. The Figma token exchange `redirectUri` is constructed server-side from `SITE_URL` environment variable (defaults to `http://localhost:3000`) to prevent OAuth redirect manipulation.
+- **AI rewrite caching:** Rewritten descriptions are cached client-side in localStorage under `ds-ai-cache:*` keys using a DJB2 hash. API calls are batched in chunks of 10 to balance latency and token usage.
 
 ## Important Conventions
 
