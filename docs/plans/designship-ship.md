@@ -140,9 +140,9 @@ Every task names the skills under **Skills:**. Load them via the `Skill` tool be
 **Files:** `README.md`
 
 ### Task 9: Write Contributing + License sections
-- [ ] **Contributing**: PRs welcome, run `npm run lint && npm run typecheck` before opening, follow Conventional Commits
-- [ ] **License**: link to `LICENSE` (create `LICENSE` as MIT if it doesn't exist)
-- [ ] Commit: `readme: add Contributing + License sections`
+- [x] **Contributing**: PRs welcome, run `npm run lint && npm run typecheck` before opening, follow Conventional Commits
+- [x] **License**: link to `LICENSE` (create `LICENSE` as MIT if it doesn't exist)
+- [x] Commit: `readme: add Contributing + License sections`
 
 **Skills:** `superpowers:writing-skills`
 **Files:** `README.md`, `LICENSE` (new if missing)

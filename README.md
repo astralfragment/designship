@@ -228,6 +228,14 @@ After your first production deploy, update the callback URLs in these services:
 - **Figma Developer App** (Callback URL):
   - `https://<your-domain>/auth/figma-callback`
 
+## Contributing
+
+PRs are welcome! Before opening one:
+
+1. Run `npm run lint` to catch type errors
+2. Follow [Conventional Commits](https://www.conventionalcommits.org/) for your commit messages (e.g. `feat:`, `fix:`, `docs:`)
+3. Keep PRs focused — one feature or fix per PR
+
 ## License
 
-Private
+[MIT](LICENSE)
