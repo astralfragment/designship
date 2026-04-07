@@ -190,217 +190,99 @@ Every task names the skills under **Skills:**. Load them via the `Skill` tool be
 **Skills:** none
 **Files:** none
 
-### Task 14: Capture the timeline screenshot for the README
-- [ ] Start the dev server: `npm run dev`
-- [ ] Sign in via the local app, browse a connected repo, let the timeline render with at least 5 entries
-- [ ] Use `chrome-devtools-mcp` to navigate to `http://localhost:3000` and `take_screenshot` of the timeline at 1440×900 viewport
-- [ ] Save as `public/screenshot-timeline.png` (overwrite the placeholder from Task 2)
-- [ ] Verify the README image now shows the real screenshot in a markdown preview
-- [ ] Commit: `docs: replace placeholder with real timeline screenshot`
+
+### Task 14: Capture timeline screenshot + add GitHub repo metadata
+- [ ] Start dev server (`npm run dev`), sign in, open a connected repo until the timeline renders ≥ 5 entries
+- [ ] Use `chrome-devtools-mcp` to capture at 1440×900, save to `public/screenshot-timeline.png` (overwrite the placeholder)
+- [ ] `gh repo edit --add-topic tanstack,react,supabase,vercel,github-oauth,figma,claude-ai,zero-input,communication,timeline`
+- [ ] `gh repo edit --homepage "https://<to-be-set-in-task-20>"` (placeholder — real URL set after prod deploy)
+- [ ] `gh repo view` confirms topics landed
+- [ ] Commit: `docs: real timeline screenshot + GitHub topics`
 
 **Skills:** `chrome-devtools-mcp:chrome-devtools`, `web-design-reviewer`
 **Files:** `public/screenshot-timeline.png`
-
-### Task 15: Add GitHub repo topics + description
-- [ ] `gh repo edit --add-topic tanstack,react,supabase,vercel,github-oauth,figma,claude-ai,zero-input,communication,timeline`
-- [ ] Verify with `gh repo view` that topics were added
-- [ ] **No commit for this task — GitHub metadata only.**
-
-**Skills:** none
-**Files:** none
 
 ---
 
 ## Phase 3 — Vercel Deployment
 
-### Task 16: Install Vercel CLI globally
-- [ ] `npm i -g vercel` (or `pnpm add -g vercel`)
-- [ ] `vercel --version` reports the installed version
-- [ ] **No commit for this task — install only.** Surface the installed version in the loop output.
+> **Knowledge update (2026-02):** Vercel now runs on **Fluid Compute** by default (same regions + price as old Edge, but full Node.js support). **Node.js 24 LTS** is the default runtime. Default function timeout is **300s**. `vercel.ts` is the new recommended config format — `vercel.json` still works, so we stay on it unless a migration is needed. Server-only secrets (no `VITE_` prefix) never leak into the client bundle.
 
-**Skills:** `vercel-cli`
-**Files:** none
+### Task 15: Install + auth + link Vercel, verify deploy config
+- [ ] `npm i -g vercel` then `vercel --version` (CLI is NOT installed yet)
+- [ ] `vercel login` and complete SSO; `vercel whoami` returns the expected user; `vercel teams switch <slug>` if needed
+- [ ] Dispatch `Explore` to read `vercel.json` and `app.config.ts` and confirm: `vercel.json` has `framework: null` + `outputDirectory: .output`, and `app.config.ts` has `server: { preset: 'vercel' }` (per `CLAUDE.md` Tech Stack table). Fix either if wrong.
+- [ ] `vercel link` from repo root → team + project name `designship` + `./` directory. Confirm `.vercel/project.json` exists and is gitignored.
+- [ ] Commit: `vercel: link project + verify deploy config` (only if config edits were needed; otherwise no-commit for install/auth/link)
 
-### Task 17: Authenticate with Vercel
-- [ ] `vercel login` and complete the email/SSO flow
-- [ ] `vercel whoami` returns the authenticated user
-- [ ] `vercel teams ls` shows available teams; switch to the right team with `vercel teams switch <slug>` if needed
-- [ ] **No commit for this task — auth only.**
+**Skills:** `vercel-cli`, `vercel:deployments-cicd`
+**Subagents:** `Explore` (config audit), `Reviewer` (only if edits were needed)
+**Files:** `vercel.json`, `app.config.ts` (only if a fix was needed)
 
-**Skills:** `vercel-cli`
-**Files:** none
-
-### Task 18: Verify vercel.json + app.config.ts are correct for Vercel
-- [ ] Dispatch `Explore` to read `vercel.json` and `app.config.ts` and confirm:
-  - `vercel.json` has `framework: null` and `outputDirectory: .output`
-  - `app.config.ts` has `server: { preset: 'vercel' }` (per `CLAUDE.md` Tech Stack table)
-- [ ] If either is wrong, fix it. Dispatch `Reviewer` after any edit.
-- [ ] Commit: `vercel: verify vercel.json + app.config.ts preset` (only if a change was needed)
-
-**Skills:** `vercel-cli`
-**Files:** `vercel.json`, `app.config.ts` (only if changes needed)
-
-### Task 19: Link the local project to a new Vercel project
-- [ ] `vercel link` from the repo root
-- [ ] When prompted: "Set up and deploy?" — yes; "Which scope?" — pick the right team; "Link to existing project?" — no; "Project name?" — `designship`; "In which directory is your code located?" — `./`
-- [ ] Confirm `.vercel/project.json` exists with `projectId` and `orgId`
-- [ ] `.vercel/` is already gitignored — verify `git status` does NOT show it as untracked
-- [ ] **No commit for this task — link only.** Note the project ID in the loop output.
-
-**Skills:** `vercel-cli`
-**Files:** `.vercel/project.json` (gitignored)
-
-### Task 20: Add Supabase env vars to Vercel
-- [ ] `vercel env add VITE_SUPABASE_URL` — paste the Supabase URL, scope to Production + Preview + Development
-- [ ] `vercel env add VITE_SUPABASE_ANON_KEY` — paste the anon key, all 3 scopes
-- [ ] `vercel env ls` shows both new vars across all 3 environments
-- [ ] **No commit for this task — env vars are server-side only.**
-
-**Skills:** `vercel-cli`, `vercel:env-vars`
-**Files:** none
-
-### Task 21: Add Anthropic API key to Vercel (server-only)
-- [ ] `vercel env add ANTHROPIC_API_KEY` — paste the key, scope to Production + Preview + Development
-- [ ] **Confirm the variable name has NO `VITE_` prefix** so it stays out of the client bundle
-- [ ] `vercel env ls | grep ANTHROPIC` confirms it landed
-- [ ] **No commit for this task.**
-
-**Skills:** `vercel-cli`, `vercel:env-vars`
-**Files:** none
-
-### Task 22: Add Figma OAuth env vars to Vercel
-- [ ] `vercel env add VITE_FIGMA_CLIENT_ID` — paste, all 3 scopes
-- [ ] `vercel env add FIGMA_CLIENT_ID` — paste, all 3 scopes
-- [ ] `vercel env add FIGMA_CLIENT_SECRET` — paste, all 3 scopes (server-only, no `VITE_` prefix)
-- [ ] `vercel env ls | grep FIGMA` shows all 3
-- [ ] **No commit for this task.**
-
-**Skills:** `vercel-cli`, `vercel:env-vars`
-**Files:** none
-
-### Task 23: Add SITE_URL placeholder to Vercel
-- [ ] `vercel env add SITE_URL` — for Production paste `https://designship.vercel.app` (placeholder, will be updated after first deploy if Vercel assigns a different domain), for Preview paste `https://$VERCEL_URL`, for Development paste `http://localhost:3000`
-- [ ] `vercel env ls | grep SITE_URL` shows all 3
-- [ ] **No commit for this task.**
-
-**Skills:** `vercel-cli`, `vercel:env-vars`
-**Files:** none
-
-### Task 24: Pull the env config locally for verification
-- [ ] `vercel env pull .env.vercel.local` — pulls Development-scoped env vars to a local file
-- [ ] Inspect the file: every variable from `.env.example` should be present
-- [ ] Delete the file after inspection: `rm .env.vercel.local` (it's gitignored anyway, but no need to keep it around)
-- [ ] **No commit for this task — verification only.**
+### Task 16: Push all env vars to Vercel + verify
+- [ ] `vercel env add` for each var in `.env.example`, scoping every one to Production + Preview + Development:
+  - `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+  - `ANTHROPIC_API_KEY` (**no** `VITE_` prefix — server-only)
+  - `VITE_FIGMA_CLIENT_ID`, `FIGMA_CLIENT_ID`, `FIGMA_CLIENT_SECRET` (last one server-only)
+  - `SITE_URL` (Prod: `https://designship.vercel.app`, Preview: `https://$VERCEL_URL`, Dev: `http://localhost:3000`)
+- [ ] `vercel env ls` shows every variable across all 3 environments
+- [ ] `vercel env pull .env.vercel.local --yes` → inspect that the pulled Development-scoped file matches `.env.example`, then `rm .env.vercel.local` (the `--yes` flag skips the overwrite prompt so this works non-interactively)
+- [ ] **No commit — env vars are server-side only.** Log the var count to the loop output.
 
 **Skills:** `vercel-cli`, `vercel:env-vars`
 **Files:** `.env.vercel.local` (created then deleted)
 
-### Task 25: Run a preview deployment
-- [ ] `vercel deploy` (no `--prod` flag — this is a preview deployment)
-- [ ] Capture the preview URL printed to stdout
-- [ ] If the build fails, read the build logs (`vercel inspect <deployment-url> --logs` or follow the link in the CLI output) and fix root cause
-- [ ] Re-run `vercel deploy` until it succeeds
-- [ ] **No commit for this task** unless build fixes were needed; if so, commit with: `vercel: fix preview build`
+### Task 17: Preview deploy + smoke test
+- [ ] `vercel deploy` (no `--prod`); capture the preview URL
+- [ ] If the build fails: `vercel inspect <url> --logs`, fix root cause, re-run — do NOT paper over errors
+- [ ] Use `chrome-devtools-mcp` to `navigate_page` to the preview URL at 1440×900
+- [ ] Verify: login page renders, GitHub OAuth button visible, dark theme default
+- [ ] `list_console_messages` filtered to errors — zero errors expected
+- [ ] `list_network_requests` — no 4xx/5xx on initial load
+- [ ] `take_screenshot` → `.ralphex/screenshots/preview-deploy.png`
+- [ ] Commit: `qa: preview deploy smoke test passed` (commits the screenshot; include any build fixes in the same commit if they were needed)
 
-**Skills:** `vercel-cli`, `vercel:deployments-cicd`
-**Files:** whichever build fixes were needed
+**Skills:** `vercel-cli`, `vercel:deployments-cicd`, `chrome-devtools-mcp:chrome-devtools`, `vercel:verification`
+**Files:** `.ralphex/screenshots/preview-deploy.png`, any build fixes
 
-### Task 26: Smoke-test the preview deployment
-- [ ] Open the preview URL in a browser (use `chrome-devtools-mcp` `navigate_page`)
-- [ ] Verify: the login page renders, the GitHub OAuth button appears, the dark theme is the default
-- [ ] Check the browser console for errors (`list_console_messages` filtered to errors)
-- [ ] Check network requests for any 404s or 500s on initial load (`list_network_requests`)
-- [ ] If anything is broken, return to the failing MVP task to fix it; do NOT paper over with a hotfix
-- [ ] Take a screenshot at 1440×900 saved to `.ralphex/screenshots/preview-deploy.png`
-- [ ] Commit: `qa: preview deployment smoke test passed` (commits the screenshot)
-
-**Skills:** `vercel-cli`, `chrome-devtools-mcp:chrome-devtools`, `vercel:verification`
-**Files:** `.ralphex/screenshots/preview-deploy.png`
-
-### Task 27: Update Supabase redirect URLs for the production domain
-- [ ] Open Supabase dashboard → Authentication → URL Configuration → Redirect URLs
-- [ ] Add: `https://designship.vercel.app/auth/callback` and the actual preview URL pattern `https://designship-*.vercel.app/auth/callback`
-- [ ] Add: `https://designship.vercel.app/auth/figma-callback` and `https://designship-*.vercel.app/auth/figma-callback`
-- [ ] Save
-- [ ] **No commit for this task — Supabase dashboard work only.** Note the saved URLs in the loop output.
+### Task 18: Update OAuth callback URLs across all three providers
+- [ ] **Supabase** dashboard → Authentication → URL Configuration → Redirect URLs: add `https://designship.vercel.app/auth/callback`, `https://designship-*.vercel.app/auth/callback`, `https://designship.vercel.app/auth/figma-callback`, `https://designship-*.vercel.app/auth/figma-callback`
+- [ ] **GitHub OAuth App** (https://github.com/settings/developers): confirm Authorization callback URL is `https://<supabase-project>.supabase.co/auth/v1/callback` and Homepage URL matches the production Vercel domain
+- [ ] **Figma Developer App** (https://www.figma.com/developers/apps): set Callback URL to `https://designship.vercel.app/auth/figma-callback`
+- [ ] Note the saved URLs in the loop output as evidence
+- [ ] **No commit — all work is external dashboard config.**
 
 **Skills:** none
 **Files:** none
 
-### Task 28: Update GitHub OAuth App callback URL
-- [ ] Open https://github.com/settings/developers → the DesignShip OAuth App
-- [ ] Set Authorization callback URL to `https://<supabase-project>.supabase.co/auth/v1/callback` (this stays the same — Supabase handles the OAuth dance)
-- [ ] Confirm the Homepage URL matches the production Vercel domain
-- [ ] **No commit for this task — GitHub OAuth App settings only.**
+### Task 19: Promote to production + end-to-end smoke test
+- [ ] `vercel --prod` from repo root; capture the production URL
+- [ ] If the build fails: read logs, fix root cause, re-run
+- [ ] Use `chrome-devtools-mcp` to drive a real signed-in flow on the production URL:
+  1. GitHub OAuth sign-in → callback completes → timeline loads
+  2. Select a connected repo → merged PRs render
+  3. Toggle Builder ↔ Stakeholder view → AI rewrite runs without error
+  4. Generate a weekly summary → dialog opens, summary text appears
+  5. (Optional) Connect Figma → OAuth flow completes
+- [ ] `take_screenshot` of the production timeline at 1440×900 → overwrite `public/screenshot-timeline.png` with the polished prod version
+- [ ] Commit: `qa: production deploy + e2e smoke test` (includes the replacement screenshot and any build fixes)
 
-**Skills:** none
-**Files:** none
-
-### Task 29: Update Figma OAuth App callback URL
-- [ ] Open https://www.figma.com/developers/apps → the DesignShip app
-- [ ] Set the Callback URL to `https://designship.vercel.app/auth/figma-callback`
-- [ ] Save
-- [ ] **No commit for this task — Figma developer app settings only.**
-
-**Skills:** none
-**Files:** none
-
-### Task 30: Promote to production
-- [ ] `vercel --prod` from the repo root
-- [ ] Capture the production URL printed to stdout
-- [ ] If the build fails, read the build logs and fix root cause; re-run `vercel --prod` until it succeeds
-- [ ] **No commit for this task** unless build fixes were needed.
-
-**Skills:** `vercel-cli`, `vercel:deployments-cicd`
-**Files:** whichever build fixes were needed
-
-### Task 31: Smoke-test the production deployment end-to-end
-- [ ] Open the production URL in a browser
-- [ ] Sign in with GitHub OAuth — confirm the callback completes and the timeline loads
-- [ ] Verify a connected repo's merged PRs render in the timeline
-- [ ] Toggle Builder ↔ Stakeholder view — verify the AI rewrite runs without error
-- [ ] Generate a weekly summary — verify the dialog opens and the summary text appears
-- [ ] (Optional) Connect Figma and verify the Figma OAuth flow completes
-- [ ] Take a screenshot of the production timeline at 1440×900 saved to `public/screenshot-timeline.png` (overwrites the dev screenshot from Task 14 with the polished prod version)
-- [ ] Commit: `qa: production smoke test + final timeline screenshot`
-
-**Skills:** `vercel-cli`, `chrome-devtools-mcp:chrome-devtools`, `vercel:verification`
-**Files:** `public/screenshot-timeline.png`
+**Skills:** `vercel-cli`, `vercel:deployments-cicd`, `chrome-devtools-mcp:chrome-devtools`, `vercel:verification`
+**Files:** `public/screenshot-timeline.png`, any build fixes
 
 ---
 
 ## Phase 4 — Final Documentation Pass
 
-### Task 32: Add the live production URL to the README
-- [ ] Add a "Live demo" badge or link near the top of the README pointing at the production Vercel URL
-- [ ] Add the URL to the `gh repo edit --homepage <url>` so the GitHub repo sidebar shows it
-- [ ] Commit: `readme: add live demo URL`
-
-**Skills:** none
-**Files:** `README.md`
-
-### Task 33: Add deployment status badge to README
-- [ ] Add a Vercel deploy status badge at the top of the README (`![Vercel](https://vercelbadge.vercel.app/api/<user>/designship)` or the official Vercel badge)
-- [ ] Commit: `readme: add Vercel deploy status badge`
-
-**Skills:** none
-**Files:** `README.md`
-
-### Task 34: Push final commits + verify GitHub state
-- [ ] `git push origin master` (or `main`)
-- [ ] `gh repo view` confirms the README, topics, and homepage URL are all updated
-- [ ] `gh run list --limit 5` confirms (if any GitHub Actions exist) that they pass; if no Actions yet, this is fine
-- [ ] `vercel ls --limit 5` confirms the latest production deployment is healthy
-- [ ] **No commit for this task — verification only.**
-
-**Skills:** none
-**Files:** none
-
-### Task 35: Write a release-notes entry for v0.1.0
-- [ ] Create or update `CHANGELOG.md` with a `## v0.1.0 — Initial Release` section listing the shipped features (mirror the README Features section, but past-tense)
-- [ ] Tag the release: `git tag -a v0.1.0 -m "Initial release"` then `git push --tags`
+### Task 20: README badges, live URL, changelog, release, push
+- [ ] Add Vercel deploy status badge near the top of `README.md`
+- [ ] Add "Live demo" link to the hero block pointing at the production Vercel URL
+- [ ] `gh repo edit --homepage <production-url>` so the GitHub sidebar shows the live URL
+- [ ] Create or update `CHANGELOG.md` with a `## v0.1.0 — Initial Release` section mirroring the Features section (past-tense)
+- [ ] `git tag -a v0.1.0 -m "Initial release"` then `git push --tags`
 - [ ] `gh release create v0.1.0 --title "v0.1.0 — Initial Release" --notes-from-tag`
-- [ ] Commit: `meta: changelog v0.1.0 + release tag`
+- [ ] `git push origin` (current branch); `gh repo view` confirms README + topics + homepage are updated; `vercel ls --limit 3` confirms latest prod deploy is healthy
+- [ ] Commit: `meta: v0.1.0 release — badges, live URL, changelog, tag`
 
-**Skills:** `superpowers:writing-skills`
-**Files:** `CHANGELOG.md`
+**Skills:** `vercel-cli`
+**Files:** `README.md`, `CHANGELOG.md`
