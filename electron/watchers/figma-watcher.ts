@@ -3,7 +3,7 @@ import { EventStore } from '../db/events'
 import { ulid } from 'ulid'
 import { app } from 'electron'
 import { join } from 'path'
-import { mkdirSync, writeFileSync } from 'fs'
+import { mkdirSync } from 'fs'
 import { discoverFigmaFilesFromBrowsers } from './figma-discovery'
 
 interface FigmaVersion {
@@ -12,6 +12,13 @@ interface FigmaVersion {
   label: string
   description: string
   user: { handle: string; img_url: string }
+}
+
+interface FigmaProject {
+  id: string
+  identifier: string
+  name: string
+  config: string | null
 }
 
 export class FigmaWatcher {
@@ -30,7 +37,6 @@ export class FigmaWatcher {
   }
 
   start() {
-    // Poll immediately, then on interval
     this.fullPoll()
     this.timer = setInterval(() => this.fullPoll(), this.pollInterval)
   }
@@ -39,9 +45,8 @@ export class FigmaWatcher {
     if (this.timer) { clearInterval(this.timer); this.timer = null }
   }
 
-  /** Called when user saves a new token — re-discover and poll immediately */
   async onTokenChanged() {
-    console.log('[FigmaWatcher] Token changed, re-discovering files...')
+    console.log('[Figma] Token updated — re-discovering files...')
     await this.discoverAndRegisterFiles()
     await this.pollAllFiles()
   }
@@ -60,82 +65,149 @@ export class FigmaWatcher {
     await this.pollAllFiles()
   }
 
-  /** Discover files from browser history + validate with Figma API */
+  // ── Discovery ──────────────────────────────────────────────
+
   private async discoverAndRegisterFiles() {
     const token = this.getToken()
     if (!token) return
 
     try {
-      // Verify token
       const meRes = await fetch('https://api.figma.com/v1/me', {
         headers: { 'X-Figma-Token': token },
       })
       if (!meRes.ok) {
-        console.log('[FigmaWatcher] Invalid token (status', meRes.status, ')')
+        console.log('[Figma] Token invalid (HTTP', meRes.status, ')')
         return
       }
       const me = await meRes.json()
-      console.log(`[FigmaWatcher] Authenticated as: ${me.handle ?? me.email}`)
+      console.log(`[Figma] Authenticated: ${me.handle} (${me.email})`)
 
-      // 1. Discover file keys from browser history (zero config)
+      // Discover from browser history
       const browserFiles = discoverFigmaFilesFromBrowsers()
-
-      // 2. For each discovered key, verify access + get file name via API
       let registered = 0
+      let skipped = 0
+      let noAccess = 0
+
       for (const { key } of browserFiles) {
-        // Skip if already registered
         const existing = this.db.prepare(
           "SELECT id FROM projects WHERE type = 'figma_file' AND identifier = ?"
         ).get(key)
-        if (existing) continue
+        if (existing) { skipped++; continue }
 
-        // Validate access with the token
         try {
           const fileRes = await fetch(`https://api.figma.com/v1/files/${key}?depth=1`, {
             headers: { 'X-Figma-Token': token },
           })
-          if (!fileRes.ok) continue // No access — skip silently
+          if (!fileRes.ok) {
+            noAccess++
+            console.log(`[Figma] No access to file ${key} (HTTP ${fileRes.status})`)
+            continue
+          }
           const fileData = await fileRes.json()
-          this.registerFigmaFile(key, fileData.name ?? `Figma: ${key.slice(0, 12)}`)
+          const fileName = fileData.name ?? `Figma: ${key.slice(0, 12)}`
+          this.registerFile(key, fileName)
           registered++
-        } catch {
-          // Network error — skip
+
+          // Import version history immediately
+          await this.importVersionHistory(key, fileName, token)
+        } catch (err) {
+          console.log(`[Figma] Error checking file ${key}:`, err)
         }
       }
 
-      if (registered > 0) {
-        console.log(`[FigmaWatcher] Registered ${registered} new Figma files`)
-      }
+      console.log(`[Figma] Discovery: ${registered} new, ${skipped} existing, ${noAccess} no access`)
     } catch (err) {
-      console.log('[FigmaWatcher] Discovery error:', err)
+      console.log('[Figma] Discovery error:', err)
     }
   }
 
-  private registerFigmaFile(fileKey: string, fileName: string) {
+  private registerFile(fileKey: string, fileName: string): string {
     const existing = this.db.prepare(
       "SELECT id FROM projects WHERE type = 'figma_file' AND identifier = ?"
-    ).get(fileKey)
+    ).get(fileKey) as { id: string } | undefined
 
-    if (!existing) {
-      const id = ulid()
-      this.db.prepare(`
-        INSERT INTO projects (id, name, type, identifier, config)
-        VALUES (?, ?, 'figma_file', ?, ?)
-      `).run(id, fileName || `Figma: ${fileKey.slice(0, 12)}`, fileKey, JSON.stringify({ autoDiscovered: true }))
-      console.log(`[FigmaWatcher] Registered: ${fileName}`)
+    if (existing) return existing.id
+
+    const id = ulid()
+    this.db.prepare(`
+      INSERT INTO projects (id, name, type, identifier, config)
+      VALUES (?, ?, 'figma_file', ?, ?)
+    `).run(id, fileName, fileKey, JSON.stringify({ autoDiscovered: true, enabled: true }))
+    console.log(`[Figma] Registered: ${fileName} (${fileKey.slice(0, 8)}...)`)
+    return id
+  }
+
+  // ── Import version history (first time) ────────────────────
+
+  private async importVersionHistory(fileKey: string, fileName: string, token: string) {
+    const project = this.db.prepare(
+      "SELECT id FROM projects WHERE type = 'figma_file' AND identifier = ?"
+    ).get(fileKey) as { id: string } | undefined
+    if (!project) return
+
+    // Check if we already have events for this file
+    const existingCount = this.db.prepare(
+      "SELECT COUNT(*) as c FROM events WHERE project_id = ? AND source = 'figma'"
+    ).get(project.id) as { c: number }
+    if (existingCount.c > 0) return // Already imported
+
+    try {
+      const versRes = await fetch(`https://api.figma.com/v1/files/${fileKey}/versions`, {
+        headers: { 'X-Figma-Token': token },
+      })
+      if (!versRes.ok) {
+        console.log(`[Figma] Can't fetch versions for ${fileName} (HTTP ${versRes.status})`)
+        return
+      }
+      const versData = await versRes.json()
+      const versions: FigmaVersion[] = (versData.versions ?? []).slice(0, 20) // Last 20
+
+      let imported = 0
+      for (const version of versions) {
+        const dedupKey = `figma:${fileKey}:${version.id}`
+        if (this.events.exists('figma', 'version_created', dedupKey)) continue
+
+        this.events.insert({
+          timestamp: version.created_at,
+          source: 'figma',
+          type: 'version_created',
+          title: version.description || `${fileName} updated`,
+          body: version.label || null,
+          actor: version.user?.handle ?? 'Unknown',
+          project_id: project.id,
+          metadata: {
+            dedupKey,
+            figmaFileKey: fileKey,
+            figmaFileName: fileName,
+            versionId: version.id,
+          },
+        })
+        imported++
+      }
+
+      if (imported > 0) {
+        console.log(`[Figma] ${fileName}: imported ${imported} versions from history`)
+      }
+    } catch (err) {
+      console.log(`[Figma] Error importing history for ${fileName}:`, err)
     }
   }
 
-  /** Poll all registered Figma files for changes */
+  // ── Polling for new changes ────────────────────────────────
+
   private async pollAllFiles() {
     const token = this.getToken()
     if (!token) return
 
     const projects = this.db
       .prepare("SELECT * FROM projects WHERE type = 'figma_file'")
-      .all() as Array<{ id: string; identifier: string; name: string }>
+      .all() as FigmaProject[]
 
     for (const project of projects) {
+      // Check if disabled
+      const config = project.config ? JSON.parse(project.config) : {}
+      if (config.enabled === false) continue
+
       await this.pollFile(project.identifier, project.id, project.name, token)
     }
   }
@@ -149,12 +221,12 @@ export class FigmaWatcher {
       const data = await res.json()
 
       const lastKnown = this.lastModifiedMap.get(fileKey)
-      if (lastKnown && lastKnown === data.lastModified) return
-
       this.lastModifiedMap.set(fileKey, data.lastModified)
-      if (!lastKnown) return // First poll — baseline only
 
-      // Fetch version history
+      if (!lastKnown) return // First poll — baseline set
+      if (lastKnown === data.lastModified) return // No changes
+
+      // Fetch new versions
       const versRes = await fetch(`https://api.figma.com/v1/files/${fileKey}/versions`, {
         headers: { 'X-Figma-Token': token },
       })
@@ -176,7 +248,7 @@ export class FigmaWatcher {
           type: 'version_created',
           title: version.description || `${fileName} updated`,
           body: version.label || null,
-          actor: version.user.handle,
+          actor: version.user?.handle ?? 'Unknown',
           project_id: projectId,
           metadata: {
             dedupKey,
@@ -188,10 +260,10 @@ export class FigmaWatcher {
       }
 
       if (newVersions.length > 0) {
-        console.log(`[FigmaWatcher] ${fileName}: ${newVersions.length} new versions`)
+        console.log(`[Figma] ${fileName}: ${newVersions.length} new changes detected`)
       }
     } catch (err) {
-      console.error(`[FigmaWatcher] Error polling ${fileKey}:`, err)
+      console.error(`[Figma] Poll error for ${fileKey}:`, err)
     }
   }
 }

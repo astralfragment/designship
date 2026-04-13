@@ -50,6 +50,15 @@ export function registerIPCHandlers(db: Database.Database) {
     db.prepare('DELETE FROM projects WHERE id = ?').run(id)
   })
 
+  ipcMain.handle('projects:toggle-watch', (_e, id: string, enabled: boolean) => {
+    const project = db.prepare('SELECT config FROM projects WHERE id = ?').get(id) as { config: string | null } | undefined
+    if (!project) return
+    const config = project.config ? JSON.parse(project.config) : {}
+    config.enabled = enabled
+    db.prepare('UPDATE projects SET config = ? WHERE id = ?').run(JSON.stringify(config), id)
+    return enabled
+  })
+
   // --- Git ---
   ipcMain.handle('git:browse-repo', async () => {
     const result = await dialog.showOpenDialog({

@@ -25,6 +25,7 @@ const api = {
     addFigma: (fileUrl: string) => invoke('projects:add-figma', fileUrl),
     addGit: (repoPath: string) => invoke('projects:add-git', repoPath),
     remove: (id: string) => invoke('projects:remove', id),
+    toggleWatch: (id: string, enabled: boolean) => ipcRenderer.invoke('projects:toggle-watch', id, enabled),
   },
 
   // Figma

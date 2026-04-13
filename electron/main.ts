@@ -1,6 +1,8 @@
-import 'dotenv/config'
-import { app, BrowserWindow, nativeImage, shell } from 'electron'
+import { config as loadEnv } from 'dotenv'
 import { join } from 'path'
+loadEnv({ path: join(__dirname, '../../.env') })
+
+import { app, BrowserWindow, nativeImage, shell } from 'electron'
 import { initDatabase } from './db/schema'
 import { createTray } from './tray'
 import { WatcherManager } from './watchers/watcher-manager'
@@ -75,14 +77,11 @@ app.whenReady().then(async () => {
   // Create tray
   createTray(mainWindow!)
 
-  // Auto-load Figma PAT from env if not already in DB
+  // Auto-load Figma PAT from env — always overwrite DB with env value if set
   const envPat = process.env.FIGMA_PAT
   if (envPat) {
-    const existing = db.prepare("SELECT value FROM app_config WHERE key = 'figma_token'").get() as { value: string } | undefined
-    if (!existing?.value) {
-      db.prepare("INSERT OR REPLACE INTO app_config (key, value) VALUES ('figma_token', ?)").run(envPat)
-      console.log('[Main] Loaded Figma PAT from environment')
-    }
+    db.prepare("INSERT OR REPLACE INTO app_config (key, value) VALUES ('figma_token', ?)").run(envPat)
+    console.log('[Main] Figma PAT loaded from .env')
   }
 
   // Auto-discover Git repos and import commits (zero config)

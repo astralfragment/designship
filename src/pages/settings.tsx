@@ -67,15 +67,11 @@ function FigmaSection() {
       {figmaProjects.length > 0 && (
         <div className="mt-2">
           <p className="text-[11px] font-medium text-text-secondary mb-1.5">
-            Watching {figmaProjects.length} file{figmaProjects.length !== 1 ? 's' : ''}
+            {figmaProjects.length} file{figmaProjects.length !== 1 ? 's' : ''} discovered
           </p>
           <div className="flex flex-col gap-1">
             {figmaProjects.map((p) => (
-              <div key={p.id} className="flex items-center gap-2 rounded-lg bg-bg-primary/40 px-3 py-1.5">
-                <div className="size-1.5 rounded-full bg-accent-figma animate-pulse-glow" />
-                <span className="text-[12px] text-text-primary">{p.name}</span>
-                <span className="ml-auto font-mono text-[10px] text-text-muted">{p.identifier.slice(0, 12)}</span>
-              </div>
+              <FigmaFileRow key={p.id} project={p} />
             ))}
           </div>
         </div>
@@ -188,6 +184,38 @@ function AISection() {
         {saved ? 'Saved' : 'Save AI settings'}
       </button>
     </Section>
+  )
+}
+
+function FigmaFileRow({ project }: { project: { id: string; name: string; identifier: string; config?: string } }) {
+  const config = project.config ? JSON.parse(project.config) : {}
+  const [enabled, setEnabled] = useState(config.enabled !== false)
+
+  const toggle = async () => {
+    const next = !enabled
+    setEnabled(next)
+    await window.ds.projects.toggleWatch(project.id, next)
+  }
+
+  return (
+    <div className="flex items-center gap-2 rounded-lg bg-bg-primary/40 px-3 py-2">
+      <button
+        onClick={toggle}
+        className={`size-3.5 shrink-0 rounded-sm border transition-colors ${
+          enabled
+            ? 'border-accent-figma bg-accent-figma'
+            : 'border-white/20 bg-transparent'
+        }`}
+      >
+        {enabled && (
+          <Check className="size-2.5 text-white" style={{ margin: '0.5px' }} />
+        )}
+      </button>
+      <span className={`flex-1 text-[12px] ${enabled ? 'text-text-primary' : 'text-text-muted line-through'}`}>
+        {project.name}
+      </span>
+      <span className="font-mono text-[10px] text-text-muted">{project.identifier.slice(0, 10)}</span>
+    </div>
   )
 }
 
