@@ -44,17 +44,28 @@ function AuthCallback() {
           }
         }
 
-        // 3. Implicit flow: hash contains access_token
-        //    Supabase's detectSessionInUrl should handle this, but it runs
-        //    asynchronously. Listen for the auth state change it triggers.
-        if (hashParams.get('access_token')) {
-          const session = await waitForSession(8000)
-          if (session) {
-            persistAndRedirect(session)
+        // 3. Implicit flow: hash contains access_token + refresh_token
+        //    Manually set the session — detectSessionInUrl races with TanStack Router
+        const accessToken = hashParams.get('access_token')
+        const refreshToken = hashParams.get('refresh_token')
+        if (accessToken && refreshToken) {
+          const { data, error: setErr } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          })
+          if (setErr) {
+            setError(setErr.message)
             return
           }
-          setError('Received token but failed to establish session. Please try again.')
-          return
+          if (data.session) {
+            // Also grab provider_token from hash since setSession won't include it
+            const providerToken = hashParams.get('provider_token')
+            if (providerToken) {
+              localStorage.setItem(GITHUB_TOKEN_KEY, providerToken)
+            }
+            navigate({ to: '/' })
+            return
+          }
         }
 
         // 4. Maybe session was already established
@@ -75,31 +86,6 @@ function AuthCallback() {
         localStorage.setItem(GITHUB_TOKEN_KEY, session.provider_token)
       }
       navigate({ to: '/' })
-    }
-
-    /** Wait for detectSessionInUrl to process the hash and fire SIGNED_IN */
-    function waitForSession(timeoutMs: number): Promise<Session | null> {
-      return new Promise((resolve) => {
-        // Check if already available
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          if (session) { resolve(session); return }
-        })
-
-        const timeout = setTimeout(() => {
-          sub.unsubscribe()
-          resolve(null)
-        }, timeoutMs)
-
-        const { data: { subscription: sub } } = supabase.auth.onAuthStateChange(
-          (event, session) => {
-            if (event === 'SIGNED_IN' && session) {
-              clearTimeout(timeout)
-              sub.unsubscribe()
-              resolve(session)
-            }
-          },
-        )
-      })
     }
 
     processAuth()
