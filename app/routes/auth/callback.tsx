@@ -19,10 +19,10 @@ function AuthCallback() {
       handled.current = true
 
       try {
-        // 1. Check for error params from Supabase/GitHub
         const params = new URLSearchParams(window.location.search)
         const hashParams = new URLSearchParams(window.location.hash.slice(1))
 
+        // 1. Check for error params from Supabase/GitHub
         const errorParam = params.get('error') || hashParams.get('error')
         if (errorParam) {
           const desc = params.get('error_description') || hashParams.get('error_description') || errorParam
@@ -44,24 +44,26 @@ function AuthCallback() {
           }
         }
 
-        // 3. Implicit flow fallback: check hash for access_token
-        const accessToken = hashParams.get('access_token')
-        if (accessToken) {
-          const { data: { session } } = await supabase.auth.getSession()
+        // 3. Implicit flow: hash contains access_token
+        //    Supabase's detectSessionInUrl should handle this, but it runs
+        //    asynchronously. Listen for the auth state change it triggers.
+        if (hashParams.get('access_token')) {
+          const session = await waitForSession(8000)
           if (session) {
             persistAndRedirect(session)
             return
           }
+          setError('Received token but failed to establish session. Please try again.')
+          return
         }
 
-        // 4. Maybe session was already established (e.g. detectSessionInUrl fired)
+        // 4. Maybe session was already established
         const { data: { session } } = await supabase.auth.getSession()
         if (session) {
           persistAndRedirect(session)
           return
         }
 
-        // Nothing worked
         setError('No auth session found. Please try signing in again.')
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Authentication failed')
@@ -73,6 +75,31 @@ function AuthCallback() {
         localStorage.setItem(GITHUB_TOKEN_KEY, session.provider_token)
       }
       navigate({ to: '/' })
+    }
+
+    /** Wait for detectSessionInUrl to process the hash and fire SIGNED_IN */
+    function waitForSession(timeoutMs: number): Promise<Session | null> {
+      return new Promise((resolve) => {
+        // Check if already available
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session) { resolve(session); return }
+        })
+
+        const timeout = setTimeout(() => {
+          sub.unsubscribe()
+          resolve(null)
+        }, timeoutMs)
+
+        const { data: { subscription: sub } } = supabase.auth.onAuthStateChange(
+          (event, session) => {
+            if (event === 'SIGNED_IN' && session) {
+              clearTimeout(timeout)
+              sub.unsubscribe()
+              resolve(session)
+            }
+          },
+        )
+      })
     }
 
     processAuth()
