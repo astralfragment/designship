@@ -152,7 +152,7 @@ export function validateOAuthState(state: string): boolean {
 
 // Server function for token exchange (client_secret stays server-side)
 export const exchangeFigmaCode = createServerFn({ method: 'POST' })
-  .inputValidator((d: unknown) => {
+  .validator((d: unknown) => {
     if (!d || typeof d !== 'object') throw new Error('Invalid input')
     const obj = d as Record<string, unknown>
     if (typeof obj.accessToken !== 'string' || obj.accessToken.length === 0) {

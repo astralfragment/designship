@@ -148,7 +148,7 @@ async function verifyAuth(accessToken: string): Promise<void> {
 // --- Server function ---
 
 const rewriteOnServer = createServerFn({ method: 'POST' })
-  .inputValidator((d: unknown) => {
+  .validator((d: unknown) => {
     if (!d || typeof d !== 'object') throw new Error('Invalid input: expected { texts: string[], accessToken: string }')
     const obj = d as Record<string, unknown>
     if (typeof obj.accessToken !== 'string' || obj.accessToken.length === 0) {
@@ -217,7 +217,7 @@ ${numbered}`,
 // --- Classify server function ---
 
 const classifyOnServer = createServerFn({ method: 'POST' })
-  .inputValidator((d: unknown) => {
+  .validator((d: unknown) => {
     if (!d || typeof d !== 'object') throw new Error('Invalid input: expected { entries: Array<{ id, title, description }>, accessToken: string }')
     const obj = d as Record<string, unknown>
     if (typeof obj.accessToken !== 'string' || obj.accessToken.length === 0) {
@@ -290,7 +290,7 @@ ${numbered}`,
 // --- Weekly summary server function ---
 
 const generateSummaryOnServer = createServerFn({ method: 'POST' })
-  .inputValidator((d: unknown) => {
+  .validator((d: unknown) => {
     if (!d || typeof d !== 'object') throw new Error('Invalid input: expected { entries: Array<{ title, description, date }>, accessToken: string }')
     const obj = d as Record<string, unknown>
     if (typeof obj.accessToken !== 'string' || obj.accessToken.length === 0) {
