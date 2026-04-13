@@ -42,6 +42,10 @@ function createWindow() {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow?.show()
+    // Open DevTools in dev mode
+    if (process.env.ELECTRON_RENDERER_URL) {
+      mainWindow?.webContents.openDevTools({ mode: 'bottom' })
+    }
   })
 
   mainWindow.on('close', (e) => {
