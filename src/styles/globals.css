@@ -1,326 +1,123 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:is(.dark *));
-
 /* ============================================================
-   DesignShip Design Tokens — Elyxia Edition
-   Dark-first with pink / iridescent accents.
-   Inter font. 4px spacing base.
+   DesignShip — Pastel-Dark Design Tokens
+   Rhythm game aesthetic: soft glows on dark surfaces
    ============================================================ */
 
 :root {
-  /* --- shadcn component tokens (light mode) --- */
-  --background: oklch(0.985 0.002 260);
-  --foreground: oklch(0.145 0.005 260);
-  --card: oklch(1.0 0 0);
-  --card-foreground: oklch(0.145 0.005 260);
-  --popover: oklch(1.0 0 0);
-  --popover-foreground: oklch(0.145 0.005 260);
-  --primary: oklch(0.65 0.22 340);
-  --primary-foreground: oklch(0.98 0.005 340);
-  --secondary: oklch(0.94 0.01 330);
-  --secondary-foreground: oklch(0.20 0.01 340);
-  --muted: oklch(0.955 0.008 330);
-  --muted-foreground: oklch(0.46 0.01 330);
-  --accent: oklch(0.955 0.01 330);
-  --accent-foreground: oklch(0.20 0.01 340);
-  --destructive: oklch(0.55 0.22 29);
-  --destructive-foreground: oklch(0.98 0.005 260);
-  --border: oklch(0.90 0.008 330);
-  --input: oklch(0.90 0.008 330);
-  --ring: oklch(0.65 0.22 340);
-  --radius: 0.625rem;
-  --chart-1: oklch(0.65 0.22 340);
-  --chart-2: oklch(0.60 0.18 310);
-  --chart-3: oklch(0.65 0.15 280);
-  --chart-4: oklch(0.70 0.16 350);
-  --chart-5: oklch(0.60 0.14 20);
-  --sidebar: oklch(0.97 0.005 330);
-  --sidebar-foreground: oklch(0.145 0.005 330);
-  --sidebar-primary: oklch(0.65 0.22 340);
-  --sidebar-primary-foreground: oklch(0.98 0.005 340);
-  --sidebar-accent: oklch(0.955 0.01 330);
-  --sidebar-accent-foreground: oklch(0.20 0.01 340);
-  --sidebar-border: oklch(0.90 0.008 330);
-  --sidebar-ring: oklch(0.65 0.22 340);
+  /* Surfaces */
+  --bg-primary: #0f0f14;
+  --bg-secondary: #1a1a24;
+  --bg-tertiary: #24243a;
+  --bg-card: #1e1e30;
 
-  /* --- shadows (light) --- */
-  --shadow-color: oklch(0 0 0 / 0.04);
-  --shadow-opacity: 0.04;
-  --shadow-offset-x: 0px;
-  --shadow-2xs: 0 1px 2px 0 oklch(0 0 0 / 0.03);
-  --shadow-xs: 0 1px 3px 0 oklch(0 0 0 / 0.04);
-  --shadow-sm: 0 1px 2px -1px oklch(0 0 0 / 0.04), 0 1px 3px 0 oklch(0 0 0 / 0.06);
-  --shadow: 0 1px 3px -1px oklch(0 0 0 / 0.04), 0 2px 4px 0 oklch(0 0 0 / 0.06);
-  --shadow-md: 0 2px 4px -2px oklch(0 0 0 / 0.04), 0 4px 6px 0 oklch(0 0 0 / 0.06);
-  --shadow-lg: 0 4px 6px -4px oklch(0 0 0 / 0.04), 0 8px 12px 0 oklch(0 0 0 / 0.06);
-  --shadow-xl: 0 8px 10px -6px oklch(0 0 0 / 0.04), 0 16px 24px 0 oklch(0 0 0 / 0.06);
-  --shadow-2xl: 0 24px 48px -12px oklch(0 0 0 / 0.18);
+  /* Accents */
+  --accent-figma: #a259ff;
+  --accent-git: #58d68d;
+  --accent-ai: #f8a5c2;
+  --accent-link: #74b9ff;
 
-  /* --- fonts --- */
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-serif: "Merriweather", ui-serif, Georgia, serif;
-  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", monospace;
+  /* Text */
+  --text-primary: #e8e8f0;
+  --text-secondary: #8888a8;
+  --text-muted: #555570;
 
-  /* --- DesignShip tokens (--ds-*) --- */
+  /* Borders */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-active: rgba(162, 89, 255, 0.3);
 
-  /* surfaces (progressive elevation) */
-  --ds-surface-0: oklch(0.985 0.002 260);
-  --ds-surface-1: oklch(1.0 0 0);
-  --ds-surface-2: oklch(0.97 0.003 260);
+  /* Glows */
+  --glow-figma: 0 0 20px rgba(162, 89, 255, 0.15);
+  --glow-git: 0 0 20px rgba(88, 214, 141, 0.15);
+  --glow-ai: 0 0 20px rgba(248, 165, 194, 0.15);
 
-  /* text hierarchy */
-  --ds-text-primary: oklch(0.145 0.005 260);
-  --ds-text-secondary: oklch(0.40 0.01 260);
-  --ds-text-tertiary: oklch(0.55 0.01 260);
+  /* Radius */
+  --radius: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
 
-  /* timeline event dots — pink-shifted palette */
-  --ds-timeline-dot-pr: oklch(0.68 0.22 340);
-  --ds-timeline-dot-commit: oklch(0.60 0.18 310);
-  --ds-timeline-dot-deploy: oklch(0.70 0.16 350);
-  --ds-timeline-dot-design: oklch(0.65 0.20 320);
-  --ds-timeline-connector: oklch(0.90 0.008 330);
-
-  /* iridescent accent gradient (use as background-image) */
-  --ds-iridescent: linear-gradient(135deg, oklch(0.68 0.22 340), oklch(0.60 0.18 310), oklch(0.65 0.15 280));
-
-  /* status */
-  --ds-success: oklch(0.65 0.18 155);
-  --ds-warning: oklch(0.75 0.15 75);
-  --ds-info: oklch(0.65 0.20 340);
-}
-
-.dark {
-  /* --- shadcn component tokens (dark mode) --- */
-  --background: oklch(0.13 0.005 260);
-  --foreground: oklch(0.93 0.005 260);
-  --card: oklch(0.17 0.005 260);
-  --card-foreground: oklch(0.93 0.005 260);
-  --popover: oklch(0.17 0.005 260);
-  --popover-foreground: oklch(0.93 0.005 260);
-  --primary: oklch(0.70 0.22 340);
-  --primary-foreground: oklch(0.98 0.005 340);
-  --secondary: oklch(0.22 0.01 330);
-  --secondary-foreground: oklch(0.90 0.005 330);
-  --muted: oklch(0.20 0.008 330);
-  --muted-foreground: oklch(0.55 0.01 330);
-  --accent: oklch(0.22 0.015 330);
-  --accent-foreground: oklch(0.90 0.005 330);
-  --destructive: oklch(0.45 0.18 29);
-  --destructive-foreground: oklch(0.95 0.005 260);
-  --border: oklch(0.27 0.012 330);
-  --input: oklch(0.27 0.012 330);
-  --ring: oklch(0.70 0.22 340);
-  --chart-1: oklch(0.70 0.22 340);
-  --chart-2: oklch(0.65 0.18 310);
-  --chart-3: oklch(0.65 0.15 280);
-  --chart-4: oklch(0.70 0.16 350);
-  --chart-5: oklch(0.60 0.14 20);
-  --sidebar: oklch(0.15 0.008 330);
-  --sidebar-foreground: oklch(0.93 0.005 330);
-  --sidebar-primary: oklch(0.70 0.22 340);
-  --sidebar-primary-foreground: oklch(0.93 0.005 340);
-  --sidebar-accent: oklch(0.22 0.015 330);
-  --sidebar-accent-foreground: oklch(0.93 0.005 330);
-  --sidebar-border: oklch(0.27 0.012 330 / 50%);
-  --sidebar-ring: oklch(0.70 0.22 340);
-
-  /* --- shadows (dark — minimal, border-based depth) --- */
-  --shadow-color: oklch(0 0 0 / 0.30);
-  --shadow-opacity: 0.30;
-  --shadow-2xs: 0 1px 2px 0 oklch(0 0 0 / 0.20);
-  --shadow-xs: 0 1px 3px 0 oklch(0 0 0 / 0.25);
-  --shadow-sm: 0 1px 2px -1px oklch(0 0 0 / 0.25), 0 1px 3px 0 oklch(0 0 0 / 0.30);
-  --shadow: 0 1px 3px -1px oklch(0 0 0 / 0.25), 0 2px 4px 0 oklch(0 0 0 / 0.30);
-  --shadow-md: 0 2px 4px -2px oklch(0 0 0 / 0.25), 0 4px 6px 0 oklch(0 0 0 / 0.30);
-  --shadow-lg: 0 4px 6px -4px oklch(0 0 0 / 0.25), 0 8px 12px 0 oklch(0 0 0 / 0.30);
-  --shadow-xl: 0 8px 10px -6px oklch(0 0 0 / 0.25), 0 16px 24px 0 oklch(0 0 0 / 0.30);
-  --shadow-2xl: 0 24px 48px -12px oklch(0 0 0 / 0.50);
-
-  /* --- DesignShip tokens (--ds-*) dark overrides --- */
-  --ds-surface-0: oklch(0.13 0.005 260);
-  --ds-surface-1: oklch(0.17 0.005 260);
-  --ds-surface-2: oklch(0.20 0.005 260);
-
-  --ds-text-primary: oklch(0.93 0.005 260);
-  --ds-text-secondary: oklch(0.60 0.01 260);
-  --ds-text-tertiary: oklch(0.45 0.01 260);
-
-  --ds-timeline-dot-pr: oklch(0.72 0.22 340);
-  --ds-timeline-dot-commit: oklch(0.65 0.18 310);
-  --ds-timeline-dot-deploy: oklch(0.70 0.16 350);
-  --ds-timeline-dot-design: oklch(0.68 0.20 320);
-  --ds-timeline-connector: oklch(0.27 0.012 330);
-
-  /* iridescent accent gradient (dark mode) */
-  --ds-iridescent: linear-gradient(135deg, oklch(0.72 0.22 340), oklch(0.65 0.18 310), oklch(0.60 0.15 280));
-
-  --ds-success: oklch(0.65 0.18 155);
-  --ds-warning: oklch(0.75 0.15 75);
-  --ds-info: oklch(0.70 0.20 340);
+  /* Fonts */
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
 @theme inline {
-  /* --- shadcn component colors --- */
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-shadow-color: var(--shadow-color);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-tertiary: var(--bg-tertiary);
+  --color-bg-card: var(--bg-card);
 
-  /* --- DesignShip colors (usable as bg-ds-surface-1, text-ds-text-secondary, etc.) --- */
-  --color-ds-surface-0: var(--ds-surface-0);
-  --color-ds-surface-1: var(--ds-surface-1);
-  --color-ds-surface-2: var(--ds-surface-2);
-  --color-ds-text-primary: var(--ds-text-primary);
-  --color-ds-text-secondary: var(--ds-text-secondary);
-  --color-ds-text-tertiary: var(--ds-text-tertiary);
-  --color-ds-timeline-dot-pr: var(--ds-timeline-dot-pr);
-  --color-ds-timeline-dot-commit: var(--ds-timeline-dot-commit);
-  --color-ds-timeline-dot-deploy: var(--ds-timeline-dot-deploy);
-  --color-ds-timeline-dot-design: var(--ds-timeline-dot-design);
-  --color-ds-timeline-connector: var(--ds-timeline-connector);
-  --color-ds-success: var(--ds-success);
-  --color-ds-warning: var(--ds-warning);
-  --color-ds-info: var(--ds-info);
+  --color-accent-figma: var(--accent-figma);
+  --color-accent-git: var(--accent-git);
+  --color-accent-ai: var(--accent-ai);
+  --color-accent-link: var(--accent-link);
 
-  /* --- iridescent gradient (use as `bg-[image:var(--ds-iridescent)]`) --- */
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
 
-  /* --- radii --- */
-  --radius: var(--radius);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-active: var(--border-active);
 
-  /* --- fonts --- */
-  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
   --font-mono: var(--font-mono);
-  --font-serif: var(--font-serif);
 
-  /* --- shadows --- */
-  --shadow-2xs: var(--shadow-2xs);
-  --shadow-xs: var(--shadow-xs);
-  --shadow-sm: var(--shadow-sm);
-  --shadow: var(--shadow);
-  --shadow-md: var(--shadow-md);
-  --shadow-lg: var(--shadow-lg);
-  --shadow-xl: var(--shadow-xl);
-  --shadow-2xl: var(--shadow-2xl);
-  --shadow-offset-x: var(--shadow-offset-x);
-  --shadow-opacity: var(--shadow-opacity);
-
-  /* --- animations (usable as animate-ds-fade-in, animate-ds-slide-up, etc.) --- */
-  --animate-ds-fade-in: ds-fade-in 0.4s ease-out both;
-  --animate-ds-slide-up: ds-slide-up 0.4s ease-out both;
-  --animate-ds-slide-down: ds-slide-down 0.3s ease-out both;
+  --animate-fade-in: fade-in 0.3s ease-out both;
+  --animate-slide-up: slide-up 0.35s ease-out both;
+  --animate-pulse-glow: pulse-glow 2s ease-in-out infinite;
 }
 
-/* --- Keyframes for timeline animations --- */
-
-@keyframes ds-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-@keyframes ds-slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes ds-slide-down {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* --- Iridescent shimmer effect (apply via class="ds-iridescent") --- */
-.ds-iridescent {
-  background: var(--ds-iridescent);
-  background-size: 200% 200%;
-  animation: ds-shimmer 6s ease-in-out infinite;
-}
-
-.ds-iridescent-text {
-  background: var(--ds-iridescent);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-size: 200% 200%;
-  animation: ds-shimmer 6s ease-in-out infinite;
-}
-
-@keyframes ds-shimmer {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ds-iridescent,
-  .ds-iridescent-text {
-    animation: none;
-    background-size: 100% 100%;
-  }
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: var(--border-subtle);
   }
   body {
-    @apply bg-background text-foreground antialiased;
-    font-family: var(--font-sans);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-body);
     line-height: 1.6;
     letter-spacing: -0.011em;
+    margin: 0;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
   }
-  html,
-  body {
-    transition: background-color 0.2s ease, color 0.15s ease;
+  /* Electron: make title bar area draggable */
+  .drag-region {
+    -webkit-app-region: drag;
+  }
+  .no-drag {
+    -webkit-app-region: no-drag;
+  }
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--text-muted);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
   }
 }

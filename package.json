@@ -1,59 +1,64 @@
 {
   "name": "designship",
-  "version": "1.0.0",
-  "private": true,
-  "type": "module",
+  "version": "0.1.0",
+  "description": "Zero-input communication layer — watches Figma + Git and generates every update your team needs",
+  "main": "./out/main/index.js",
   "scripts": {
-    "dev": "vinxi dev",
-    "build": "vinxi build",
-    "start": "vinxi start",
-    "lint": "tsc --noEmit"
+    "dev": "electron-vite dev --config electron-vite.config.ts",
+    "build": "electron-vite build --config electron-vite.config.ts",
+    "preview": "electron-vite preview --config electron-vite.config.ts",
+    "typecheck": "tsc --noEmit",
+    "package": "electron-builder --win",
+    "package:mac": "electron-builder --mac",
+    "package:linux": "electron-builder --linux"
+  },
+  "build": {
+    "appId": "app.designship",
+    "productName": "DesignShip",
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": ["nsis"],
+      "icon": "build/icon.ico"
+    },
+    "mac": {
+      "target": ["dmg"],
+      "icon": "build/icon.icns"
+    },
+    "linux": {
+      "target": ["AppImage"],
+      "icon": "build/icon.png"
+    }
   },
   "dependencies": {
-    "@base-ui/react": "^1.3.0",
-    "@supabase/supabase-js": "^2.101.1",
-    "@tanstack/react-query": "^5.96.2",
-    "@tanstack/react-router": "1.120.20",
-    "@tanstack/start": "1.120.20",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "lucide-react": "^1.7.0",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "tailwind-merge": "^3.5.0",
-    "vinxi": "0.5.3"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@tanstack/react-router": "^1.120.0",
+    "@tanstack/react-query": "^5.96.0",
+    "zustand": "^5.0.0",
+    "ai": "^4.0.0",
+    "@ai-sdk/anthropic": "^1.0.0",
+    "ollama-ai-provider": "^1.2.0",
+    "better-sqlite3": "^11.0.0",
+    "simple-git": "^3.27.0",
+    "chokidar": "^4.0.0",
+    "ulid": "^2.3.0",
+    "node-schedule": "^2.1.0",
+    "lucide-react": "^0.475.0"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.2.2",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "tailwindcss": "^4.2.2",
-    "typescript": "^6.0.2",
-    "vite": "^6.4.1"
-  },
-  "overrides": {
-    "@tanstack/router-generator": "1.120.20",
-    "@tanstack/router-plugin": "1.120.20",
-    "@tanstack/router-core": "1.120.19",
-    "@tanstack/react-start-plugin": "1.120.17",
-    "@tanstack/start-plugin-core": "1.120.17",
-    "@tanstack/server-functions-plugin": "1.120.17",
-    "@tanstack/directive-functions-plugin": "1.120.17",
-    "@tanstack/start-config": "1.120.20",
-    "@tanstack/start-server-core": "1.120.19",
-    "@tanstack/start-client-core": "1.120.19",
-    "@tanstack/react-start-server": "1.120.20",
-    "@tanstack/react-start-client": "1.120.20",
-    "@tanstack/react-start-router-manifest": "1.120.19",
-    "@tanstack/start-api-routes": "1.120.19",
-    "@tanstack/start-server-functions-client": "1.120.19",
-    "@tanstack/start-server-functions-server": "1.120.17",
-    "@tanstack/start-server-functions-handler": "1.120.19",
-    "@tanstack/start-server-functions-ssr": "1.120.19",
-    "@tanstack/history": "1.120.17",
-    "@tanstack/start-server-functions-fetcher": "1.120.19",
-    "@tanstack/router-utils": "1.120.17",
-    "@tanstack/virtual-file-routes": "1.120.17",
-    "vinxi": "0.5.3"
+    "electron": "^33.0.0",
+    "electron-vite": "^3.0.0",
+    "electron-builder": "^25.0.0",
+    "@types/better-sqlite3": "^7.6.0",
+    "@types/node-schedule": "^2.1.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "tailwindcss": "^4.0.0",
+    "@tailwindcss/vite": "^4.0.0"
   }
 }

@@ -1,20 +1,14 @@
 # Dependencies
 node_modules/
-.pnp
-.pnp.js
 
-# Build
+# Build output
+out/
+release/
 dist/
-build/
-.output/
-.vinxi/
-.vercel/
-app.config.timestamp_*
 
 # Environment
 .env
 .env.local
-.env.production
 .env.*.local
 
 # IDE
@@ -27,18 +21,20 @@ app.config.timestamp_*
 .DS_Store
 Thumbs.db
 
-# Ralphex
-.ralphex/progress/
-.ralphex/config.backup
-.claude/ralph-loop.local.md
+# Electron
+*.asar
 
-# Playwright MCP
+# SQLite (user data)
+*.db
+*.db-wal
+*.db-shm
+
+# Snapshots (user data)
+snapshots/
+
+# Misc
+.claude/
 .playwright-mcp/
 
 # Debug
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Coverage
-coverage/

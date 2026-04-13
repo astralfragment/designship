@@ -2,23 +2,21 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "skipLibCheck": true,
     "esModuleInterop": true,
+    "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "paths": {
-      "@/components/*": ["./src/components/*"],
-      "@/lib/*": ["./src/lib/*"],
-      "@/hooks/*": ["./src/hooks/*"],
-      "@/styles/*": ["./src/styles/*"]
+      "@/*": ["./src/*"],
+      "@shared/*": ["./shared/*"],
+      "@electron/*": ["./electron/*"]
     }
   },
-  "include": ["app/**/*.ts", "app/**/*.tsx", "src/**/*.ts", "src/**/*.tsx"]
+  "include": ["src/**/*", "shared/**/*", "electron/**/*"],
+  "exclude": ["node_modules", "out", "release"]
 }
