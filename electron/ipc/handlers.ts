@@ -82,6 +82,9 @@ export function registerIPCHandlers(db: Database.Database) {
     db.prepare(`
       INSERT OR REPLACE INTO app_config (key, value) VALUES ('figma_token', ?)
     `).run(token)
+    // Trigger immediate re-discovery with the new token
+    const { WatcherManager } = require('../watchers/watcher-manager')
+    WatcherManager.getInstance()?.onFigmaTokenChanged()
     return true
   })
 

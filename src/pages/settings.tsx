@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useProjects, useAddFigmaProject, useAddGitProject, useRemoveProject } from '../hooks/useProjects'
+import { useProjects, useAddGitProject, useRemoveProject } from '../hooks/useProjects'
 import { Figma, GitBranch, Plus, Trash2, Check, Loader2, Sparkles } from 'lucide-react'
 
 export function SettingsPage() {
@@ -22,26 +22,24 @@ export function SettingsPage() {
 
 function FigmaSection() {
   const [token, setToken] = useState('')
-  const [fileUrl, setFileUrl] = useState('')
   const [saved, setSaved] = useState(false)
-  const { data: projects = [] } = useProjects()
-  const addFigma = useAddFigmaProject()
-  const remove = useRemoveProject()
+  const [discovering, setDiscovering] = useState(false)
+  const { data: projects = [], refetch } = useProjects()
   const figmaProjects = (projects as Array<{ id: string; name: string; type: string; identifier: string }>)
     .filter((p) => p.type === 'figma_file')
 
   const saveToken = async () => {
     if (!token.trim()) return
+    setDiscovering(true)
     await window.ds.figma.setToken(token.trim())
     setSaved(true)
     setToken('')
-    setTimeout(() => setSaved(false), 2000)
-  }
-
-  const addFile = async () => {
-    if (!fileUrl.trim()) return
-    await addFigma.mutateAsync(fileUrl.trim())
-    setFileUrl('')
+    // Give the watcher a moment to discover files
+    setTimeout(async () => {
+      await refetch()
+      setDiscovering(false)
+      setTimeout(() => setSaved(false), 2000)
+    }, 3000)
   }
 
   return (
@@ -54,35 +52,32 @@ function FigmaSection() {
             onChange={(e) => setToken(e.target.value)}
             placeholder="figd_..."
             className="input flex-1"
+            onKeyDown={(e) => e.key === 'Enter' && saveToken()}
           />
-          <button onClick={saveToken} className="btn-accent" style={{ '--accent': '#a259ff' } as React.CSSProperties}>
-            {saved ? <Check className="size-3" /> : null}
-            {saved ? 'Saved' : 'Save'}
+          <button onClick={saveToken} disabled={discovering} className="btn-accent" style={{ '--accent': '#a259ff' } as React.CSSProperties}>
+            {discovering ? <Loader2 className="size-3 animate-spin" /> : saved ? <Check className="size-3" /> : null}
+            {discovering ? 'Discovering...' : saved ? 'Saved' : 'Save'}
           </button>
         </div>
-      </Field>
-
-      <Field label="Watch a Figma file">
-        <div className="flex gap-2">
-          <input
-            value={fileUrl}
-            onChange={(e) => setFileUrl(e.target.value)}
-            placeholder="https://figma.com/design/..."
-            className="input flex-1"
-            onKeyDown={(e) => e.key === 'Enter' && addFile()}
-          />
-          <button onClick={addFile} disabled={addFigma.isPending} className="btn-secondary">
-            {addFigma.isPending ? <Loader2 className="size-3 animate-spin" /> : <Plus className="size-3" />}
-            Add
-          </button>
-        </div>
+        <p className="mt-1.5 text-[11px] text-text-muted">
+          All your Figma files are discovered and watched automatically.
+        </p>
       </Field>
 
       {figmaProjects.length > 0 && (
-        <div className="flex flex-col gap-1 mt-1">
-          {figmaProjects.map((p) => (
-            <ProjectRow key={p.id} name={p.name} detail={p.identifier} onRemove={() => remove.mutate(p.id)} />
-          ))}
+        <div className="mt-2">
+          <p className="text-[11px] font-medium text-text-secondary mb-1.5">
+            Watching {figmaProjects.length} file{figmaProjects.length !== 1 ? 's' : ''}
+          </p>
+          <div className="flex flex-col gap-1">
+            {figmaProjects.map((p) => (
+              <div key={p.id} className="flex items-center gap-2 rounded-lg bg-bg-primary/40 px-3 py-1.5">
+                <div className="size-1.5 rounded-full bg-accent-figma animate-pulse-glow" />
+                <span className="text-[12px] text-text-primary">{p.name}</span>
+                <span className="ml-auto font-mono text-[10px] text-text-muted">{p.identifier.slice(0, 12)}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </Section>

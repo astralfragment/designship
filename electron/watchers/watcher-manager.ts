@@ -2,20 +2,21 @@ import type Database from 'better-sqlite3'
 import { FigmaWatcher } from './figma-watcher'
 import { GitWatcher } from './git-watcher'
 
+let _instance: WatcherManager | null = null
+
 export class WatcherManager {
   private figmaWatcher: FigmaWatcher
   private gitWatcher: GitWatcher
 
   constructor(private db: Database.Database) {
-    this.figmaWatcher = new FigmaWatcher(db, () => this.getFigmaToken())
+    this.figmaWatcher = new FigmaWatcher(db)
     this.gitWatcher = new GitWatcher(db)
+    _instance = this
   }
 
   start() {
-    // Start Figma polling
     this.figmaWatcher.start()
 
-    // Start watching all registered Git repos
     const gitProjects = this.db
       .prepare("SELECT * FROM projects WHERE type = 'git_repo'")
       .all() as Array<{ id: string; identifier: string }>
@@ -30,16 +31,15 @@ export class WatcherManager {
   stop() {
     this.figmaWatcher.stop()
     this.gitWatcher.stopAll()
-    console.log('[WatcherManager] All watchers stopped')
+  }
+
+  /** Called when user saves Figma token — trigger immediate re-discovery */
+  onFigmaTokenChanged() {
+    this.figmaWatcher.onTokenChanged()
   }
 
   getFigmaWatcher() { return this.figmaWatcher }
   getGitWatcher() { return this.gitWatcher }
 
-  private getFigmaToken(): string | null {
-    const row = this.db
-      .prepare("SELECT value FROM app_config WHERE key = 'figma_token'")
-      .get() as { value: string } | undefined
-    return row?.value ?? null
-  }
+  static getInstance(): WatcherManager | null { return _instance }
 }

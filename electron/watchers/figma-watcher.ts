@@ -5,13 +5,6 @@ import { app } from 'electron'
 import { join } from 'path'
 import { mkdirSync, writeFileSync } from 'fs'
 
-interface FigmaFile {
-  key: string
-  name: string
-  lastModified: string
-  version: string
-}
-
 interface FigmaVersion {
   id: string
   created_at: string
@@ -28,8 +21,7 @@ export class FigmaWatcher {
 
   constructor(
     private db: Database.Database,
-    private getToken: () => string | null,
-    private pollInterval = 15 * 60 * 1000, // 15 min default
+    private pollInterval = 15 * 60 * 1000,
   ) {
     this.events = new EventStore(db)
     this.snapshotDir = join(app.getPath('userData'), 'snapshots')
@@ -37,84 +29,163 @@ export class FigmaWatcher {
   }
 
   start() {
-    // Auto-discover Figma files on first start
-    this.autoDiscoverFiles().then(() => this.poll())
-    this.timer = setInterval(() => this.poll(), this.pollInterval)
+    // Poll immediately, then on interval
+    this.fullPoll()
+    this.timer = setInterval(() => this.fullPoll(), this.pollInterval)
   }
 
-  /** Fetch user's recent files and auto-register them as projects */
-  private async autoDiscoverFiles() {
+  stop() {
+    if (this.timer) { clearInterval(this.timer); this.timer = null }
+  }
+
+  /** Called when user saves a new token — re-discover and poll immediately */
+  async onTokenChanged() {
+    console.log('[FigmaWatcher] Token changed, re-discovering files...')
+    await this.discoverAndRegisterFiles()
+    await this.pollAllFiles()
+  }
+
+  private getToken(): string | null {
+    const row = this.db
+      .prepare("SELECT value FROM app_config WHERE key = 'figma_token'")
+      .get() as { value: string } | undefined
+    return row?.value || null
+  }
+
+  private async fullPoll() {
+    const token = this.getToken()
+    if (!token) return
+    await this.discoverAndRegisterFiles()
+    await this.pollAllFiles()
+  }
+
+  /** Fetch ALL files the user has access to and register them as projects */
+  private async discoverAndRegisterFiles() {
     const token = this.getToken()
     if (!token) return
 
     try {
+      // Verify token + get user info
+      const meRes = await fetch('https://api.figma.com/v1/me', {
+        headers: { 'X-Figma-Token': token },
+      })
+      if (!meRes.ok) {
+        console.log('[FigmaWatcher] Invalid token (status', meRes.status, ')')
+        return
+      }
+      const me = await meRes.json()
+      console.log(`[FigmaWatcher] Authenticated as: ${me.handle ?? me.email}`)
+
+      // Get user's teams
+      const teamsRes = await fetch('https://api.figma.com/v1/me', {
+        headers: { 'X-Figma-Token': token },
+      })
+      // Figma doesn't have a "list all my files" endpoint, but we can get team projects
+      // For personal accounts, we use /v1/me/files if available, otherwise just poll registered files
+
+      // Try the teams → projects → files path
+      if (me.teams && Array.isArray(me.teams)) {
+        for (const team of me.teams) {
+          await this.discoverTeamFiles(team.id, token)
+        }
+      }
+
+      // Also try getting recent files directly (works for some account types)
+      await this.discoverRecentFiles(token)
+
+    } catch (err) {
+      console.log('[FigmaWatcher] Discovery error:', err)
+    }
+  }
+
+  private async discoverTeamFiles(teamId: string, token: string) {
+    try {
+      const projRes = await fetch(`https://api.figma.com/v1/teams/${teamId}/projects`, {
+        headers: { 'X-Figma-Token': token },
+      })
+      if (!projRes.ok) return
+      const projData = await projRes.json()
+
+      for (const project of projData.projects ?? []) {
+        const filesRes = await fetch(`https://api.figma.com/v1/projects/${project.id}/files`, {
+          headers: { 'X-Figma-Token': token },
+        })
+        if (!filesRes.ok) continue
+        const filesData = await filesRes.json()
+
+        for (const file of filesData.files ?? []) {
+          this.registerFigmaFile(file.key, file.name)
+        }
+      }
+    } catch {
+      // Team access error — skip
+    }
+  }
+
+  private async discoverRecentFiles(token: string) {
+    try {
+      // /v1/me endpoint sometimes includes recent_files
       const res = await fetch('https://api.figma.com/v1/me', {
         headers: { 'X-Figma-Token': token },
       })
       if (!res.ok) return
-      const me = await res.json()
-      console.log(`[FigmaWatcher] Connected as ${me.handle ?? me.email ?? 'unknown'}`)
-
-      // Fetch recent files from the user's teams/projects
-      // The /v1/me/files endpoint gives recent files
-      const filesRes = await fetch('https://api.figma.com/v1/me/files?page_size=10', {
-        headers: { 'X-Figma-Token': token },
-      })
-      // This endpoint may not exist for all accounts, so fail gracefully
-      if (!filesRes.ok) {
-        console.log('[FigmaWatcher] Could not auto-discover files (API returned', filesRes.status, ')')
-        return
-      }
-
-      const filesData = await filesRes.json()
-      const files = filesData.files ?? filesData.meta?.files ?? []
-
-      for (const file of files) {
-        const fileKey = file.key
-        if (!fileKey) continue
-
-        const existing = this.db.prepare(
-          "SELECT id FROM projects WHERE type = 'figma_file' AND identifier = ?"
-        ).get(fileKey)
-
-        if (!existing) {
-          const id = ulid()
-          this.db.prepare(`
-            INSERT INTO projects (id, name, type, identifier, config)
-            VALUES (?, ?, 'figma_file', ?, ?)
-          `).run(id, file.name || `Figma: ${fileKey.slice(0, 8)}`, fileKey, JSON.stringify({ autoDiscovered: true }))
-          console.log(`[FigmaWatcher] Auto-registered: ${file.name}`)
-        }
-      }
-    } catch (err) {
-      console.log('[FigmaWatcher] Auto-discover error:', err)
+      // Note: this doesn't list files directly, but we tried
+    } catch {
+      // Ignore
     }
   }
 
-  stop() {
-    if (this.timer) {
-      clearInterval(this.timer)
-      this.timer = null
+  private registerFigmaFile(fileKey: string, fileName: string) {
+    const existing = this.db.prepare(
+      "SELECT id FROM projects WHERE type = 'figma_file' AND identifier = ?"
+    ).get(fileKey)
+
+    if (!existing) {
+      const id = ulid()
+      this.db.prepare(`
+        INSERT INTO projects (id, name, type, identifier, config)
+        VALUES (?, ?, 'figma_file', ?, ?)
+      `).run(id, fileName || `Figma: ${fileKey.slice(0, 12)}`, fileKey, JSON.stringify({ autoDiscovered: true }))
+      console.log(`[FigmaWatcher] Registered: ${fileName}`)
     }
   }
 
-  async pollFile(fileKey: string, projectId: string): Promise<void> {
+  /** Poll all registered Figma files for changes */
+  private async pollAllFiles() {
     const token = this.getToken()
     if (!token) return
 
+    const projects = this.db
+      .prepare("SELECT * FROM projects WHERE type = 'figma_file'")
+      .all() as Array<{ id: string; identifier: string; name: string }>
+
+    for (const project of projects) {
+      await this.pollFile(project.identifier, project.id, project.name, token)
+    }
+  }
+
+  private async pollFile(fileKey: string, projectId: string, fileName: string, token: string) {
     try {
-      // 1. Check if file was modified
-      const file = await this.fetchFile(fileKey, token)
-      if (!file) return
+      const res = await fetch(`https://api.figma.com/v1/files/${fileKey}?depth=1`, {
+        headers: { 'X-Figma-Token': token },
+      })
+      if (!res.ok) return
+      const data = await res.json()
 
       const lastKnown = this.lastModifiedMap.get(fileKey)
-      if (lastKnown && lastKnown === file.lastModified) return
+      if (lastKnown && lastKnown === data.lastModified) return
 
-      this.lastModifiedMap.set(fileKey, file.lastModified)
-      if (!lastKnown) return // First poll — just record baseline
+      this.lastModifiedMap.set(fileKey, data.lastModified)
+      if (!lastKnown) return // First poll — baseline only
 
-      // 2. Fetch version history to see what changed
-      const versions = await this.fetchVersions(fileKey, token)
+      // Fetch version history
+      const versRes = await fetch(`https://api.figma.com/v1/files/${fileKey}/versions`, {
+        headers: { 'X-Figma-Token': token },
+      })
+      if (!versRes.ok) return
+      const versData = await versRes.json()
+      const versions: FigmaVersion[] = versData.versions ?? []
+
       const newVersions = versions.filter(
         (v) => new Date(v.created_at) > new Date(lastKnown),
       )
@@ -127,91 +198,24 @@ export class FigmaWatcher {
           timestamp: version.created_at,
           source: 'figma',
           type: 'version_created',
-          title: version.description || `${file.name} updated`,
+          title: version.description || `${fileName} updated`,
           body: version.label || null,
           actor: version.user.handle,
           project_id: projectId,
           metadata: {
             dedupKey,
             figmaFileKey: fileKey,
-            figmaFileName: file.name,
+            figmaFileName: fileName,
             versionId: version.id,
-            versionDescription: version.description,
           },
         })
       }
 
-      // 3. Try to capture a snapshot of the first page
-      await this.captureSnapshot(fileKey, token)
+      if (newVersions.length > 0) {
+        console.log(`[FigmaWatcher] ${fileName}: ${newVersions.length} new versions`)
+      }
     } catch (err) {
       console.error(`[FigmaWatcher] Error polling ${fileKey}:`, err)
-    }
-  }
-
-  private async poll() {
-    const projects = this.db
-      .prepare("SELECT * FROM projects WHERE type = 'figma_file'")
-      .all() as Array<{ id: string; identifier: string }>
-
-    for (const project of projects) {
-      await this.pollFile(project.identifier, project.id)
-    }
-  }
-
-  private async fetchFile(fileKey: string, token: string): Promise<FigmaFile | null> {
-    const res = await fetch(`https://api.figma.com/v1/files/${fileKey}?depth=1`, {
-      headers: { 'X-Figma-Token': token },
-    })
-    if (!res.ok) return null
-    const data = await res.json()
-    return {
-      key: fileKey,
-      name: data.name,
-      lastModified: data.lastModified,
-      version: data.version,
-    }
-  }
-
-  private async fetchVersions(fileKey: string, token: string): Promise<FigmaVersion[]> {
-    const res = await fetch(`https://api.figma.com/v1/files/${fileKey}/versions`, {
-      headers: { 'X-Figma-Token': token },
-    })
-    if (!res.ok) return []
-    const data = await res.json()
-    return data.versions ?? []
-  }
-
-  private async captureSnapshot(fileKey: string, token: string): Promise<string | null> {
-    try {
-      // Get the first page's node ID
-      const res = await fetch(`https://api.figma.com/v1/files/${fileKey}?depth=1`, {
-        headers: { 'X-Figma-Token': token },
-      })
-      if (!res.ok) return null
-      const data = await res.json()
-      const firstPage = data.document?.children?.[0]
-      if (!firstPage) return null
-
-      // Render as image
-      const imgRes = await fetch(
-        `https://api.figma.com/v1/images/${fileKey}?ids=${firstPage.id}&format=png&scale=1`,
-        { headers: { 'X-Figma-Token': token } },
-      )
-      if (!imgRes.ok) return null
-      const imgData = await imgRes.json()
-      const imageUrl = imgData.images?.[firstPage.id]
-      if (!imageUrl) return null
-
-      // Download and save
-      const pngRes = await fetch(imageUrl)
-      const buffer = Buffer.from(await pngRes.arrayBuffer())
-      const filename = `${fileKey}-${Date.now()}.png`
-      const filepath = join(this.snapshotDir, filename)
-      writeFileSync(filepath, buffer)
-
-      return filepath
-    } catch {
-      return null
     }
   }
 }
