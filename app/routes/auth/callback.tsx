@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { GITHUB_TOKEN_KEY } from '@/lib/auth'
@@ -10,55 +10,95 @@ export const Route = createFileRoute('/auth/callback')({
 
 function AuthCallback() {
   const navigate = useNavigate()
-  const navigated = useRef(false)
+  const handled = useRef(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    function handleSession(session: Session) {
-      if (navigated.current) return
-      navigated.current = true
+    async function processAuth() {
+      if (handled.current) return
+      handled.current = true
+
+      try {
+        // 1. Check for error params from Supabase/GitHub
+        const params = new URLSearchParams(window.location.search)
+        const hashParams = new URLSearchParams(window.location.hash.slice(1))
+
+        const errorParam = params.get('error') || hashParams.get('error')
+        if (errorParam) {
+          const desc = params.get('error_description') || hashParams.get('error_description') || errorParam
+          setError(desc)
+          return
+        }
+
+        // 2. PKCE flow: exchange the code explicitly
+        const code = params.get('code')
+        if (code) {
+          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+          if (exchangeError) {
+            setError(exchangeError.message)
+            return
+          }
+          if (data.session) {
+            persistAndRedirect(data.session)
+            return
+          }
+        }
+
+        // 3. Implicit flow fallback: check hash for access_token
+        const accessToken = hashParams.get('access_token')
+        if (accessToken) {
+          const { data: { session } } = await supabase.auth.getSession()
+          if (session) {
+            persistAndRedirect(session)
+            return
+          }
+        }
+
+        // 4. Maybe session was already established (e.g. detectSessionInUrl fired)
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session) {
+          persistAndRedirect(session)
+          return
+        }
+
+        // Nothing worked
+        setError('No auth session found. Please try signing in again.')
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Authentication failed')
+      }
+    }
+
+    function persistAndRedirect(session: Session) {
       if (session.provider_token) {
         localStorage.setItem(GITHUB_TOKEN_KEY, session.provider_token)
       }
       navigate({ to: '/' })
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          handleSession(session)
-        } else if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
-          if (!session && !navigated.current) {
-            navigated.current = true
-            navigate({ to: '/login' })
-          }
-        }
-      },
-    )
-
-    // Fallback: if Supabase already processed the URL before the listener was set up
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        handleSession(session)
-      }
-    })
-
-    // Safety timeout: redirect to login if auth flow doesn't complete
-    const timeout = setTimeout(() => {
-      if (!navigated.current) {
-        navigated.current = true
-        navigate({ to: '/login' })
-      }
-    }, 10_000)
-
-    return () => {
-      subscription.unsubscribe()
-      clearTimeout(timeout)
-    }
+    processAuth()
   }, [navigate])
 
+  if (error) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-ds-surface-0 px-4">
+        <div className="max-w-sm text-center">
+          <p className="text-sm font-medium text-destructive">Sign in failed</p>
+          <p className="mt-1 text-sm text-ds-text-secondary">{error}</p>
+        </div>
+        <button
+          onClick={() => navigate({ to: '/login' })}
+          className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+        >
+          Back to sign in
+        </button>
+      </div>
+    )
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <p className="text-ds-text-secondary">Signing you in...</p>
+    <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-ds-surface-0">
+      <div className="size-5 animate-spin rounded-full border-2 border-ds-text-tertiary border-t-primary" />
+      <p className="text-sm text-ds-text-secondary">Signing you in...</p>
     </div>
   )
 }
