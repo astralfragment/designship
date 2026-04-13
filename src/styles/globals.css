@@ -3,9 +3,9 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ============================================================
-   DesignShip Design Tokens
-   Slate-based palette inspired by Linear & Vercel.
-   Dark mode first. Inter font. 4px spacing base.
+   DesignShip Design Tokens — Elyxia Edition
+   Dark-first with pink / iridescent accents.
+   Inter font. 4px spacing base.
    ============================================================ */
 
 :root {
@@ -16,33 +16,33 @@
   --card-foreground: oklch(0.145 0.005 260);
   --popover: oklch(1.0 0 0);
   --popover-foreground: oklch(0.145 0.005 260);
-  --primary: oklch(0.60 0.14 250);
-  --primary-foreground: oklch(0.98 0.005 260);
-  --secondary: oklch(0.94 0.005 260);
-  --secondary-foreground: oklch(0.20 0.005 260);
-  --muted: oklch(0.955 0.005 260);
-  --muted-foreground: oklch(0.46 0.01 260);
-  --accent: oklch(0.955 0.005 260);
-  --accent-foreground: oklch(0.20 0.005 260);
+  --primary: oklch(0.65 0.22 340);
+  --primary-foreground: oklch(0.98 0.005 340);
+  --secondary: oklch(0.94 0.01 330);
+  --secondary-foreground: oklch(0.20 0.01 340);
+  --muted: oklch(0.955 0.008 330);
+  --muted-foreground: oklch(0.46 0.01 330);
+  --accent: oklch(0.955 0.01 330);
+  --accent-foreground: oklch(0.20 0.01 340);
   --destructive: oklch(0.55 0.22 29);
   --destructive-foreground: oklch(0.98 0.005 260);
-  --border: oklch(0.90 0.005 260);
-  --input: oklch(0.90 0.005 260);
-  --ring: oklch(0.60 0.14 250);
+  --border: oklch(0.90 0.008 330);
+  --input: oklch(0.90 0.008 330);
+  --ring: oklch(0.65 0.22 340);
   --radius: 0.625rem;
-  --chart-1: oklch(0.60 0.14 250);
-  --chart-2: oklch(0.65 0.15 160);
-  --chart-3: oklch(0.60 0.18 310);
-  --chart-4: oklch(0.70 0.14 130);
-  --chart-5: oklch(0.65 0.16 45);
-  --sidebar: oklch(0.97 0.002 260);
-  --sidebar-foreground: oklch(0.145 0.005 260);
-  --sidebar-primary: oklch(0.60 0.14 250);
-  --sidebar-primary-foreground: oklch(0.98 0.005 260);
-  --sidebar-accent: oklch(0.955 0.005 260);
-  --sidebar-accent-foreground: oklch(0.20 0.005 260);
-  --sidebar-border: oklch(0.90 0.005 260);
-  --sidebar-ring: oklch(0.60 0.14 250);
+  --chart-1: oklch(0.65 0.22 340);
+  --chart-2: oklch(0.60 0.18 310);
+  --chart-3: oklch(0.65 0.15 280);
+  --chart-4: oklch(0.70 0.16 350);
+  --chart-5: oklch(0.60 0.14 20);
+  --sidebar: oklch(0.97 0.005 330);
+  --sidebar-foreground: oklch(0.145 0.005 330);
+  --sidebar-primary: oklch(0.65 0.22 340);
+  --sidebar-primary-foreground: oklch(0.98 0.005 340);
+  --sidebar-accent: oklch(0.955 0.01 330);
+  --sidebar-accent-foreground: oklch(0.20 0.01 340);
+  --sidebar-border: oklch(0.90 0.008 330);
+  --sidebar-ring: oklch(0.65 0.22 340);
 
   /* --- shadows (light) --- */
   --shadow-color: oklch(0 0 0 / 0.04);
@@ -74,17 +74,20 @@
   --ds-text-secondary: oklch(0.40 0.01 260);
   --ds-text-tertiary: oklch(0.55 0.01 260);
 
-  /* timeline event dots */
-  --ds-timeline-dot-pr: oklch(0.65 0.18 160);
-  --ds-timeline-dot-commit: oklch(0.60 0.14 250);
-  --ds-timeline-dot-deploy: oklch(0.70 0.16 45);
-  --ds-timeline-dot-design: oklch(0.65 0.18 310);
-  --ds-timeline-connector: oklch(0.90 0.005 260);
+  /* timeline event dots — pink-shifted palette */
+  --ds-timeline-dot-pr: oklch(0.68 0.22 340);
+  --ds-timeline-dot-commit: oklch(0.60 0.18 310);
+  --ds-timeline-dot-deploy: oklch(0.70 0.16 350);
+  --ds-timeline-dot-design: oklch(0.65 0.20 320);
+  --ds-timeline-connector: oklch(0.90 0.008 330);
+
+  /* iridescent accent gradient (use as background-image) */
+  --ds-iridescent: linear-gradient(135deg, oklch(0.68 0.22 340), oklch(0.60 0.18 310), oklch(0.65 0.15 280));
 
   /* status */
   --ds-success: oklch(0.65 0.18 155);
   --ds-warning: oklch(0.75 0.15 75);
-  --ds-info: oklch(0.60 0.14 250);
+  --ds-info: oklch(0.65 0.20 340);
 }
 
 .dark {
@@ -95,32 +98,32 @@
   --card-foreground: oklch(0.93 0.005 260);
   --popover: oklch(0.17 0.005 260);
   --popover-foreground: oklch(0.93 0.005 260);
-  --primary: oklch(0.65 0.15 250);
-  --primary-foreground: oklch(0.98 0.005 260);
-  --secondary: oklch(0.22 0.005 260);
-  --secondary-foreground: oklch(0.90 0.005 260);
-  --muted: oklch(0.20 0.005 260);
-  --muted-foreground: oklch(0.55 0.01 260);
-  --accent: oklch(0.22 0.01 260);
-  --accent-foreground: oklch(0.90 0.005 260);
+  --primary: oklch(0.70 0.22 340);
+  --primary-foreground: oklch(0.98 0.005 340);
+  --secondary: oklch(0.22 0.01 330);
+  --secondary-foreground: oklch(0.90 0.005 330);
+  --muted: oklch(0.20 0.008 330);
+  --muted-foreground: oklch(0.55 0.01 330);
+  --accent: oklch(0.22 0.015 330);
+  --accent-foreground: oklch(0.90 0.005 330);
   --destructive: oklch(0.45 0.18 29);
   --destructive-foreground: oklch(0.95 0.005 260);
-  --border: oklch(0.27 0.005 260);
-  --input: oklch(0.27 0.005 260);
-  --ring: oklch(0.65 0.15 250);
-  --chart-1: oklch(0.65 0.15 250);
-  --chart-2: oklch(0.65 0.15 160);
-  --chart-3: oklch(0.65 0.18 310);
-  --chart-4: oklch(0.65 0.14 130);
-  --chart-5: oklch(0.65 0.16 45);
-  --sidebar: oklch(0.15 0.005 260);
-  --sidebar-foreground: oklch(0.93 0.005 260);
-  --sidebar-primary: oklch(0.65 0.15 250);
-  --sidebar-primary-foreground: oklch(0.93 0.005 260);
-  --sidebar-accent: oklch(0.22 0.005 260);
-  --sidebar-accent-foreground: oklch(0.93 0.005 260);
-  --sidebar-border: oklch(0.27 0.005 260 / 50%);
-  --sidebar-ring: oklch(0.65 0.15 250);
+  --border: oklch(0.27 0.012 330);
+  --input: oklch(0.27 0.012 330);
+  --ring: oklch(0.70 0.22 340);
+  --chart-1: oklch(0.70 0.22 340);
+  --chart-2: oklch(0.65 0.18 310);
+  --chart-3: oklch(0.65 0.15 280);
+  --chart-4: oklch(0.70 0.16 350);
+  --chart-5: oklch(0.60 0.14 20);
+  --sidebar: oklch(0.15 0.008 330);
+  --sidebar-foreground: oklch(0.93 0.005 330);
+  --sidebar-primary: oklch(0.70 0.22 340);
+  --sidebar-primary-foreground: oklch(0.93 0.005 340);
+  --sidebar-accent: oklch(0.22 0.015 330);
+  --sidebar-accent-foreground: oklch(0.93 0.005 330);
+  --sidebar-border: oklch(0.27 0.012 330 / 50%);
+  --sidebar-ring: oklch(0.70 0.22 340);
 
   /* --- shadows (dark — minimal, border-based depth) --- */
   --shadow-color: oklch(0 0 0 / 0.30);
@@ -143,15 +146,18 @@
   --ds-text-secondary: oklch(0.60 0.01 260);
   --ds-text-tertiary: oklch(0.45 0.01 260);
 
-  --ds-timeline-dot-pr: oklch(0.65 0.18 160);
-  --ds-timeline-dot-commit: oklch(0.65 0.15 250);
-  --ds-timeline-dot-deploy: oklch(0.70 0.16 45);
-  --ds-timeline-dot-design: oklch(0.65 0.18 310);
-  --ds-timeline-connector: oklch(0.27 0.005 260);
+  --ds-timeline-dot-pr: oklch(0.72 0.22 340);
+  --ds-timeline-dot-commit: oklch(0.65 0.18 310);
+  --ds-timeline-dot-deploy: oklch(0.70 0.16 350);
+  --ds-timeline-dot-design: oklch(0.68 0.20 320);
+  --ds-timeline-connector: oklch(0.27 0.012 330);
+
+  /* iridescent accent gradient (dark mode) */
+  --ds-iridescent: linear-gradient(135deg, oklch(0.72 0.22 340), oklch(0.65 0.18 310), oklch(0.60 0.15 280));
 
   --ds-success: oklch(0.65 0.18 155);
   --ds-warning: oklch(0.75 0.15 75);
-  --ds-info: oklch(0.65 0.15 250);
+  --ds-info: oklch(0.70 0.20 340);
 }
 
 @theme inline {
@@ -205,6 +211,8 @@
   --color-ds-success: var(--ds-success);
   --color-ds-warning: var(--ds-warning);
   --color-ds-info: var(--ds-info);
+
+  /* --- iridescent gradient (use as `bg-[image:var(--ds-iridescent)]`) --- */
 
   /* --- radii --- */
   --radius: var(--radius);
@@ -269,6 +277,35 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* --- Iridescent shimmer effect (apply via class="ds-iridescent") --- */
+.ds-iridescent {
+  background: var(--ds-iridescent);
+  background-size: 200% 200%;
+  animation: ds-shimmer 6s ease-in-out infinite;
+}
+
+.ds-iridescent-text {
+  background: var(--ds-iridescent);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% 200%;
+  animation: ds-shimmer 6s ease-in-out infinite;
+}
+
+@keyframes ds-shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-iridescent,
+  .ds-iridescent-text {
+    animation: none;
+    background-size: 100% 100%;
   }
 }
 
