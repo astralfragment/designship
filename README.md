@@ -9,6 +9,9 @@ Zero-input communication layer that turns your GitHub + Figma activity into stan
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Framework: TanStack Start](https://img.shields.io/badge/Framework-TanStack%20Start-ff4154)](https://tanstack.com/start)
 [![Status: Alpha](https://img.shields.io/badge/Status-Alpha-orange)]()
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fastralfragment%2Fdesignship)
+
+**[Live Demo](https://designship.vercel.app)**
 
 ![DesignShip Timeline](public/screenshot-timeline.png)
 
