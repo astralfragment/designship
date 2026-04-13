@@ -4,8 +4,17 @@ import { join } from 'path'
 let tray: Tray | null = null
 
 export function createTray(mainWindow: BrowserWindow) {
-  // Create a simple 16x16 tray icon (will be replaced with proper icon)
-  const icon = nativeImage.createEmpty()
+  // Load tray icon — try resources dir first, fall back to build dir
+  const iconPath = join(__dirname, '../../resources/tray-icon.png')
+  const fallbackPath = join(__dirname, '../../build/icon-16.png')
+  let icon: Electron.NativeImage
+  try {
+    icon = nativeImage.createFromPath(iconPath)
+    if (icon.isEmpty()) icon = nativeImage.createFromPath(fallbackPath)
+    if (icon.isEmpty()) icon = nativeImage.createEmpty()
+  } catch {
+    icon = nativeImage.createEmpty()
+  }
 
   tray = new Tray(icon)
   tray.setToolTip('DesignShip')

@@ -37,8 +37,58 @@ export class FigmaWatcher {
   }
 
   start() {
-    this.poll()
+    // Auto-discover Figma files on first start
+    this.autoDiscoverFiles().then(() => this.poll())
     this.timer = setInterval(() => this.poll(), this.pollInterval)
+  }
+
+  /** Fetch user's recent files and auto-register them as projects */
+  private async autoDiscoverFiles() {
+    const token = this.getToken()
+    if (!token) return
+
+    try {
+      const res = await fetch('https://api.figma.com/v1/me', {
+        headers: { 'X-Figma-Token': token },
+      })
+      if (!res.ok) return
+      const me = await res.json()
+      console.log(`[FigmaWatcher] Connected as ${me.handle ?? me.email ?? 'unknown'}`)
+
+      // Fetch recent files from the user's teams/projects
+      // The /v1/me/files endpoint gives recent files
+      const filesRes = await fetch('https://api.figma.com/v1/me/files?page_size=10', {
+        headers: { 'X-Figma-Token': token },
+      })
+      // This endpoint may not exist for all accounts, so fail gracefully
+      if (!filesRes.ok) {
+        console.log('[FigmaWatcher] Could not auto-discover files (API returned', filesRes.status, ')')
+        return
+      }
+
+      const filesData = await filesRes.json()
+      const files = filesData.files ?? filesData.meta?.files ?? []
+
+      for (const file of files) {
+        const fileKey = file.key
+        if (!fileKey) continue
+
+        const existing = this.db.prepare(
+          "SELECT id FROM projects WHERE type = 'figma_file' AND identifier = ?"
+        ).get(fileKey)
+
+        if (!existing) {
+          const id = ulid()
+          this.db.prepare(`
+            INSERT INTO projects (id, name, type, identifier, config)
+            VALUES (?, ?, 'figma_file', ?, ?)
+          `).run(id, file.name || `Figma: ${fileKey.slice(0, 8)}`, fileKey, JSON.stringify({ autoDiscovered: true }))
+          console.log(`[FigmaWatcher] Auto-registered: ${file.name}`)
+        }
+      }
+    } catch (err) {
+      console.log('[FigmaWatcher] Auto-discover error:', err)
+    }
   }
 
   stop() {

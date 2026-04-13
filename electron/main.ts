@@ -1,22 +1,35 @@
-import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron'
+import { app, BrowserWindow, nativeImage, shell } from 'electron'
 import { join } from 'path'
 import { initDatabase } from './db/schema'
 import { createTray } from './tray'
 import { WatcherManager } from './watchers/watcher-manager'
 import { registerIPCHandlers } from './ipc/handlers'
+import { seedOnStartup } from './db/seed'
 
 let mainWindow: BrowserWindow | null = null
 let watcherManager: WatcherManager | null = null
 
+function getAppIcon() {
+  const iconPath = join(__dirname, '../../build/icon.png')
+  try {
+    const img = nativeImage.createFromPath(iconPath)
+    if (!img.isEmpty()) return img
+  } catch {}
+  return undefined
+}
+
 function createWindow() {
+  const icon = getAppIcon()
   mainWindow = new BrowserWindow({
     width: 1100,
     height: 750,
     minWidth: 800,
     minHeight: 600,
-    titleBarStyle: 'hiddenInset',
+    icon,
     backgroundColor: '#0f0f14',
     show: false,
+    autoHideMenuBar: true,
+    frame: true,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -60,6 +73,9 @@ app.whenReady().then(async () => {
 
   // Create tray
   createTray(mainWindow!)
+
+  // Auto-discover Git repos and import commits (zero config)
+  seedOnStartup(db).catch((err) => console.error('[AutoDiscover]', err))
 
   // Start watchers
   watcherManager = new WatcherManager(db)

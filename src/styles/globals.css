@@ -121,3 +121,26 @@
     background: var(--text-secondary);
   }
 }
+
+@layer components {
+  .input {
+    @apply rounded-lg border border-white/[0.08] bg-bg-secondary px-3 py-1.5 text-[13px] text-text-primary placeholder:text-text-muted/60;
+    @apply focus:border-accent-figma/50 focus:outline-none;
+    @apply transition-colors;
+  }
+  .btn-secondary {
+    @apply flex items-center gap-1.5 rounded-lg border border-white/[0.06] bg-bg-secondary px-3 py-1.5 text-[12px] font-medium text-text-secondary;
+    @apply hover:bg-bg-tertiary hover:text-text-primary;
+    @apply disabled:opacity-50;
+    @apply transition-colors;
+  }
+  .btn-accent {
+    @apply flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-medium;
+    @apply transition-colors;
+    background: color-mix(in srgb, var(--accent, #a259ff) 15%, transparent);
+    color: var(--accent, #a259ff);
+  }
+  .btn-accent:hover {
+    background: color-mix(in srgb, var(--accent, #a259ff) 25%, transparent);
+  }
+}
