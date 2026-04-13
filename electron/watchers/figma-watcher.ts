@@ -4,6 +4,7 @@ import { ulid } from 'ulid'
 import { app } from 'electron'
 import { join } from 'path'
 import { mkdirSync, writeFileSync } from 'fs'
+import { discoverFigmaFilesFromBrowsers } from './figma-discovery'
 
 interface FigmaVersion {
   id: string
@@ -59,13 +60,13 @@ export class FigmaWatcher {
     await this.pollAllFiles()
   }
 
-  /** Fetch ALL files the user has access to and register them as projects */
+  /** Discover files from browser history + validate with Figma API */
   private async discoverAndRegisterFiles() {
     const token = this.getToken()
     if (!token) return
 
     try {
-      // Verify token + get user info
+      // Verify token
       const meRes = await fetch('https://api.figma.com/v1/me', {
         headers: { 'X-Figma-Token': token },
       })
@@ -76,62 +77,37 @@ export class FigmaWatcher {
       const me = await meRes.json()
       console.log(`[FigmaWatcher] Authenticated as: ${me.handle ?? me.email}`)
 
-      // Get user's teams
-      const teamsRes = await fetch('https://api.figma.com/v1/me', {
-        headers: { 'X-Figma-Token': token },
-      })
-      // Figma doesn't have a "list all my files" endpoint, but we can get team projects
-      // For personal accounts, we use /v1/me/files if available, otherwise just poll registered files
+      // 1. Discover file keys from browser history (zero config)
+      const browserFiles = discoverFigmaFilesFromBrowsers()
 
-      // Try the teams → projects → files path
-      if (me.teams && Array.isArray(me.teams)) {
-        for (const team of me.teams) {
-          await this.discoverTeamFiles(team.id, token)
+      // 2. For each discovered key, verify access + get file name via API
+      let registered = 0
+      for (const { key } of browserFiles) {
+        // Skip if already registered
+        const existing = this.db.prepare(
+          "SELECT id FROM projects WHERE type = 'figma_file' AND identifier = ?"
+        ).get(key)
+        if (existing) continue
+
+        // Validate access with the token
+        try {
+          const fileRes = await fetch(`https://api.figma.com/v1/files/${key}?depth=1`, {
+            headers: { 'X-Figma-Token': token },
+          })
+          if (!fileRes.ok) continue // No access — skip silently
+          const fileData = await fileRes.json()
+          this.registerFigmaFile(key, fileData.name ?? `Figma: ${key.slice(0, 12)}`)
+          registered++
+        } catch {
+          // Network error — skip
         }
       }
 
-      // Also try getting recent files directly (works for some account types)
-      await this.discoverRecentFiles(token)
-
+      if (registered > 0) {
+        console.log(`[FigmaWatcher] Registered ${registered} new Figma files`)
+      }
     } catch (err) {
       console.log('[FigmaWatcher] Discovery error:', err)
-    }
-  }
-
-  private async discoverTeamFiles(teamId: string, token: string) {
-    try {
-      const projRes = await fetch(`https://api.figma.com/v1/teams/${teamId}/projects`, {
-        headers: { 'X-Figma-Token': token },
-      })
-      if (!projRes.ok) return
-      const projData = await projRes.json()
-
-      for (const project of projData.projects ?? []) {
-        const filesRes = await fetch(`https://api.figma.com/v1/projects/${project.id}/files`, {
-          headers: { 'X-Figma-Token': token },
-        })
-        if (!filesRes.ok) continue
-        const filesData = await filesRes.json()
-
-        for (const file of filesData.files ?? []) {
-          this.registerFigmaFile(file.key, file.name)
-        }
-      }
-    } catch {
-      // Team access error — skip
-    }
-  }
-
-  private async discoverRecentFiles(token: string) {
-    try {
-      // /v1/me endpoint sometimes includes recent_files
-      const res = await fetch('https://api.figma.com/v1/me', {
-        headers: { 'X-Figma-Token': token },
-      })
-      if (!res.ok) return
-      // Note: this doesn't list files directly, but we tried
-    } catch {
-      // Ignore
     }
   }
 

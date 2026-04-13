@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { app, BrowserWindow, nativeImage, shell } from 'electron'
 import { join } from 'path'
 import { initDatabase } from './db/schema'
@@ -73,6 +74,16 @@ app.whenReady().then(async () => {
 
   // Create tray
   createTray(mainWindow!)
+
+  // Auto-load Figma PAT from env if not already in DB
+  const envPat = process.env.FIGMA_PAT
+  if (envPat) {
+    const existing = db.prepare("SELECT value FROM app_config WHERE key = 'figma_token'").get() as { value: string } | undefined
+    if (!existing?.value) {
+      db.prepare("INSERT OR REPLACE INTO app_config (key, value) VALUES ('figma_token', ?)").run(envPat)
+      console.log('[Main] Loaded Figma PAT from environment')
+    }
+  }
 
   // Auto-discover Git repos and import commits (zero config)
   seedOnStartup(db).catch((err) => console.error('[AutoDiscover]', err))
