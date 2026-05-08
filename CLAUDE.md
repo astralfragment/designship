@@ -1,54 +1,56 @@
-# CLAUDE.md — DesignShip
+# CLAUDE.md — Fragment
 
 ## Project Overview
 
-**DesignShip** — Zero-input communication layer. Watches Figma + Git activity and auto-generates standups, release notes, stakeholder updates, and visual changelogs.
+**Fragment** — A product workspace by **Lilac Fragment** for turning scattered product context into build-ready specs. Capture notes, feedback, decisions, and requirements; auto-group by tag; draft markdown specs (template by default, AI-enhanced if configured).
 
 - **Stack:** Electron 33 + React 19 + TanStack Router/Query + Zustand + SQLite + Vercel AI SDK + Tailwind CSS 4
-- **Project dir:** `C:\Users\char\Desktop\designship`
-- **Runtime:** Desktop app (Electron), tray-resident
+- **Runtime:** Local-first desktop app (Electron), tray-resident
+- **Status:** Early prototype, active development
 
 ## Core Principle
 
-Zero input, maximum output. You change nothing about how you work. You update Figma, commit code, merge PRs, deploy — and DesignShip turns that activity into every communication artifact your team and stakeholders need. If the user has to manually enter data, the product has failed.
+Clarity over capture. Fragment is a calm workspace, not a dashboard. The user pastes messy notes, feedback, and decisions in; Fragment shapes them into clear implementation direction. AI is an optional quality upgrade — the template path always works.
 
 ## Design Direction
 
-- Pastel-dark aesthetic. Soft glows on dark surfaces. Not a dashboard — **a timeline.**
-- Figma purple (`#a259ff`), Git green (`#58d68d`), AI pink (`#f8a5c2`)
-- Fonts: Space Grotesk (headings), IBM Plex Sans (body), JetBrains Mono (code)
-- Dark mode only (MVP)
-- Two views: Builder (technical) and Stakeholder (plain English)
+- Soft Japandi-glass aesthetic on a light pastel base. Not a dashboard — **a workspace.**
+- Ink (`#24172F`) text on Cream (`#FFFAF5`) background
+- Lilac (`#C8B6FF`) brand accent, Iris (`#9F87FF`) interactive, Blush (`#FFD2E7`) warm, Sky (`#DCEEFF`) cool
+- Fonts: Geist (sans, all UI), Instrument Serif (sparing editorial accent)
+- Light/pastel only (MVP)
 
 ## Architecture
 
 ```
 electron/          — Main process (Node.js)
-  main.ts          — App entry, window management
-  preload.ts       — Context bridge (IPC)
+  main.ts          — App entry, window management, sample seeding
+  preload.ts       — Context bridge (IPC) — exposes window.fragment
   tray.ts          — System tray
-  watchers/        — Figma polling + Git filesystem watching
-  ai/              — Template summaries + AI provider (Ollama/Claude)
-  db/              — SQLite schema, event/summary CRUD
+  ai/              — Template + AI spec drafting (Ollama/Claude)
+  db/              — SQLite schema, fragment/spec CRUD, sample workspace
   ipc/             — IPC handlers
+  watchers/        — Parked: Figma + Git watchers (future integrations)
 
 src/               — Renderer process (React)
-  routes/          — TanStack Router pages (timeline, settings, summaries)
+  pages/           — Capture, Fragments, Specs, Settings
   hooks/           — TanStack Query hooks for IPC data
-  stores/          — Zustand (UI state, filters)
-  styles/          — Tailwind CSS + design tokens
+  stores/          — Zustand (current project, selected fragments)
+  components/      — Shared UI (EmptyState, etc.)
+  styles/          — Tailwind CSS + Fragment design tokens
 
 shared/            — Types shared between main + renderer
   ipc-types.ts     — IPC channel contract
+
+docs/              — Roadmap and product docs
 ```
 
 ## Key Patterns
 
-- **IPC bridge:** All main↔renderer communication via typed `ipcMain.handle` / `ipcRenderer.invoke`. API exposed as `window.ds.*` via contextBridge.
-- **SQLite:** 5 tables (events, event_links, projects, summaries, snapshots). WAL mode. ULID primary keys.
-- **Figma watcher:** Polls REST API on interval. Detects changes via `lastModified`. Captures PNG snapshots.
-- **Git watcher:** `chokidar` on `.git/refs/heads`. Parses commits via `simple-git`. Extracts Figma URLs from messages.
-- **Summaries:** Template-based (zero cost) by default. AI opt-in via Ollama (local) or Claude API.
+- **IPC bridge:** All main↔renderer communication via typed `ipcMain.handle` / `ipcRenderer.invoke`. API exposed as `window.fragment.*` via contextBridge.
+- **SQLite:** Fragment tables (fragments, context_groups, fragment_links, decisions, specs) plus `projects` and `app_config`. WAL mode. ULID primary keys.
+- **Sample workspace:** On first launch, an idempotent seeder creates a "Welcome to Fragment" project with 8 demo fragments demonstrating the full workflow.
+- **Spec drafting:** Template-based (zero cost) by default. AI opt-in via Ollama (local) or Claude API for higher-quality drafts.
 - **AI SDK:** Vercel AI SDK (`ai` package) with `@ai-sdk/anthropic` and `ollama-ai-provider`.
 
 ## Commands
@@ -62,9 +64,11 @@ npm run typecheck  # TypeScript check
 
 ## Important Conventions
 
-- Dark mode only (MVP)
-- Timeline is the core UI — everything feeds into it
-- Template summaries work without AI — AI is an optional quality enhancement
-- Figma PAT stored in app config (SQLite), not plaintext
+- Light/pastel by default
+- Capture → Fragments → Specs is the core UI flow
+- Template specs work without AI — AI is an optional quality enhancement
+- AI keys stored in app config (SQLite) or `.env`, never plaintext in repo
 - No cloud dependency for core function — everything local
 - CSS tokens use Tailwind v4 @theme inline with custom properties
+- Figma/Git watcher code is parked under `electron/watchers/` for a future
+  integration phase; not started by default

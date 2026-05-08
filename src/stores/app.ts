@@ -1,32 +1,38 @@
 import { create } from 'zustand'
-import type { EventSource } from '../../shared/ipc-types'
-
-type ViewMode = 'builder' | 'stakeholder'
 
 interface AppState {
-  viewMode: ViewMode
-  setViewMode: (mode: ViewMode) => void
+  currentProjectId: string | null
+  setCurrentProjectId: (id: string | null) => void
 
-  sourceFilter: EventSource | null
-  setSourceFilter: (source: EventSource | null) => void
+  selectedFragmentIds: string[]
+  toggleFragmentSelected: (id: string) => void
+  clearSelection: () => void
+  setSelection: (ids: string[]) => void
 
-  dateRange: { from: string | null; to: string | null }
-  setDateRange: (from: string | null, to: string | null) => void
+  welcomeDismissed: boolean
+  dismissWelcome: () => void
 
-  sidebarOpen: boolean
-  toggleSidebar: () => void
+  activeSpecId: string | null
+  setActiveSpecId: (id: string | null) => void
 }
 
 export const useAppStore = create<AppState>((set) => ({
-  viewMode: 'builder',
-  setViewMode: (mode) => set({ viewMode: mode }),
+  currentProjectId: null,
+  setCurrentProjectId: (id) => set({ currentProjectId: id }),
 
-  sourceFilter: null,
-  setSourceFilter: (source) => set({ sourceFilter: source }),
+  selectedFragmentIds: [],
+  toggleFragmentSelected: (id) =>
+    set((s) => ({
+      selectedFragmentIds: s.selectedFragmentIds.includes(id)
+        ? s.selectedFragmentIds.filter((x) => x !== id)
+        : [...s.selectedFragmentIds, id],
+    })),
+  clearSelection: () => set({ selectedFragmentIds: [] }),
+  setSelection: (ids) => set({ selectedFragmentIds: ids }),
 
-  dateRange: { from: null, to: null },
-  setDateRange: (from, to) => set({ dateRange: { from, to } }),
+  welcomeDismissed: false,
+  dismissWelcome: () => set({ welcomeDismissed: true }),
 
-  sidebarOpen: true,
-  toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
+  activeSpecId: null,
+  setActiveSpecId: (id) => set({ activeSpecId: id }),
 }))

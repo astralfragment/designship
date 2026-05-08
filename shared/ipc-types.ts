@@ -1,5 +1,112 @@
 // Shared IPC type contract between main and renderer processes
 
+// ===== Fragment MVP types =====
+
+export type FragmentType =
+  | 'note'
+  | 'feedback'
+  | 'decision'
+  | 'requirement'
+  | 'question'
+  | 'qa'
+
+export type SpecStatus = 'draft' | 'review' | 'ready' | 'shipped'
+
+export interface Project {
+  id: string
+  name: string
+  type: string
+  identifier: string
+  config: Record<string, unknown> | null
+  created_at: string
+}
+
+export interface Fragment {
+  id: string
+  project_id: string
+  title: string
+  content: string
+  type: FragmentType
+  source: string | null
+  tags: string[]
+  created_at: string
+  updated_at: string
+}
+
+export interface FragmentInput {
+  project_id: string
+  title: string
+  content?: string
+  type?: FragmentType
+  source?: string | null
+  tags?: string[]
+}
+
+export interface FragmentFilters {
+  project_id?: string
+  type?: FragmentType
+  tag?: string
+  search?: string
+  limit?: number
+}
+
+export interface ContextGroup {
+  id: string
+  project_id: string
+  name: string
+  description: string | null
+  created_at: string
+}
+
+export interface Decision {
+  id: string
+  project_id: string
+  title: string
+  rationale: string | null
+  fragment_ids: string[]
+  created_at: string
+}
+
+export interface Spec {
+  id: string
+  project_id: string
+  title: string
+  content_md: string
+  status: SpecStatus
+  fragment_ids: string[]
+  created_at: string
+  updated_at: string
+}
+
+export interface SpecDraftOptions {
+  project_id: string
+  fragment_ids: string[]
+  title?: string
+  use_ai?: boolean
+}
+
+export interface SpecUpdateInput {
+  title?: string
+  content_md?: string
+  status?: SpecStatus
+}
+
+// ===== AI / app config =====
+
+export interface AIProviderConfig {
+  provider: 'claude' | 'ollama' | 'none'
+  apiKey?: string
+  ollamaBaseUrl?: string
+  ollamaModel?: string
+}
+
+export interface AppConfig {
+  aiProvider: AIProviderConfig
+  currentProjectId: string | null
+}
+
+// ===== Parked DesignShip types (kept so watcher/event code still compiles) =====
+
 export type EventSource = 'figma' | 'git'
 export type EventType =
   | 'version_created'
@@ -32,15 +139,6 @@ export interface EventLink {
   source_event_id: string
   target_event_id: string
   link_type: 'figma_ref' | 'implements' | 'related'
-  created_at: string
-}
-
-export interface Project {
-  id: string
-  name: string
-  type: 'figma_file' | 'git_repo'
-  identifier: string
-  config: Record<string, unknown> | null
   created_at: string
 }
 
@@ -81,20 +179,6 @@ export interface SummaryOptions {
   use_ai?: boolean
 }
 
-export interface AIProviderConfig {
-  provider: 'claude' | 'ollama' | 'none'
-  apiKey?: string
-  ollamaBaseUrl?: string
-  ollamaModel?: string
-}
-
-export interface AppConfig {
-  figmaToken: string | null
-  figmaPollInterval: number
-  aiProvider: AIProviderConfig
-  theme: 'dark' | 'light'
-}
-
 export interface GitRepoInfo {
   path: string
   name: string
@@ -102,35 +186,37 @@ export interface GitRepoInfo {
   remoteUrl: string | null
 }
 
-// IPC channel definitions
-export interface IPCChannels {
-  // Events
-  'events:list': { args: [EventFilters]; return: DSEvent[] }
-  'events:get': { args: [string]; return: DSEvent | null }
-  'events:count': { args: [EventFilters]; return: number }
+// ===== IPC channel definitions =====
 
+export interface IPCChannels {
   // Projects
   'projects:list': { args: []; return: Project[] }
-  'projects:add-figma': { args: [string]; return: Project }
-  'projects:add-git': { args: [string]; return: Project }
+  'projects:create': { args: [string]; return: Project }
+  'projects:rename': { args: [string, string]; return: Project }
   'projects:remove': { args: [string]; return: void }
 
-  // Figma
-  'figma:set-token': { args: [string]; return: boolean }
-  'figma:poll-now': { args: [string]; return: DSEvent[] }
-  'figma:get-snapshot': { args: [string]; return: string | null }
+  // Fragments
+  'fragments:list': { args: [FragmentFilters]; return: Fragment[] }
+  'fragments:get': { args: [string]; return: Fragment | null }
+  'fragments:add': { args: [FragmentInput]; return: Fragment }
+  'fragments:update': { args: [string, Partial<FragmentInput>]; return: Fragment }
+  'fragments:delete': { args: [string]; return: void }
 
-  // Git
-  'git:browse-repo': { args: []; return: string | null }
-  'git:get-info': { args: [string]; return: GitRepoInfo | null }
+  // Specs
+  'specs:list': { args: [string]; return: Spec[] }
+  'specs:get': { args: [string]; return: Spec | null }
+  'specs:draft': { args: [SpecDraftOptions]; return: Spec }
+  'specs:update': { args: [string, SpecUpdateInput]; return: Spec }
+  'specs:delete': { args: [string]; return: void }
+  'specs:export': { args: [string, 'markdown' | 'github']; return: string }
+  'specs:save-as': { args: [string]; return: string | null }
 
-  // AI / Summaries
-  'summary:generate': { args: [SummaryOptions]; return: string }
-  'summary:list': { args: []; return: Summary[] }
-  'summary:get': { args: [string]; return: Summary | null }
+  // Sample data
+  'seed:samples': { args: []; return: { project_id: string } }
+  'seed:reset-welcome-flag': { args: []; return: void }
 
   // Config
   'config:get': { args: []; return: AppConfig }
-  'config:set': { args: [Partial<AppConfig>]; return: void }
   'config:set-ai': { args: [AIProviderConfig]; return: void }
+  'config:set-current-project': { args: [string]; return: void }
 }

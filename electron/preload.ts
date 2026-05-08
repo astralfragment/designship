@@ -1,9 +1,15 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { IPCChannels } from '../shared/ipc-types'
+import type {
+  IPCChannels,
+  AIProviderConfig,
+  FragmentInput,
+  FragmentFilters,
+  SpecDraftOptions,
+  SpecUpdateInput,
+} from '../shared/ipc-types'
 
 type ChannelName = keyof IPCChannels
 
-// Type-safe IPC invoke
 function invoke<K extends ChannelName>(
   channel: K,
   ...args: IPCChannels[K]['args']
@@ -12,50 +18,49 @@ function invoke<K extends ChannelName>(
 }
 
 const api = {
-  // Events
-  events: {
-    list: (filters = {}) => invoke('events:list', filters),
-    get: (id: string) => invoke('events:get', id),
-    count: (filters = {}) => invoke('events:count', filters),
-  },
-
   // Projects
   projects: {
     list: () => invoke('projects:list'),
-    addFigma: (fileUrl: string) => invoke('projects:add-figma', fileUrl),
-    addGit: (repoPath: string) => invoke('projects:add-git', repoPath),
+    create: (name: string) => invoke('projects:create', name),
+    rename: (id: string, name: string) => invoke('projects:rename', id, name),
     remove: (id: string) => invoke('projects:remove', id),
-    toggleWatch: (id: string, enabled: boolean) => ipcRenderer.invoke('projects:toggle-watch', id, enabled),
   },
 
-  // Figma
-  figma: {
-    setToken: (token: string) => invoke('figma:set-token', token),
-    pollNow: (fileKey: string) => invoke('figma:poll-now', fileKey),
-    getSnapshot: (eventId: string) => invoke('figma:get-snapshot', eventId),
+  // Fragments
+  fragments: {
+    list: (filters: FragmentFilters = {}) => invoke('fragments:list', filters),
+    get: (id: string) => invoke('fragments:get', id),
+    add: (input: FragmentInput) => invoke('fragments:add', input),
+    update: (id: string, patch: Partial<FragmentInput>) =>
+      invoke('fragments:update', id, patch),
+    delete: (id: string) => invoke('fragments:delete', id),
   },
 
-  // Git
-  git: {
-    browseRepo: () => invoke('git:browse-repo'),
-    getInfo: (path: string) => invoke('git:get-info', path),
+  // Specs
+  specs: {
+    list: (projectId: string) => invoke('specs:list', projectId),
+    get: (id: string) => invoke('specs:get', id),
+    draft: (opts: SpecDraftOptions) => invoke('specs:draft', opts),
+    update: (id: string, patch: SpecUpdateInput) =>
+      invoke('specs:update', id, patch),
+    delete: (id: string) => invoke('specs:delete', id),
+    export: (id: string, format: 'markdown' | 'github') =>
+      invoke('specs:export', id, format),
+    saveAs: (id: string) => invoke('specs:save-as', id),
   },
 
-  // Summaries
-  summary: {
-    generate: (opts: Parameters<typeof invoke<'summary:generate'>>[1]) =>
-      invoke('summary:generate', opts),
-    list: () => invoke('summary:list'),
-    get: (id: string) => invoke('summary:get', id),
+  // Sample data
+  seed: {
+    samples: () => invoke('seed:samples'),
+    resetWelcomeFlag: () => invoke('seed:reset-welcome-flag'),
   },
 
   // Config
   config: {
     get: () => invoke('config:get'),
-    set: (config: Parameters<typeof invoke<'config:set'>>[1]) =>
-      invoke('config:set', config),
-    setAI: (config: Parameters<typeof invoke<'config:set-ai'>>[1]) =>
-      invoke('config:set-ai', config),
+    setAI: (config: AIProviderConfig) => invoke('config:set-ai', config),
+    setCurrentProject: (projectId: string) =>
+      invoke('config:set-current-project', projectId),
   },
 
   // Window controls
@@ -64,15 +69,8 @@ const api = {
     maximize: () => ipcRenderer.send('window:maximize'),
     close: () => ipcRenderer.send('window:close'),
   },
-
-  // Event subscriptions
-  on: (channel: string, callback: (...args: unknown[]) => void) => {
-    const sub = (_event: Electron.IpcRendererEvent, ...args: unknown[]) => callback(...args)
-    ipcRenderer.on(channel, sub)
-    return () => ipcRenderer.removeListener(channel, sub)
-  },
 }
 
-contextBridge.exposeInMainWorld('ds', api)
+contextBridge.exposeInMainWorld('fragment', api)
 
-export type DesignShipAPI = typeof api
+export type FragmentAPI = typeof api

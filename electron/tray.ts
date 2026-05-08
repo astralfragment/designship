@@ -4,7 +4,6 @@ import { join } from 'path'
 let tray: Tray | null = null
 
 export function createTray(mainWindow: BrowserWindow) {
-  // Load tray icon — try resources dir first, fall back to build dir
   const iconPath = join(__dirname, '../../resources/tray-icon.png')
   const fallbackPath = join(__dirname, '../../build/icon-16.png')
   let icon: Electron.NativeImage
@@ -17,11 +16,11 @@ export function createTray(mainWindow: BrowserWindow) {
   }
 
   tray = new Tray(icon)
-  tray.setToolTip('DesignShip')
+  tray.setToolTip('Fragment')
 
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: 'Show DesignShip',
+      label: 'Show Fragment',
       click: () => {
         mainWindow.show()
         mainWindow.focus()
@@ -29,22 +28,15 @@ export function createTray(mainWindow: BrowserWindow) {
     },
     { type: 'separator' },
     {
-      label: 'Generate Standup',
+      label: 'New fragment',
       click: () => {
         mainWindow.show()
-        mainWindow.webContents.send('action:generate-standup')
-      },
-    },
-    {
-      label: 'Generate Weekly Digest',
-      click: () => {
-        mainWindow.show()
-        mainWindow.webContents.send('action:generate-weekly')
+        mainWindow.webContents.send('action:new-fragment')
       },
     },
     { type: 'separator' },
     {
-      label: 'Quit DesignShip',
+      label: 'Quit Fragment',
       click: () => {
         app.quit()
       },
