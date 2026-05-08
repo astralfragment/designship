@@ -1,7 +1,7 @@
 {
-  "name": "designship",
+  "name": "fragment",
   "version": "0.1.0",
-  "description": "Zero-input communication layer — watches Figma + Git and generates every update your team needs",
+  "description": "From scattered context to build-ready specs. A product workspace by Lilac Fragment.",
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev --config electron-vite.config.ts",
@@ -13,8 +13,8 @@
     "package:linux": "electron-builder --linux"
   },
   "build": {
-    "appId": "app.designship",
-    "productName": "DesignShip",
+    "appId": "studio.lilacfragment.fragment",
+    "productName": "Fragment",
     "directories": {
       "output": "release"
     },
@@ -50,6 +50,8 @@
     "ollama-ai-provider": "^1.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-markdown": "^9.0.1",
+    "remark-gfm": "^4.0.0",
     "simple-git": "^3.27.0",
     "ulid": "^2.3.0",
     "zustand": "^5.0.0"

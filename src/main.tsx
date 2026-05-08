@@ -1,80 +1,174 @@
-import { StrictMode } from 'react'
+import { StrictMode, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { RouterProvider, createRouter, createRootRoute, createRoute, Outlet, Link, useRouterState } from '@tanstack/react-router'
+import {
+  RouterProvider,
+  createRouter,
+  createRootRoute,
+  createRoute,
+  Outlet,
+  Link,
+  useRouterState,
+} from '@tanstack/react-router'
+import { Inbox, Layers, FileText, Settings as SettingsIcon } from 'lucide-react'
 import { useAppStore } from './stores/app'
-import { useEventCount } from './hooks/useEvents'
 import { useProjects } from './hooks/useProjects'
-import { TimelinePage } from './pages/timeline'
-import { SummariesPage } from './pages/summaries'
+import { useConfig, useSetCurrentProject } from './hooks/useConfig'
+import { useFragments } from './hooks/useFragments'
+import { CapturePage } from './pages/capture'
+import { FragmentsPage } from './pages/fragments'
+import { SpecsPage } from './pages/specs'
 import { SettingsPage } from './pages/settings'
-import { Clock, Settings, FileText } from 'lucide-react'
+import { FragmentMark } from './components/FragmentMark'
 import './styles/globals.css'
 
-// --- Root layout ---
 const rootRoute = createRootRoute({
   component: RootLayout,
 })
 
 function RootLayout() {
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-bg-primary">
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-8">
-            <Outlet />
-          </div>
-        </main>
+    <ProjectBootstrap>
+      <div className="flex h-screen flex-col overflow-hidden">
+        <div className="flex flex-1 overflow-hidden">
+          <Sidebar />
+          <main className="flex-1 overflow-y-auto">
+            <div className="mx-auto max-w-6xl px-8 py-10">
+              <Outlet />
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </ProjectBootstrap>
   )
+}
+
+/** Hydrates currentProjectId from config + projects on first load. */
+function ProjectBootstrap({ children }: { children: React.ReactNode }) {
+  const config = useConfig()
+  const projects = useProjects()
+  const currentProjectId = useAppStore((s) => s.currentProjectId)
+  const setCurrentProjectId = useAppStore((s) => s.setCurrentProjectId)
+  const persistCurrent = useSetCurrentProject()
+
+  useEffect(() => {
+    if (!projects.data) return
+    if (currentProjectId) {
+      const stillExists = projects.data.some((p) => p.id === currentProjectId)
+      if (!stillExists) {
+        const fallback = projects.data[0]?.id ?? null
+        setCurrentProjectId(fallback)
+        if (fallback) persistCurrent.mutate(fallback)
+      }
+      return
+    }
+    const fromConfig = config.data?.currentProjectId
+    if (fromConfig && projects.data.some((p) => p.id === fromConfig)) {
+      setCurrentProjectId(fromConfig)
+      return
+    }
+    const first = projects.data[0]?.id ?? null
+    if (first) {
+      setCurrentProjectId(first)
+      persistCurrent.mutate(first)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projects.data, config.data])
+
+  return <>{children}</>
 }
 
 function Sidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
-  const { data: eventCount = 0 } = useEventCount()
-  const { data: projects = [] } = useProjects()
+  const projects = useProjects()
+  const currentProjectId = useAppStore((s) => s.currentProjectId)
+  const setCurrentProjectId = useAppStore((s) => s.setCurrentProjectId)
+  const persistCurrent = useSetCurrentProject()
+  const fragments = useFragments({ project_id: currentProjectId ?? undefined })
 
-  const figmaCount = (projects as Array<{ type: string }>).filter((p) => p.type === 'figma_file').length
-  const gitCount = (projects as Array<{ type: string }>).filter((p) => p.type === 'git_repo').length
+  const fragmentCount = fragments.data?.length ?? 0
+  const currentProject = projects.data?.find((p) => p.id === currentProjectId)
 
-  const navItems = [
-    { to: '/', icon: Clock, label: 'Timeline', badge: eventCount > 0 ? String(eventCount) : undefined },
-    { to: '/summaries', icon: FileText, label: 'Summaries' },
-    { to: '/settings', icon: Settings, label: 'Settings' },
-  ] as const
+  const navItems: {
+    to: '/' | '/fragments' | '/specs' | '/settings'
+    icon: typeof Inbox
+    label: string
+    badge?: string
+  }[] = [
+    { to: '/', icon: Inbox, label: 'Capture' },
+    {
+      to: '/fragments',
+      icon: Layers,
+      label: 'Fragments',
+      badge: fragmentCount > 0 ? String(fragmentCount) : undefined,
+    },
+    { to: '/specs', icon: FileText, label: 'Specs' },
+    { to: '/settings', icon: SettingsIcon, label: 'Settings' },
+  ]
 
   return (
-    <nav className="flex w-52 shrink-0 flex-col border-r border-white/[0.04] bg-bg-secondary/80">
-      {/* Branding */}
-      <div className="flex items-center gap-2.5 border-b border-white/[0.04] px-4 py-3">
-        <div className="flex size-6 items-center justify-center rounded-lg bg-gradient-to-br from-accent-figma to-accent-git">
-          <span className="text-[10px] font-bold text-white">DS</span>
+    <nav className="flex w-60 shrink-0 flex-col border-r border-border-subtle bg-bg-glass backdrop-blur">
+      <div className="flex items-center gap-2.5 px-5 pt-5 pb-4">
+        <FragmentMark size={26} />
+        <div className="flex flex-col leading-none">
+          <span className="text-[15px] font-semibold tracking-tight text-text-primary">
+            Fragment
+          </span>
+          <span className="text-[10px] tracking-wide text-text-muted">
+            by Lilac Fragment
+          </span>
         </div>
-        <span className="font-display text-sm font-semibold tracking-tight text-text-primary">
-          DesignShip
-        </span>
       </div>
 
-      {/* Nav */}
-      <div className="flex flex-col gap-0.5 p-2 pt-3">
+      <div className="px-3 pb-2">
+        <label className="block">
+          <span className="sr-only">Workspace</span>
+          {projects.data && projects.data.length > 0 ? (
+            <select
+              className="input w-full text-[13px]"
+              value={currentProjectId ?? ''}
+              onChange={(e) => {
+                setCurrentProjectId(e.target.value)
+                persistCurrent.mutate(e.target.value)
+              }}
+            >
+              {projects.data.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <div className="rounded-[10px] border border-border-subtle bg-bg-elevated px-3 py-2 text-[12px] text-text-muted">
+              No workspace yet
+            </div>
+          )}
+        </label>
+      </div>
+
+      <div className="flex flex-col gap-0.5 p-2 pt-2">
         {navItems.map(({ to, icon: Icon, label, badge }) => {
           const active = to === '/' ? pathname === '/' : pathname.startsWith(to)
           return (
             <Link
               key={to}
               to={to}
-              className={`group flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-150 ${
+              className={`group flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors ${
                 active
-                  ? 'bg-white/[0.08] text-text-primary'
-                  : 'text-text-secondary hover:bg-white/[0.04] hover:text-text-primary'
+                  ? 'bg-ink text-bg-primary'
+                  : 'text-text-secondary hover:bg-bg-elevated hover:text-text-primary'
               }`}
             >
-              <Icon className={`size-4 ${active ? 'text-accent-figma' : 'text-text-muted group-hover:text-text-secondary'}`} />
+              <Icon size={16} />
               <span className="flex-1">{label}</span>
               {badge && (
-                <span className="rounded-full bg-white/[0.06] px-1.5 py-0.5 text-[10px] tabular-nums text-text-muted">
+                <span
+                  className={`rounded-full px-1.5 py-0.5 text-[10px] tabular-nums ${
+                    active
+                      ? 'bg-bg-primary/20 text-bg-primary'
+                      : 'bg-bg-secondary text-text-muted'
+                  }`}
+                >
                   {badge}
                 </span>
               )}
@@ -83,39 +177,41 @@ function Sidebar() {
         })}
       </div>
 
-      {/* Status */}
-      <div className="mt-auto border-t border-white/[0.04] p-3">
-        <StatusDot color="#a259ff" label="Figma" count={figmaCount} />
-        <StatusDot color="#58d68d" label="Git repos" count={gitCount} />
+      <div className="mt-auto px-4 pb-4 pt-3 text-[11px] text-text-muted">
+        {currentProject ? (
+          <>
+            <div className="font-medium text-text-secondary">
+              {currentProject.name}
+            </div>
+            <div>Local-first · everything stays on your machine.</div>
+          </>
+        ) : (
+          <div>Local-first · everything stays on your machine.</div>
+        )}
       </div>
     </nav>
   )
 }
 
-function StatusDot({ color, label, count }: { color: string; label: string; count: number }) {
-  return (
-    <div className="flex items-center gap-2 px-1 py-0.5">
-      <div
-        className="size-1.5 rounded-full"
-        style={{ backgroundColor: count > 0 ? color : '#555570' }}
-      />
-      <span className="flex-1 text-[11px] text-text-muted">{label}</span>
-      <span className="text-[10px] tabular-nums text-text-muted">{count}</span>
-    </div>
-  )
-}
-
-// --- Routes ---
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  component: TimelinePage,
+  component: CapturePage,
 })
 
-const summariesRoute = createRoute({
+const fragmentsRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/summaries',
-  component: SummariesPage,
+  path: '/fragments',
+  component: FragmentsPage,
+})
+
+const specsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/specs',
+  component: SpecsPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    draft: typeof search.draft === 'string' ? search.draft : undefined,
+  }),
 })
 
 const settingsRoute = createRoute({
@@ -124,15 +220,26 @@ const settingsRoute = createRoute({
   component: SettingsPage,
 })
 
-const routeTree = rootRoute.addChildren([indexRoute, summariesRoute, settingsRoute])
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  fragmentsRoute,
+  specsRoute,
+  settingsRoute,
+])
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { refetchOnWindowFocus: false, retry: 1, staleTime: 10_000 },
+    queries: { refetchOnWindowFocus: false, retry: 1, staleTime: 5_000 },
   },
 })
 
 const router = createRouter({ routeTree })
+
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router
+  }
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

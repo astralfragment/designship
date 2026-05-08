@@ -1,28 +1,25 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 export function useProjects() {
   return useQuery({
     queryKey: ['projects'],
-    queryFn: () => window.ds.projects.list(),
+    queryFn: () => window.fragment.projects.list(),
   })
 }
 
-export function useAddFigmaProject() {
+export function useCreateProject() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (fileUrl: string) => window.ds.projects.addFigma(fileUrl),
+    mutationFn: (name: string) => window.fragment.projects.create(name),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['projects'] }),
   })
 }
 
-export function useAddGitProject() {
+export function useRenameProject() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async () => {
-      const path = await window.ds.git.browseRepo()
-      if (!path) return null
-      return window.ds.projects.addGit(path)
-    },
+    mutationFn: ({ id, name }: { id: string; name: string }) =>
+      window.fragment.projects.rename(id, name),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['projects'] }),
   })
 }
@@ -30,10 +27,11 @@ export function useAddGitProject() {
 export function useRemoveProject() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => window.ds.projects.remove(id),
+    mutationFn: (id: string) => window.fragment.projects.remove(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['projects'] })
-      qc.invalidateQueries({ queryKey: ['events'] })
+      qc.invalidateQueries({ queryKey: ['fragments'] })
+      qc.invalidateQueries({ queryKey: ['specs'] })
     },
   })
 }

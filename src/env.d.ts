@@ -1,7 +1,7 @@
-import type { DesignShipAPI } from '../electron/preload'
+import type { FragmentAPI } from '../electron/preload'
 
 declare global {
   interface Window {
-    ds: DesignShipAPI
+    fragment: FragmentAPI
   }
 }

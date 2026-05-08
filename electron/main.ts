@@ -5,12 +5,10 @@ loadEnv({ path: join(__dirname, '../../.env') })
 import { app, BrowserWindow, nativeImage, shell } from 'electron'
 import { initDatabase } from './db/schema'
 import { createTray } from './tray'
-import { WatcherManager } from './watchers/watcher-manager'
 import { registerIPCHandlers } from './ipc/handlers'
-import { seedOnStartup } from './db/seed'
+import { maybeSeedOnFirstRun } from './db/sample-workspace'
 
 let mainWindow: BrowserWindow | null = null
-let watcherManager: WatcherManager | null = null
 
 function getAppIcon() {
   const iconPath = join(__dirname, '../../build/icon.png')
@@ -24,12 +22,12 @@ function getAppIcon() {
 function createWindow() {
   const icon = getAppIcon()
   mainWindow = new BrowserWindow({
-    width: 1100,
-    height: 750,
-    minWidth: 800,
-    minHeight: 600,
+    width: 1180,
+    height: 800,
+    minWidth: 900,
+    minHeight: 640,
     icon,
-    backgroundColor: '#0f0f14',
+    backgroundColor: '#FFFAF5',
     show: false,
     autoHideMenuBar: true,
     frame: true,
@@ -42,25 +40,21 @@ function createWindow() {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow?.show()
-    // Open DevTools in dev mode
     if (process.env.ELECTRON_RENDERER_URL) {
       mainWindow?.webContents.openDevTools({ mode: 'bottom' })
     }
   })
 
   mainWindow.on('close', (e) => {
-    // Minimize to tray instead of quitting
     e.preventDefault()
     mainWindow?.hide()
   })
 
-  // Open external links in default browser
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url)
     return { action: 'deny' }
   })
 
-  // Load renderer
   if (process.env.ELECTRON_RENDERER_URL) {
     mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL)
   } else {
@@ -69,31 +63,14 @@ function createWindow() {
 }
 
 app.whenReady().then(async () => {
-  // Init SQLite
   const db = initDatabase()
-
-  // Setup IPC handlers
   registerIPCHandlers(db)
 
-  // Create window
+  // Seed the "Welcome to Fragment" project on first launch
+  maybeSeedOnFirstRun(db)
+
   createWindow()
-
-  // Create tray
   createTray(mainWindow!)
-
-  // Auto-load Figma PAT from env — always overwrite DB with env value if set
-  const envPat = process.env.FIGMA_PAT
-  if (envPat) {
-    db.prepare("INSERT OR REPLACE INTO app_config (key, value) VALUES ('figma_token', ?)").run(envPat)
-    console.log('[Main] Figma PAT loaded from .env')
-  }
-
-  // Auto-discover Git repos and import commits (zero config)
-  seedOnStartup(db).catch((err) => console.error('[AutoDiscover]', err))
-
-  // Start watchers
-  watcherManager = new WatcherManager(db)
-  watcherManager.start()
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -105,13 +82,10 @@ app.whenReady().then(async () => {
 })
 
 app.on('before-quit', () => {
-  watcherManager?.stop()
-  // Allow actual quit
   mainWindow?.removeAllListeners('close')
   mainWindow?.close()
 })
 
-// Prevent multiple instances
 const gotLock = app.requestSingleInstanceLock()
 if (!gotLock) {
   app.quit()

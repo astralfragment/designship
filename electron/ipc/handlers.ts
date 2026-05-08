@@ -1,169 +1,155 @@
 import { ipcMain, dialog, BrowserWindow } from 'electron'
 import type Database from 'better-sqlite3'
-import { ulid } from 'ulid'
-import { EventStore } from '../db/events'
-import { SummaryStore } from '../db/summaries'
-import { generateTemplateSummary } from '../ai/templates'
-import { generateAISummary } from '../ai/summariser'
-import type { AppConfig, AIProviderConfig, SummaryOptions } from '../../shared/ipc-types'
-import simpleGit from 'simple-git'
-import { basename } from 'path'
+import { writeFileSync } from 'fs'
+import { ProjectStore } from '../db/projects'
+import { FragmentStore } from '../db/fragments'
+import { SpecStore, draftSpecMarkdown } from '../db/specs'
+import { seedSampleWorkspace } from '../db/sample-workspace'
+import { draftSpecWithAI } from '../ai/spec-drafter'
+import type {
+  AIProviderConfig,
+  AppConfig,
+  FragmentInput,
+  FragmentFilters,
+  SpecDraftOptions,
+  SpecUpdateInput,
+} from '../../shared/ipc-types'
 
 export function registerIPCHandlers(db: Database.Database) {
-  const events = new EventStore(db)
-  const summaries = new SummaryStore(db)
-
-  // --- Events ---
-  ipcMain.handle('events:list', (_e, filters) => events.list(filters))
-  ipcMain.handle('events:get', (_e, id) => events.get(id))
-  ipcMain.handle('events:count', (_e, filters) => events.count(filters))
+  const projects = new ProjectStore(db)
+  const fragments = new FragmentStore(db)
+  const specs = new SpecStore(db)
 
   // --- Projects ---
-  ipcMain.handle('projects:list', () => {
-    return db.prepare('SELECT * FROM projects ORDER BY created_at DESC').all()
-  })
-
-  ipcMain.handle('projects:add-figma', (_e, fileUrl: string) => {
-    // Extract file key from URL: https://figma.com/file/XXXXX/...
-    const match = fileUrl.match(/figma\.com\/(?:file|design|proto)\/([a-zA-Z0-9]+)/)
-    const fileKey = match?.[1] ?? fileUrl // Allow raw file key too
-    const id = ulid()
-    db.prepare(`
-      INSERT INTO projects (id, name, type, identifier)
-      VALUES (?, ?, 'figma_file', ?)
-    `).run(id, `Figma: ${fileKey.slice(0, 12)}...`, fileKey)
-    return db.prepare('SELECT * FROM projects WHERE id = ?').get(id)
-  })
-
-  ipcMain.handle('projects:add-git', (_e, repoPath: string) => {
-    const id = ulid()
-    const name = basename(repoPath)
-    db.prepare(`
-      INSERT INTO projects (id, name, type, identifier)
-      VALUES (?, ?, 'git_repo', ?)
-    `).run(id, name, repoPath)
-    return db.prepare('SELECT * FROM projects WHERE id = ?').get(id)
-  })
-
+  ipcMain.handle('projects:list', () => projects.list())
+  ipcMain.handle('projects:create', (_e, name: string) => projects.create(name))
+  ipcMain.handle('projects:rename', (_e, id: string, name: string) =>
+    projects.rename(id, name),
+  )
   ipcMain.handle('projects:remove', (_e, id: string) => {
-    db.prepare('DELETE FROM events WHERE project_id = ?').run(id)
-    db.prepare('DELETE FROM projects WHERE id = ?').run(id)
+    projects.remove(id)
   })
 
-  ipcMain.handle('projects:toggle-watch', (_e, id: string, enabled: boolean) => {
-    const project = db.prepare('SELECT config FROM projects WHERE id = ?').get(id) as { config: string | null } | undefined
-    if (!project) return
-    const config = project.config ? JSON.parse(project.config) : {}
-    config.enabled = enabled
-    db.prepare('UPDATE projects SET config = ? WHERE id = ?').run(JSON.stringify(config), id)
-    return enabled
+  // --- Fragments ---
+  ipcMain.handle('fragments:list', (_e, filters: FragmentFilters) =>
+    fragments.list(filters),
+  )
+  ipcMain.handle('fragments:get', (_e, id: string) => fragments.get(id))
+  ipcMain.handle('fragments:add', (_e, input: FragmentInput) =>
+    fragments.insert(input),
+  )
+  ipcMain.handle(
+    'fragments:update',
+    (_e, id: string, patch: Partial<FragmentInput>) => fragments.update(id, patch),
+  )
+  ipcMain.handle('fragments:delete', (_e, id: string) => {
+    fragments.delete(id)
   })
 
-  // --- Git ---
-  ipcMain.handle('git:browse-repo', async () => {
-    const result = await dialog.showOpenDialog({
-      properties: ['openDirectory'],
-      title: 'Select a Git repository',
-    })
-    return result.canceled ? null : result.filePaths[0] ?? null
-  })
+  // --- Specs ---
+  ipcMain.handle('specs:list', (_e, projectId: string) => specs.list(projectId))
+  ipcMain.handle('specs:get', (_e, id: string) => specs.get(id))
 
-  ipcMain.handle('git:get-info', async (_e, path: string) => {
-    try {
-      const git = simpleGit(path)
-      const isRepo = await git.checkIsRepo()
-      if (!isRepo) return null
-      const branch = await git.branch()
-      const remotes = await git.getRemotes(true)
-      return {
-        path,
-        name: basename(path),
-        currentBranch: branch.current,
-        remoteUrl: remotes[0]?.refs?.fetch ?? null,
-      }
-    } catch {
-      return null
-    }
-  })
+  ipcMain.handle('specs:draft', async (_e, opts: SpecDraftOptions) => {
+    const selected = fragments.getMany(opts.fragment_ids)
 
-  // --- Figma ---
-  ipcMain.handle('figma:set-token', (_e, token: string) => {
-    db.prepare(`
-      INSERT OR REPLACE INTO app_config (key, value) VALUES ('figma_token', ?)
-    `).run(token)
-    // Trigger immediate re-discovery with the new token
-    const { WatcherManager } = require('../watchers/watcher-manager')
-    WatcherManager.getInstance()?.onFigmaTokenChanged()
-    return true
-  })
-
-  ipcMain.handle('figma:get-snapshot', (_e, eventId: string) => {
-    const snap = db.prepare('SELECT file_path FROM snapshots WHERE event_id = ?').get(eventId) as { file_path: string } | undefined
-    return snap?.file_path ?? null
-  })
-
-  // --- Summaries ---
-  ipcMain.handle('summary:generate', async (_e, opts: SummaryOptions) => {
-    const periodEvents = events.list({
-      from: opts.period_start,
-      to: opts.period_end,
-      limit: 500,
-    })
-
+    let title: string
     let content: string
-    let modelUsed: string | null = null
 
     if (opts.use_ai) {
       const aiConfig = getAIConfig(db)
-      const result = await generateAISummary(periodEvents, opts.type, aiConfig)
-      content = result.content
-      modelUsed = result.model
+      if (aiConfig.provider === 'none') {
+        throw new Error(
+          'No AI provider configured. Open Settings → AI assist to add a Claude key or Ollama endpoint.',
+        )
+      }
+      try {
+        const aiContent = await draftSpecWithAI(selected, aiConfig, opts.title)
+        const headlineMatch = aiContent.match(/^#\s+(.+)$/m)
+        title = opts.title ?? headlineMatch?.[1]?.trim() ?? 'Untitled spec'
+        content = aiContent
+      } catch (err) {
+        const fallback = draftSpecMarkdown(selected, opts.title)
+        title = fallback.title
+        content =
+          `_AI draft failed (${err instanceof Error ? err.message : 'unknown'}). Falling back to template draft._\n\n` +
+          fallback.content
+      }
     } else {
-      content = generateTemplateSummary(periodEvents, opts.type)
+      const drafted = draftSpecMarkdown(selected, opts.title)
+      title = drafted.title
+      content = drafted.content
     }
 
-    const summary = summaries.insert({
-      type: opts.type,
-      period_start: opts.period_start,
-      period_end: opts.period_end,
-      content,
-      model_used: modelUsed,
-      event_ids: periodEvents.map((e) => e.id),
+    return specs.insert({
+      project_id: opts.project_id,
+      title,
+      content_md: content,
+      fragment_ids: opts.fragment_ids,
     })
-
-    return summary.content
   })
 
-  ipcMain.handle('summary:list', () => summaries.list())
-  ipcMain.handle('summary:get', (_e, id) => summaries.get(id))
+  ipcMain.handle(
+    'specs:update',
+    (_e, id: string, patch: SpecUpdateInput) => specs.update(id, patch),
+  )
+  ipcMain.handle('specs:delete', (_e, id: string) => {
+    specs.delete(id)
+  })
+
+  ipcMain.handle(
+    'specs:export',
+    (_e, id: string, format: 'markdown' | 'github') => {
+      const spec = specs.get(id)
+      if (!spec) throw new Error(`Spec ${id} not found`)
+      if (format === 'github') {
+        const stripped = spec.content_md.replace(/^#\s+.+\n\n?/m, '')
+        return stripped
+      }
+      return spec.content_md
+    },
+  )
+
+  ipcMain.handle('specs:save-as', async (_e, id: string) => {
+    const spec = specs.get(id)
+    if (!spec) throw new Error(`Spec ${id} not found`)
+    const safeName = spec.title.replace(/[^a-z0-9-_ ]/gi, '').trim() || 'spec'
+    const result = await dialog.showSaveDialog({
+      title: 'Save spec as Markdown',
+      defaultPath: `${safeName}.md`,
+      filters: [{ name: 'Markdown', extensions: ['md'] }],
+    })
+    if (result.canceled || !result.filePath) return null
+    writeFileSync(result.filePath, spec.content_md, 'utf-8')
+    return result.filePath
+  })
+
+  // --- Sample data ---
+  ipcMain.handle('seed:samples', () => seedSampleWorkspace(db))
+  ipcMain.handle('seed:reset-welcome-flag', () => {
+    db.prepare(`DELETE FROM app_config WHERE key = 'welcome_dismissed'`).run()
+  })
 
   // --- Config ---
   ipcMain.handle('config:get', () => {
-    const figmaToken = getConfigValue(db, 'figma_token')
-    const pollInterval = parseInt(getConfigValue(db, 'figma_poll_interval') ?? '900000', 10)
-    const aiProvider = getAIConfig(db)
     return {
-      figmaToken,
-      figmaPollInterval: pollInterval,
-      aiProvider,
-      theme: 'dark',
+      aiProvider: getAIConfig(db),
+      currentProjectId: getConfigValue(db, 'current_project_id'),
     } satisfies AppConfig
-  })
-
-  ipcMain.handle('config:set', (_e, config: Partial<AppConfig>) => {
-    if (config.figmaToken !== undefined) {
-      setConfigValue(db, 'figma_token', config.figmaToken ?? '')
-    }
-    if (config.figmaPollInterval !== undefined) {
-      setConfigValue(db, 'figma_poll_interval', String(config.figmaPollInterval))
-    }
   })
 
   ipcMain.handle('config:set-ai', (_e, config: AIProviderConfig) => {
     setConfigValue(db, 'ai_provider', config.provider)
-    if (config.apiKey) setConfigValue(db, 'ai_api_key', config.apiKey)
-    if (config.ollamaBaseUrl) setConfigValue(db, 'ai_ollama_url', config.ollamaBaseUrl)
-    if (config.ollamaModel) setConfigValue(db, 'ai_ollama_model', config.ollamaModel)
+    if (config.apiKey !== undefined)
+      setConfigValue(db, 'ai_api_key', config.apiKey)
+    if (config.ollamaBaseUrl !== undefined)
+      setConfigValue(db, 'ai_ollama_url', config.ollamaBaseUrl)
+    if (config.ollamaModel !== undefined)
+      setConfigValue(db, 'ai_ollama_model', config.ollamaModel)
+  })
+
+  ipcMain.handle('config:set-current-project', (_e, projectId: string) => {
+    setConfigValue(db, 'current_project_id', projectId)
   })
 
   // --- Window controls ---
@@ -181,19 +167,31 @@ export function registerIPCHandlers(db: Database.Database) {
 }
 
 function getConfigValue(db: Database.Database, key: string): string | null {
-  const row = db.prepare('SELECT value FROM app_config WHERE key = ?').get(key) as { value: string } | undefined
+  const row = db
+    .prepare('SELECT value FROM app_config WHERE key = ?')
+    .get(key) as { value: string } | undefined
   return row?.value ?? null
 }
 
 function setConfigValue(db: Database.Database, key: string, value: string) {
-  db.prepare('INSERT OR REPLACE INTO app_config (key, value) VALUES (?, ?)').run(key, value)
+  db.prepare(
+    'INSERT OR REPLACE INTO app_config (key, value) VALUES (?, ?)',
+  ).run(key, value)
 }
 
 function getAIConfig(db: Database.Database): AIProviderConfig {
   return {
-    provider: (getConfigValue(db, 'ai_provider') as 'claude' | 'ollama' | 'none') ?? 'none',
-    apiKey: getConfigValue(db, 'ai_api_key') ?? undefined,
-    ollamaBaseUrl: getConfigValue(db, 'ai_ollama_url') ?? 'http://localhost:11434',
-    ollamaModel: getConfigValue(db, 'ai_ollama_model') ?? 'qwen2.5-coder:14b',
+    provider:
+      (getConfigValue(db, 'ai_provider') as 'claude' | 'ollama' | 'none') ??
+      (process.env.ANTHROPIC_API_KEY ? 'claude' : 'none'),
+    apiKey: getConfigValue(db, 'ai_api_key') ?? process.env.ANTHROPIC_API_KEY ?? undefined,
+    ollamaBaseUrl:
+      getConfigValue(db, 'ai_ollama_url') ??
+      process.env.OLLAMA_BASE_URL ??
+      'http://localhost:11434',
+    ollamaModel:
+      getConfigValue(db, 'ai_ollama_model') ??
+      process.env.OLLAMA_MODEL ??
+      'llama3.2',
   }
 }
